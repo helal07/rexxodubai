@@ -12,7 +12,7 @@ deployment:
 
     # 4. Set directory permissions for Laravel runtime
     - cd $DEPLOYPATH && chmod -R 775 storage bootstrap/cache || true
-- cd $DEPLOYPATH && chmod -R 755 public && find $DEPLOYPATH/public -type f -exec chmod 644 {} + || true
+    - cd $DEPLOYPATH && chmod -R 755 public && find $DEPLOYPATH/public -type f -exec chmod 644 {} + || true
     - cd $DEPLOYPATH && chmod 755 storage storage/app storage/app/public || true
 
     # 5. Clear all stale runtime and bootstrap caches FIRST
