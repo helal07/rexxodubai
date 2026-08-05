@@ -171,9 +171,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                 <img
                   src={settings.logo_url || settings.site_logo}
                   alt={settings.siteName || 'Brand Logo'}
-                  className={`h-8 md:h-10 w-auto max-w-[220px] object-contain transition-all group-hover:opacity-90 ${
-                    isTransparent ? 'brightness-0 invert drop-shadow-xs' : ''
-                  }`}
+                  className="h-8 md:h-10 w-auto max-w-[220px] object-contain transition-all group-hover:opacity-90 drop-shadow-xs"
                 />
               ) : (
                 <span className={`font-serif text-[24px] md:text-[32px] tracking-[0.16em] font-extrabold uppercase leading-none transition-all group-hover:tracking-[0.18em] ${
