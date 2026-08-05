@@ -98,9 +98,23 @@
                             <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">CATEGORY</label>
                             <select name="category_id" class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-3 py-2.5 rounded-xl text-[12px] focus:outline-none focus:border-[#B8712E]">
                                 <option value="">Select Category</option>
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
+                                @php
+                                    $rootCats = $categories->whereNull('parent_id');
+                                @endphp
+                                @if($rootCats->isNotEmpty())
+                                    @foreach ($rootCats as $cat)
+                                        <optgroup label="{{ $cat->name }}">
+                                            <option value="{{ $cat->id }}">{{ $cat->name }} (Main)</option>
+                                            @foreach ($categories->where('parent_id', $cat->id) as $sub)
+                                                <option value="{{ $sub->id }}">&nbsp;&nbsp;↳ {{ $sub->name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                @else
+                                    @foreach ($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
                         <div>

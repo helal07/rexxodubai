@@ -147,11 +147,29 @@
                             class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-4 py-3 rounded-xl text-[14px] font-medium focus:outline-none focus:border-[#B8712E]"
                         >
                             <option value="">No Specific Category</option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->name }}
-                                </option>
-                            @endforeach
+                            @php
+                                $rootCats = $categories->whereNull('parent_id');
+                            @endphp
+                            @if($rootCats->isNotEmpty())
+                                @foreach ($rootCats as $cat)
+                                    <optgroup label="{{ $cat->name }}">
+                                        <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
+                                            {{ $cat->name }} (Main Category)
+                                        </option>
+                                        @foreach ($categories->where('parent_id', $cat->id) as $sub)
+                                            <option value="{{ $sub->id }}" {{ old('category_id', $product->category_id) == $sub->id ? 'selected' : '' }}>
+                                                &nbsp;&nbsp;↳ {{ $sub->name }} (Subcategory)
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            @else
+                                @foreach ($categories as $cat)
+                                    <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
+                                        {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
 

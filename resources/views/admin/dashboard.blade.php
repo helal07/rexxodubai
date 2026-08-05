@@ -159,7 +159,7 @@
                     </div>
                 </div>
 
-                <!-- 3. PRODUCT (SUBMENU: ADD PRODUCT, LIST PRODUCTS) -->
+                <!-- 3. PRODUCT (SUBMENU: ADD PRODUCT, LIST PRODUCTS, CATEGORY & SUB CATEGORY) -->
                 <div>
                     <button type="button" onclick="toggleSubmenu('product')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
                         <div class="flex items-center gap-3">
@@ -170,6 +170,7 @@
                     <div id="sub-product" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
                         <button type="button" onclick="switchSection('product_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Add Product</button>
                         <button type="button" onclick="switchSection('products')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• List Products</button>
+                        <a href="{{ url('/admin/categories') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Category & Sub Category</a>
                     </div>
                 </div>
 
@@ -243,6 +244,10 @@
                 <button type="button" onclick="switchSection('menu')" id="top-btn-menu" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
                     <i data-lucide="sliders" class="w-4 h-4"></i> MENU BUILDER
                 </button>
+
+                <a href="{{ url('/admin/categories') }}" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
+                    <i data-lucide="folder-tree" class="w-4 h-4"></i> CATEGORIES & SUB
+                </a>
 
                 <button type="button" onclick="switchSection('create_order')" id="top-btn-create_order" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer bg-emerald-600/10 text-emerald-700 border border-emerald-600/30 whitespace-nowrap">
                     <i data-lucide="plus" class="w-4 h-4"></i> CREATE ORDER 🛍️
@@ -958,9 +963,23 @@
                         <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1.5">Collection / Category</label>
                         <select name="category_id" class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-bold focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20 outline-none transition-all bg-white text-[#0f172a]">
                             <option value="">Select Category...</option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
+                            @php
+                                $rootCats = $categories->whereNull('parent_id');
+                            @endphp
+                            @if($rootCats->isNotEmpty())
+                                @foreach ($rootCats as $cat)
+                                    <optgroup label="{{ $cat->name }}">
+                                        <option value="{{ $cat->id }}">{{ $cat->name }} (Main)</option>
+                                        @foreach ($categories->where('parent_id', $cat->id) as $sub)
+                                            <option value="{{ $sub->id }}">&nbsp;&nbsp;↳ {{ $sub->name }} (Subcategory)</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            @else
+                                @foreach ($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
                 </div>

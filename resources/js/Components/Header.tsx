@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
-import { Search, Menu, X, Phone, Globe, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, ShoppingBag } from 'lucide-react';
+import { Search, Menu, X, Phone, Globe, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, ShoppingBag, Sparkles, Layers } from 'lucide-react';
 import { useCart } from '@/Contexts/CartContext';
 import { useSiteSettings } from '@/Contexts/SiteSettingsContext';
 import { MenuItem, Category, FALLBACK_MENU, FALLBACK_CATEGORIES } from '@/lib/api';
@@ -24,9 +24,28 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
     ? initialMenu
     : ((menuItems && menuItems.length > 0) ? menuItems : FALLBACK_MENU);
 
-  const activeCategories: Category[] = (initialCategories && initialCategories.length > 0)
+  const rawCategories: Category[] = (initialCategories && initialCategories.length > 0)
     ? initialCategories
     : FALLBACK_CATEGORIES;
+
+  // Enrich categories with fallback subcategories if DB children are not populated
+  const enrichedCategories: Category[] = rawCategories.map(cat => {
+    if (cat.children && cat.children.length > 0) {
+      return cat;
+    }
+    const fallbackMatch = FALLBACK_CATEGORIES.find(f => 
+      f.slug === cat.slug || f.name.toLowerCase() === cat.name.toLowerCase()
+    );
+    if (fallbackMatch && fallbackMatch.children && fallbackMatch.children.length > 0) {
+      return {
+        ...cat,
+        children: fallbackMatch.children,
+        description: cat.description || fallbackMatch.description,
+        image_url: cat.image_url || fallbackMatch.image_url,
+      };
+    }
+    return cat;
+  });
 
   const [isVisible, setIsVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,12 +57,14 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
   const [searchQuery, setSearchQuery] = useState('');
 
   // Accordion state for Drawer categories
-  const [expandedCategories, setExpandedCategories] = useState<Record<number, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<number | string, boolean>>({
+    'products-master': true // Expand by default so subcategories are immediately visible
+  });
 
   // Hover state for Desktop MegaMenu
   const [hoveredCategory, setHoveredCategory] = useState<Category | MenuItem | null>(null);
 
-  const toggleCategory = (id: number) => {
+  const toggleCategory = (id: number | string) => {
     setExpandedCategories(prev => ({
       ...prev,
       [id]: !prev[id]
@@ -82,8 +103,16 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
   const isHomePage = pathname === '/' || pathname === '' || pathname.startsWith('/?');
   const isTransparent = isHomePage && !isScrolled && !isHeaderHovered && !searchOpen && !hoveredCategory;
 
-  // Use categories as primary source if available with subcategories, or menu items
-  const navigationItems = (activeCategories && activeCategories.length > 0) ? activeCategories : activeMenuItems;
+  // Master Products item with all subcategories flattened for MegaMenu
+  const allProductsMegaItem: MenuItem = {
+    id: 88888,
+    parent_id: null,
+    label: 'All Fragrances',
+    url: '/perfumes',
+    sort_order: 0,
+    is_active: true,
+    children: enrichedCategories.flatMap(c => (c.children && c.children.length > 0) ? c.children : [c]) as any,
+  };
 
   return (
     <>
@@ -156,9 +185,33 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
             <nav className={`hidden lg:flex items-center space-x-6 pl-4 border-l transition-colors ${
               isTransparent ? 'border-white/20' : 'border-[#E5E5E5]'
             }`}>
-              {navigationItems.slice(0, 5).map((cat: any) => {
-                const label = cat.name || cat.label;
-                const url = cat.url || `/perfumes?category=${cat.slug}`;
+              {/* Master Products Link */}
+              <div
+                className="relative py-4"
+                onMouseEnter={() => setHoveredCategory(allProductsMegaItem)}
+              >
+                <Link
+                  href="/perfumes"
+                  className={`text-[12px] uppercase font-bold tracking-wider transition-colors flex items-center gap-1 ${
+                    isTransparent
+                      ? hoveredCategory?.id === allProductsMegaItem.id ? 'text-[#B8712E]' : 'text-white hover:opacity-80 drop-shadow-xs'
+                      : hoveredCategory?.id === allProductsMegaItem.id ? 'text-[#B8712E]' : 'text-[#0A0A0A] hover:text-[#B8712E]'
+                  }`}
+                >
+                  <span>Products</span>
+                  <ChevronDown
+                    size={13}
+                    className={`transition-transform duration-200 ${
+                      hoveredCategory?.id === allProductsMegaItem.id ? 'rotate-180 text-[#B8712E]' : isTransparent ? 'text-white/70' : 'text-slate-400'
+                    }`}
+                  />
+                </Link>
+              </div>
+
+              {/* Individual Category Links */}
+              {enrichedCategories.slice(0, 5).map((cat) => {
+                const label = cat.name;
+                const url = `/perfumes?category=${cat.slug}`;
                 const hasSub = cat.children && cat.children.length > 0;
                 const isCurrentHovered = hoveredCategory && ((hoveredCategory as any).id === cat.id);
 
@@ -355,14 +408,82 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
 
             {/* Dynamic Hierarchical Categories & Subcategories Accordion */}
             <div className="py-6 flex-1 space-y-4">
-              <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[#B8712E] block mb-2">
-                COLLECTIONS & CATEGORIES
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[#B8712E] block">
+                  PRODUCTS & CATEGORIES
+                </span>
+                <Link
+                  href="/perfumes"
+                  onClick={() => setMenuDrawerOpen(false)}
+                  className="text-[11px] font-mono font-bold text-slate-500 hover:text-black uppercase underline"
+                >
+                  View All &rarr;
+                </Link>
+              </div>
+
+              {/* Master Product Menu Accordion */}
+              <div className="bg-[#FBF9F6] border border-[#EBE7DF] rounded-xl p-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <Link
+                    href="/perfumes"
+                    onClick={() => setMenuDrawerOpen(false)}
+                    className="text-[13px] font-bold uppercase tracking-wider text-[#0A0A0A] hover:text-[#B8712E] flex items-center gap-2"
+                  >
+                    <Sparkles size={15} className="text-[#B8712E]" />
+                    <span>Product Catalog (All)</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory('products-master')}
+                    className="p-1 text-slate-400 hover:text-black cursor-pointer"
+                  >
+                    {expandedCategories['products-master'] ? (
+                      <ChevronDown size={16} className="text-[#B8712E]" />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                  </button>
+                </div>
+
+                {expandedCategories['products-master'] && (
+                  <div className="mt-3 pt-3 border-t border-[#EBE7DF] space-y-2">
+                    {enrichedCategories.map((cat) => (
+                      <div key={'sub-group-' + cat.id} className="space-y-1">
+                        <Link
+                          href={`/perfumes?category=${cat.slug}`}
+                          onClick={() => setMenuDrawerOpen(false)}
+                          className="block text-[12px] font-bold uppercase text-[#0A0A0A] hover:text-[#B8712E] pl-2"
+                        >
+                          • {cat.name}
+                        </Link>
+                        {cat.children && cat.children.length > 0 && (
+                          <div className="pl-5 space-y-1">
+                            {cat.children.map((sub) => (
+                              <Link
+                                key={'drawer-sub-' + sub.id}
+                                href={`/perfumes?category=${sub.slug}`}
+                                onClick={() => setMenuDrawerOpen(false)}
+                                className="block text-[12px] text-slate-600 hover:text-[#B8712E] py-0.5"
+                              >
+                                ↳ {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-slate-400 block pt-2 mb-2">
+                DIRECT CATEGORY ACCESS
               </span>
 
               <div className="space-y-3">
-                {navigationItems.map((item: any) => {
-                  const label = item.name || item.label;
-                  const mainUrl = item.url || `/perfumes?category=${item.slug}`;
+                {enrichedCategories.map((item) => {
+                  const label = item.name;
+                  const mainUrl = `/perfumes?category=${item.slug}`;
                   const children = item.children || [];
                   const hasChildren = children.length > 0;
                   const isExpanded = expandedCategories[item.id];
@@ -405,9 +526,9 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                               >
                                 View All {label} &rarr;
                               </Link>
-                              {children.map((sub: any) => {
-                                const subLabel = sub.name || sub.label;
-                                const subUrl = sub.url || `/perfumes?category=${sub.slug}`;
+                              {children.map((sub) => {
+                                const subLabel = sub.name;
+                                const subUrl = `/perfumes?category=${sub.slug}`;
                                 return (
                                   <Link
                                     key={sub.id}
@@ -449,29 +570,29 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
               </div>
             </div>
 
-            {/* Bottom Utility Links */}
-            <div className="pt-6 border-t border-[#DEDBD4] space-y-3 text-[13px] text-[#0A0A0A]">
+            {/* Bottom Drawer Actions */}
+            <div className="pt-6 border-t border-[#F5F3EF] space-y-3">
               <button
                 onClick={() => {
                   setMenuDrawerOpen(false);
                   setContactDrawerOpen(true);
                 }}
-                className="flex items-center gap-3 font-medium hover:text-[#B8712E] transition-colors w-full text-left"
+                className="w-full text-left py-2 text-[12px] uppercase font-bold tracking-wider text-[#0A0A0A] hover:text-[#B8712E] transition-colors flex items-center justify-between"
               >
-                <Phone size={16} />
-                <span>Contact us ({settings.phone})</span>
+                <span>Customer Care & Concierge</span>
+                <span>&rarr;</span>
               </button>
 
-              <div className="flex items-center gap-3 font-medium text-[#6E6B66] cursor-pointer hover:text-[#0A0A0A] transition-colors">
-                <Globe size={16} />
-                <span>International / English</span>
+              <div className="text-[11px] text-[#6E6B66] font-mono">
+                {settings.phone && <div>Direct: {settings.phone}</div>}
+                {settings.email && <div>Email: {settings.email}</div>}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Right Slide-In Client Service Drawer */}
+      {/* Slide-In Contact Concierge Drawer */}
       {contactDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end animate-fade-in">
           {/* Dark Overlay Background */}
@@ -480,93 +601,103 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
             onClick={() => setContactDrawerOpen(false)}
           />
 
-          {/* Right White Slide-In Panel */}
-          <div className="relative w-full max-w-[480px] bg-white text-[#0A0A0A] h-full flex flex-col justify-between p-8 md:p-10 shadow-2xl z-10 overflow-y-auto">
-            {/* Top Close Button */}
-            <div className="flex justify-end">
+          {/* Right White Slide-In Contact Panel */}
+          <div className="relative w-full max-w-[420px] bg-white text-[#0A0A0A] h-full flex flex-col justify-between p-6 sm:p-8 shadow-2xl z-10 overflow-y-auto">
+            {/* Top Bar */}
+            <div className="flex justify-between items-center pb-6 border-b border-[#F5F3EF]">
+              <span className="font-serif text-[18px] font-bold uppercase tracking-wider text-[#0A0A0A]">
+                Client Concierge
+              </span>
               <button
                 onClick={() => setContactDrawerOpen(false)}
-                className="p-2 text-[#0A0A0A] hover:opacity-60 transition-opacity cursor-pointer"
-                aria-label="Close Client Service"
+                className="p-1 text-[#0A0A0A] hover:text-[#B8712E] transition-colors cursor-pointer"
+                aria-label="Close Contact Panel"
               >
-                <X size={22} />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Client Service Content */}
-            <div className="py-4 space-y-8 flex-1">
-              <h2 className="text-[26px] font-sans font-bold text-[#0A0A0A] tracking-tight">
-                Client Service
-              </h2>
-
-              {/* Stacked Option Cards */}
-              <div className="space-y-4">
-                {/* WhatsApp Direct Message */}
-                <a
-                  href={`https://api.whatsapp.com/send?phone=${settings.whatsapp}&text=Hello%20${encodeURIComponent(settings.siteName)},%20I%20would%20like%20to%20inquire%20about%20your%20luxury%20perfumes.`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex justify-between items-center p-5 border border-[#DEDBD4] hover:border-black transition-all bg-white group cursor-pointer"
-                >
-                  <div>
-                    <span className="text-[15px] font-medium text-[#0A0A0A] group-hover:font-semibold block">
-                      Message via WhatsApp
-                    </span>
-                    <span className="text-[11px] text-[#6E6B66]">Click to open WhatsApp chat directly ({settings.phone})</span>
-                  </div>
-                  <MessageSquare size={20} className="text-[#0A0A0A]" />
-                </a>
-
-                {/* Send message via Gmail */}
-                <a
-                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${settings.email}&su=Inquiry%20-%20${encodeURIComponent(settings.siteName)}%20Perfumes&body=Hello%20${encodeURIComponent(settings.siteName)}%20Client%20Service,%20I%20would%20like%20to%20inquire%20about%20your%20luxury%20perfumes.`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex justify-between items-center p-5 border border-[#DEDBD4] hover:border-black transition-all bg-white group cursor-pointer"
-                >
-                  <div>
-                    <span className="text-[15px] font-medium text-[#0A0A0A] group-hover:font-semibold block">
-                      Send message via Gmail
-                    </span>
-                    <span className="text-[11px] text-[#6E6B66]">Opens Gmail to {settings.email}</span>
-                  </div>
-                  <Mail size={20} className="text-[#0A0A0A]" />
-                </a>
-
-                {/* Send via Default Email */}
-                <a
-                  href={`mailto:${settings.email}?subject=Inquiry%20-%20${encodeURIComponent(settings.siteName)}%20Perfumes`}
-                  className="flex justify-between items-center p-5 border border-[#DEDBD4] hover:border-black transition-all bg-white group cursor-pointer"
-                >
-                  <div>
-                    <span className="text-[15px] font-medium text-[#0A0A0A] group-hover:font-semibold block">
-                      Send via Default Mail App
-                    </span>
-                    <span className="text-[11px] text-[#6E6B66]">{settings.email}</span>
-                  </div>
-                  <Mail size={20} className="text-[#6E6B66]" />
-                </a>
-
-                {/* Live Chat */}
-                <div className="flex justify-between items-center p-5 border border-[#DEDBD4] bg-white opacity-60 cursor-not-allowed">
-                  <div>
-                    <span className="text-[15px] font-normal text-[#6E6B66] block">
-                      Live Chat (Offline)
-                    </span>
-                    <span className="text-[11px] text-[#6E6B66]">Available Mon-Sat 9am-8pm</span>
-                  </div>
-                  <MessageCircle size={20} className="text-[#6E6B66]" />
-                </div>
+            {/* Concierge Body */}
+            <div className="py-6 flex-1 space-y-6">
+              <div>
+                <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[#B8712E] block mb-1">
+                  PRESTIGE ASSISTANCE
+                </span>
+                <p className="text-[13px] text-[#6E6B66] leading-relaxed">
+                  Our private olfactory concierges are at your service for bespoke consultations, order inquiries, and luxury gifting recommendations.
+                </p>
               </div>
 
-              {/* Policy & Hours Description Note */}
-              <p className="text-[12px] text-[#6E6B66] font-light leading-relaxed pt-4 border-t border-[#F5F3EF]">
-                You can contact our Client Service by phone at {settings.phone} (from Monday to Saturday from 9 am to 8 pm CET), by e-mail at{' '}
-                <a href={`mailto:${settings.email}`} className="underline text-[#0A0A0A]">
-                  {settings.email}
-                </a>
-                , or per livechat.
-              </p>
+              <div className="space-y-4">
+                {/* WhatsApp Direct */}
+                {settings.whatsapp && (
+                  <a
+                    href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20Rexxo%20BD%20Concierge,%20I%20would%20like%20assistance%20with%20your%20fragrance%20collection.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 bg-[#F5F3EF] hover:bg-[#0A0A0A] text-[#0A0A0A] hover:text-white transition-all group border border-[#DEDBD4]"
+                  >
+                    <MessageSquare size={20} className="text-[#25D366] group-hover:text-white shrink-0" />
+                    <div>
+                      <div className="text-[12px] font-bold uppercase tracking-wider">WhatsApp VIP Chat</div>
+                      <div className="text-[11px] text-[#6E6B66] group-hover:text-slate-300 font-mono">
+                        {settings.whatsapp}
+                      </div>
+                    </div>
+                  </a>
+                )}
+
+                {/* Phone Call */}
+                {settings.phone && (
+                  <a
+                    href={`tel:${settings.phone}`}
+                    className="flex items-center gap-3 p-4 bg-[#F5F3EF] hover:bg-[#0A0A0A] text-[#0A0A0A] hover:text-white transition-all group border border-[#DEDBD4]"
+                  >
+                    <Phone size={20} className="text-[#B8712E] group-hover:text-white shrink-0" />
+                    <div>
+                      <div className="text-[12px] font-bold uppercase tracking-wider">Telephone Concierge</div>
+                      <div className="text-[11px] text-[#6E6B66] group-hover:text-slate-300 font-mono">
+                        {settings.phone}
+                      </div>
+                    </div>
+                  </a>
+                )}
+
+                {/* Email Direct */}
+                {settings.email && (
+                  <a
+                    href={`mailto:${settings.email}`}
+                    className="flex items-center gap-3 p-4 bg-[#F5F3EF] hover:bg-[#0A0A0A] text-[#0A0A0A] hover:text-white transition-all group border border-[#DEDBD4]"
+                  >
+                    <Mail size={20} className="text-[#6E6B66] group-hover:text-white shrink-0" />
+                    <div>
+                      <div className="text-[12px] font-bold uppercase tracking-wider">Email Inquiry</div>
+                      <div className="text-[11px] text-[#6E6B66] group-hover:text-slate-300 font-mono">
+                        {settings.email}
+                      </div>
+                    </div>
+                  </a>
+                )}
+              </div>
+
+              {/* Atelier Address */}
+              {settings.address && (
+                <div className="p-4 border border-[#DEDBD4] bg-white space-y-1">
+                  <div className="text-[10px] font-mono font-bold tracking-[0.16em] uppercase text-[#6E6B66]">
+                    FLAGSHIP BOUTIQUE
+                  </div>
+                  <div className="text-[12px] text-[#0A0A0A] font-medium leading-snug">
+                    {settings.address}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Note */}
+            <div className="pt-6 border-t border-[#F5F3EF] text-center">
+              <span className="text-[10px] font-mono tracking-widest text-[#6E6B66] uppercase">
+                {settings.siteName || 'REXXO BD'} · HAUTE PARFUMERIE
+              </span>
             </div>
           </div>
         </div>
