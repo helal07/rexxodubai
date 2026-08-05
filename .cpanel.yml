@@ -1,0 +1,35 @@
+---
+deployment:
+  tasks:
+    # 1. Define deployment target path
+    - export DEPLOYPATH=/home/panaroma/shitalakshyafoundation.com
+
+    # 2. Ensure target directory exists
+    - mkdir -p $DEPLOYPATH
+
+    # 3. Sync all project files (preserves live .env and user uploads)
+    - /usr/bin/rsync -av --exclude='.git' --exclude='.env' --exclude='storage/app/public' . $DEPLOYPATH
+
+    # 4. Set directory permissions for Laravel runtime
+    - cd $DEPLOYPATH && chmod -R 775 storage bootstrap/cache || true
+    - cd $DEPLOYPATH && chmod 755 storage storage/app storage/app/public || true
+
+    # 5. Clear all stale runtime and bootstrap caches FIRST
+    - cd $DEPLOYPATH && php artisan optimize:clear
+
+    # 6. Run database migrations BEFORE route caching
+    - cd $DEPLOYPATH && php artisan migrate --force
+
+    # 7. Ensure storage symlink exists
+    - cd $DEPLOYPATH && php artisan storage:link || true
+
+    # 8. Set file permissions on uploaded media
+    - cd $DEPLOYPATH && find storage/app/public -type d -exec chmod 755 {} + || true
+    - cd $DEPLOYPATH && find storage/app/public -type f -exec chmod 644 {} + || true
+
+    # 9. Rebuild clean production caches (config, routes, views, icons)
+    - cd $DEPLOYPATH && php artisan config:cache
+    - cd $DEPLOYPATH && php artisan route:cache
+    - cd $DEPLOYPATH && php artisan view:cache
+    - cd $DEPLOYPATH && php artisan icons:cache || true
+    - cd $DEPLOYPATH && php artisan filament:cache-components || true
