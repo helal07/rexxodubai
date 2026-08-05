@@ -43,11 +43,14 @@ Route::get('/perfumes', function (Request $request) {
     if ($request->has('category') && !empty($request->input('category'))) {
         $catSlug = $request->input('category');
         $query->where(function ($q) use ($catSlug) {
-            $q->whereHas('category', function ($sub) use ($catSlug) {
-                $sub->where('slug', $catSlug)
-                    ->orWhereHas('parent', function ($p) use ($catSlug) {
+            $hasParent = \Illuminate\Support\Facades\Schema::hasColumn('categories', 'parent_id');
+            $q->whereHas('category', function ($sub) use ($catSlug, $hasParent) {
+                $sub->where('slug', $catSlug);
+                if ($hasParent) {
+                    $sub->orWhereHas('parent', function ($p) use ($catSlug) {
                         $p->where('slug', $catSlug);
                     });
+                }
             });
 
             if (in_array($catSlug, ['men', 'men-perfumes', 'men-fragrances'])) {

@@ -4,6 +4,10 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\Schema;
+use App\Models\MenuItem;
+use App\Models\Category;
+use App\Models\Setting;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,25 +41,52 @@ class HandleInertiaRequests extends Middleware
     {
         return array_merge(parent::share($request), [
             'menuTree' => function () {
-                return \App\Models\MenuItem::with(['children' => function ($q) {
-                    $q->where('is_active', true)->orderBy('sort_order', 'asc');
-                }])
-                ->whereNull('parent_id')
-                ->where('is_active', true)
-                ->orderBy('sort_order', 'asc')
-                ->get();
+                try {
+                    if (!Schema::hasTable('menu_items')) {
+                        return [];
+                    }
+                    if (Schema::hasColumn('menu_items', 'parent_id')) {
+                        return MenuItem::with(['children' => function ($q) {
+                            $q->where('is_active', true)->orderBy('sort_order', 'asc');
+                        }])
+                        ->whereNull('parent_id')
+                        ->where('is_active', true)
+                        ->orderBy('sort_order', 'asc')
+                        ->get();
+                    }
+                    return MenuItem::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+                } catch (\Throwable $e) {
+                    return [];
+                }
             },
             'categoriesTree' => function () {
-                return \App\Models\Category::with(['children' => function ($q) {
-                    $q->where('is_active', true)->orderBy('sort_order', 'asc');
-                }])
-                ->whereNull('parent_id')
-                ->where('is_active', true)
-                ->orderBy('sort_order', 'asc')
-                ->get();
+                try {
+                    if (!Schema::hasTable('categories')) {
+                        return [];
+                    }
+                    if (Schema::hasColumn('categories', 'parent_id')) {
+                        return Category::with(['children' => function ($q) {
+                            $q->where('is_active', true)->orderBy('sort_order', 'asc');
+                        }])
+                        ->whereNull('parent_id')
+                        ->where('is_active', true)
+                        ->orderBy('sort_order', 'asc')
+                        ->get();
+                    }
+                    return Category::where('is_active', true)->get();
+                } catch (\Throwable $e) {
+                    return [];
+                }
             },
             'apiSettings' => function () {
-                return \App\Models\Setting::pluck('value', 'key')->toArray();
+                try {
+                    if (!Schema::hasTable('settings')) {
+                        return [];
+                    }
+                    return Setting::pluck('value', 'key')->toArray();
+                } catch (\Throwable $e) {
+                    return [];
+                }
             }
         ]);
     }
