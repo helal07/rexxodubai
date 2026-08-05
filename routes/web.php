@@ -25,14 +25,39 @@ Route::get('/checkout', function () {
     return Inertia::render('Checkout');
 });
 Route::get('/perfumes', function (Request $request) {
-    $query = Product::with('images');
+    $query = Product::with(['images', 'category.parent']);
     $isFallback = false;
 
     if ($request->has('search')) {
         $search = $request->input('search');
-        $query->where('name', 'like', "%{$search}%")
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
               ->orWhere('scent_family', 'like', "%{$search}%")
-              ->orWhere('notes_top', 'like', "%{$search}%");
+              ->orWhere('notes_top', 'like', "%{$search}%")
+              ->orWhere('notes_heart', 'like', "%{$search}%")
+              ->orWhere('notes_base', 'like', "%{$search}%")
+              ->orWhere('short_description', 'like', "%{$search}%");
+        });
+    }
+
+    if ($request->has('category') && !empty($request->input('category'))) {
+        $catSlug = $request->input('category');
+        $query->where(function ($q) use ($catSlug) {
+            $q->whereHas('category', function ($sub) use ($catSlug) {
+                $sub->where('slug', $catSlug)
+                    ->orWhereHas('parent', function ($p) use ($catSlug) {
+                        $p->where('slug', $catSlug);
+                    });
+            });
+
+            if (in_array($catSlug, ['men', 'men-perfumes', 'men-fragrances'])) {
+                $q->orWhereIn('gender', ['men', 'unisex']);
+            } elseif (in_array($catSlug, ['women', 'women-perfumes', 'women-fragrances'])) {
+                $q->orWhereIn('gender', ['women', 'unisex']);
+            } elseif (in_array($catSlug, ['kids', 'kids-perfume'])) {
+                $q->orWhere('gender', 'kids');
+            }
+        });
     }
 
     if ($request->has('gender') && $request->input('gender') !== 'all') {
@@ -41,9 +66,9 @@ Route::get('/perfumes', function (Request $request) {
 
     $products = $query->get();
     
-    // If search yields no result, provide fallback recommendations
-    if ($request->has('search') && $products->isEmpty()) {
-        $products = Product::with('images')->where('is_featured', true)->take(4)->get();
+    // If specific filter/search yields no result, provide fallback recommendations
+    if (($request->has('search') || $request->has('category')) && $products->isEmpty()) {
+        $products = Product::with(['images', 'category'])->where('is_featured', true)->take(4)->get();
         $isFallback = true;
     }
 
@@ -54,7 +79,7 @@ Route::get('/perfumes', function (Request $request) {
     ]);
 });
 Route::get('/product/{slug}', function ($slug) {
-    $product = Product::with(['images', 'category'])->where('slug', $slug)->firstOrFail();
+    $product = Product::with(['images', 'category.parent'])->where('slug', $slug)->firstOrFail();
     $related = Product::with('images')
         ->where('id', '!=', $product->id)
         ->where(function ($q) use ($product) {
@@ -89,6 +114,7 @@ Route::get('/admin', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [AdminWebController::class, 'dashboard']);
     Route::get('/admin/menus', [AdminWebController::class, 'menus']);
+    Route::get('/admin/categories', [AdminWebController::class, 'categories']);
     Route::get('/admin/products', [AdminWebController::class, 'products']);
     Route::get('/admin/orders', [AdminWebController::class, 'dashboard']);
     Route::get('/admin/courier', [AdminWebController::class, 'dashboard']);
@@ -97,6 +123,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/menus', [AdminWebController::class, 'storeMenu']);
     Route::put('/admin/menus/{id}', [AdminWebController::class, 'updateMenu']);
     Route::delete('/admin/menus/{id}', [AdminWebController::class, 'destroyMenu']);
+
+    // Category & Subcategory CRUD Routes
+    Route::post('/admin/categories', [AdminWebController::class, 'storeCategory']);
+    Route::put('/admin/categories/{id}', [AdminWebController::class, 'updateCategory']);
+    Route::delete('/admin/categories/{id}', [AdminWebController::class, 'destroyCategory']);
 
     // Product Catalog CRUD Routes
     Route::get('/admin/products/{id}/edit', [AdminWebController::class, 'editProduct']);
@@ -110,6 +141,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
     Route::post('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
 });
+
 
 // Setup / Migration helper route (Exempt from session middleware)
 Route::withoutMiddleware([

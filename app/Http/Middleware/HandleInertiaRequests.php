@@ -37,8 +37,22 @@ class HandleInertiaRequests extends Middleware
     {
         return array_merge(parent::share($request), [
             'menuTree' => function () {
-                // Return the same format as what Next.js did
-                return \App\Models\MenuItem::with('children')->whereNull('parent_id')->orderBy('sort_order')->get();
+                return \App\Models\MenuItem::with(['children' => function ($q) {
+                    $q->where('is_active', true)->orderBy('sort_order', 'asc');
+                }])
+                ->whereNull('parent_id')
+                ->where('is_active', true)
+                ->orderBy('sort_order', 'asc')
+                ->get();
+            },
+            'categoriesTree' => function () {
+                return \App\Models\Category::with(['children' => function ($q) {
+                    $q->where('is_active', true)->orderBy('sort_order', 'asc');
+                }])
+                ->whereNull('parent_id')
+                ->where('is_active', true)
+                ->orderBy('sort_order', 'asc')
+                ->get();
             },
             'apiSettings' => function () {
                 return \App\Models\Setting::pluck('value', 'key')->toArray();

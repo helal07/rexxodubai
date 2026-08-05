@@ -10,10 +10,17 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::withCount('products');
+        $query = Category::withCount('products')
+            ->with(['children' => function ($q) {
+                $q->where('is_active', true)->orderBy('sort_order', 'asc')->withCount('products');
+            }])
+            ->orderBy('sort_order', 'asc');
 
         if (!$request->is('api/admin/*')) {
             $query->where('is_active', true);
+            if (!$request->has('all')) {
+                $query->whereNull('parent_id');
+            }
         }
 
         return response()->json($query->get());
@@ -22,15 +29,22 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'parent_id' => 'nullable|exists:categories,id',
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:categories,slug',
             'description' => 'nullable|string',
             'image_url' => 'nullable|string|max:255',
+            'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
         ]);
 
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        if (!isset($validated['sort_order'])) {
+            $maxSort = Category::where('parent_id', $validated['parent_id'] ?? null)->max('sort_order');
+            $validated['sort_order'] = ($maxSort !== null) ? $maxSort + 1 : 0;
         }
 
         $category = Category::create($validated);
@@ -42,7 +56,7 @@ class CategoryController extends Controller
     {
         $category = Category::where('slug', $slugOrId)
             ->orWhere('id', $slugOrId)
-            ->with('products')
+            ->with(['children', 'products.images'])
             ->firstOrFail();
 
         return response()->json($category);
@@ -51,10 +65,12 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
+            'parent_id' => 'nullable|exists:categories,id',
             'name' => 'sometimes|required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
             'description' => 'nullable|string',
             'image_url' => 'nullable|string|max:255',
+            'sort_order' => 'nullable|integer',
             'is_active' => 'nullable|boolean',
         ]);
 

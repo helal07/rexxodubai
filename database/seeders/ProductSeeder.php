@@ -14,34 +14,19 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed Categories
-        $c1 = Category::updateOrCreate(['slug' => 'eau-de-parfum'], [
-            'name' => 'Eau de Parfum',
-            'description' => 'High-concentration perfumes designed for lasting sillage and rich scent depth.',
-            'image_url' => 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=800&q=80',
-            'is_active' => true,
-        ]);
-
-        $c2 = Category::updateOrCreate(['slug' => 'parfum-extraits'], [
-            'name' => 'Parfum Extraits',
-            'description' => 'Pure luxury extraits containing rare botanicals, precious ouds, and raw ambers.',
-            'image_url' => 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=800&q=80',
-            'is_active' => true,
-        ]);
-
-        $c3 = Category::updateOrCreate(['slug' => 'gift-sets'], [
-            'name' => 'Discovery Gift Sets',
-            'description' => 'Curated travel vials housed in hard-edged papercraft gift cases.',
-            'image_url' => 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=800&q=80',
-            'is_active' => true,
-        ]);
+        $catRose = Category::where('slug', 'floral-rose')->first() ?? Category::first();
+        $catLeather = Category::where('slug', 'woody-leather')->first() ?? Category::first();
+        $catVanilla = Category::where('slug', 'amber-vanilla')->first() ?? Category::first();
+        $catOud = Category::where('slug', 'rare-oud')->first() ?? Category::first();
+        $catCitrus = Category::where('slug', 'fresh-citrus')->first() ?? Category::first();
+        $catGifts = Category::where('slug', 'discovery-quads')->first() ?? Category::first();
 
         // Products List
         $productsData = [
             [
                 'name' => 'L\'Ombre d\'Ambre',
                 'slug' => 'l-ombre-d-ambre',
-                'category_id' => $c1->id,
+                'category_id' => $catVanilla ? $catVanilla->id : null,
                 'scent_family' => 'Amber Spice',
                 'concentration' => 'Eau de Parfum',
                 'sizes' => ['50ml', '100ml'],
@@ -65,7 +50,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Cuir Noir Extrait',
                 'slug' => 'cuir-noir',
-                'category_id' => $c2->id,
+                'category_id' => $catLeather ? $catLeather->id : null,
                 'scent_family' => 'Woody Leather',
                 'concentration' => 'Parfum',
                 'sizes' => ['100ml'],
@@ -88,7 +73,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Velours de Rose',
                 'slug' => 'velours-de-rose',
-                'category_id' => $c1->id,
+                'category_id' => $catRose ? $catRose->id : null,
                 'scent_family' => 'Floral Amber',
                 'concentration' => 'Eau de Parfum',
                 'sizes' => ['50ml', '100ml'],
@@ -111,7 +96,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Vapour d\'Oud',
                 'slug' => 'vapour-d-oud',
-                'category_id' => $c2->id,
+                'category_id' => $catOud ? $catOud->id : null,
                 'scent_family' => 'Rare Oud',
                 'concentration' => 'Parfum',
                 'sizes' => ['100ml'],
@@ -134,7 +119,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Cèdre Brut',
                 'slug' => 'cedre-brut',
-                'category_id' => $c1->id,
+                'category_id' => $catCitrus ? $catCitrus->id : null,
                 'scent_family' => 'Woody Citrus',
                 'concentration' => 'Eau de Parfum',
                 'sizes' => ['50ml', '100ml'],
@@ -157,7 +142,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'The Discovery Quad',
                 'slug' => 'the-discovery-quad',
-                'category_id' => $c3->id,
+                'category_id' => $catGifts ? $catGifts->id : null,
                 'scent_family' => 'Curated Selection',
                 'concentration' => 'Eau de Parfum',
                 'sizes' => ['4x15ml'],

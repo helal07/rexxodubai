@@ -35,14 +35,16 @@ class AdminWebController extends Controller
 
     public function menus()
     {
-        $items = MenuItem::orderBy('sort_order', 'asc')->get();
+        $items = MenuItem::with(['children', 'parent'])->orderBy('sort_order', 'asc')->get();
+        $parentItems = MenuItem::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.menus', compact('items', 'siteSettings'));
+        return view('admin.menus', compact('items', 'parentItems', 'siteSettings'));
     }
 
     public function storeMenu(Request $request)
     {
         $validated = $request->validate([
+            'parent_id' => 'nullable|exists:menu_items,id',
             'label' => 'required|string|max:255',
             'url' => 'required|string|max:255',
             'sort_order' => 'nullable|integer',
@@ -61,8 +63,10 @@ class AdminWebController extends Controller
     public function updateMenu(Request $request, $id)
     {
         $validated = $request->validate([
+            'parent_id' => 'nullable|exists:menu_items,id',
             'label' => 'required|string|max:255',
             'url' => 'required|string|max:255',
+            'sort_order' => 'nullable|integer',
         ]);
 
         $item = MenuItem::findOrFail($id);
@@ -80,6 +84,72 @@ class AdminWebController extends Controller
 
         return redirect()->back()->with('success', 'Menu item deleted from database.');
     }
+
+    public function categories()
+    {
+        $categories = Category::with(['children', 'parent', 'products'])->orderBy('sort_order', 'asc')->get();
+        $parentCategories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        $siteSettings = Setting::pluck('value', 'key')->all();
+        return view('admin.categories', compact('categories', 'parentCategories', 'siteSettings'));
+    }
+
+    public function storeCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'parent_id' => 'nullable|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:categories,slug',
+            'description' => 'nullable|string',
+            'image_url' => 'nullable|string|max:255',
+            'sort_order' => 'nullable|integer',
+        ]);
+
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        if (!isset($validated['sort_order'])) {
+            $validated['sort_order'] = Category::max('sort_order') + 1;
+        }
+
+        Category::create($validated);
+        Cache::flush();
+
+        return redirect()->back()->with('success', 'Category / Subcategory added successfully.');
+    }
+
+    public function updateCategory(Request $request, $id)
+    {
+        $category = Category::findOrFail($id);
+
+        $validated = $request->validate([
+            'parent_id' => 'nullable|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'description' => 'nullable|string',
+            'image_url' => 'nullable|string|max:255',
+            'sort_order' => 'nullable|integer',
+        ]);
+
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        $category->update($validated);
+        Cache::flush();
+
+        return redirect()->back()->with('success', 'Category / Subcategory updated successfully.');
+    }
+
+    public function destroyCategory($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
+        Cache::flush();
+
+        return redirect()->back()->with('success', 'Category deleted from database.');
+    }
+
 
     public function products()
     {

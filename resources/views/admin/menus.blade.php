@@ -58,6 +58,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <a href="{{ url('/admin/categories') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-[#B8712E] px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
+                    <i data-lucide="folder-tree" class="w-4 h-4 text-[#B8712E]"></i> Categories & Subcategories
+                </a>
                 <a href="{{ url('/admin') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
                     <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400"></i> Dashboard
                 </a>
@@ -88,6 +91,20 @@
 
                 <form action="{{ url('/admin/menus') }}" method="POST" class="space-y-4">
                     @csrf
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">
+                            PARENT ITEM (LEAVE EMPTY FOR MAIN MENU)
+                        </label>
+                        <select name="parent_id" class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-4 py-3 rounded-xl text-[13px] focus:outline-none focus:border-[#B8712E] transition-all">
+                            <option value="">None (Top-Level Menu Item)</option>
+                            @if(isset($parentItems))
+                                @foreach ($parentItems as $pItem)
+                                    <option value="{{ $pItem->id }}">📌 {{ $pItem->label }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
                     <div>
                         <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">
                             MENU LABEL NAME

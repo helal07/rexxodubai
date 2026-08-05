@@ -1,3 +1,17 @@
+export interface Category {
+  id: number;
+  parent_id: number | null;
+  name: string;
+  slug: string;
+  description?: string | null;
+  image_url?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  products_count?: number;
+  children?: Category[];
+  parent?: Category | null;
+}
+
 export interface MenuItem {
   id: number;
   parent_id: number | null;
@@ -8,6 +22,7 @@ export interface MenuItem {
   sort_order: number;
   is_active: boolean;
   children?: MenuItem[];
+  parent?: MenuItem | null;
 }
 
 export interface ProductImage {
@@ -37,18 +52,162 @@ export interface Product {
   is_new_arrival: boolean;
   stock: number;
   images?: ProductImage[];
-  category?: { id: number; name: string; slug: string };
+  category?: Category;
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
-// Fallback data for seamless rendering during offline or fast preview
+// Fallback hierarchical categories and subcategories
+export const FALLBACK_CATEGORIES: Category[] = [
+  {
+    id: 1,
+    parent_id: null,
+    name: "Men Perfumes",
+    slug: "men-perfumes",
+    description: "Architectural, smoky, leather, and wood extraits.",
+    sort_order: 1,
+    is_active: true,
+    children: [
+      { id: 11, parent_id: 1, name: "Eau de Parfum", slug: "men-eau-de-parfum", sort_order: 1, is_active: true },
+      { id: 12, parent_id: 1, name: "Parfum Extraits", slug: "men-parfum-extraits", sort_order: 2, is_active: true },
+      { id: 13, parent_id: 1, name: "Woody & Smoked Leather", slug: "woody-leather", sort_order: 3, is_active: true },
+      { id: 14, parent_id: 1, name: "Fresh Citrus & Vetiver", slug: "fresh-citrus", sort_order: 4, is_active: true },
+    ]
+  },
+  {
+    id: 2,
+    parent_id: null,
+    name: "Women Perfumes",
+    slug: "women-perfumes",
+    description: "Sculpted florals, velvet damask roses, and warm amber vapor.",
+    sort_order: 2,
+    is_active: true,
+    children: [
+      { id: 21, parent_id: 2, name: "Floral & Damask Rose", slug: "floral-rose", sort_order: 1, is_active: true },
+      { id: 22, parent_id: 2, name: "Amber & Bourbon Vanilla", slug: "amber-vanilla", sort_order: 2, is_active: true },
+      { id: 23, parent_id: 2, name: "Parfum Extraits", slug: "women-parfum-extraits", sort_order: 3, is_active: true },
+      { id: 24, parent_id: 2, name: "Gourmand & White Musk", slug: "gourmand-musk", sort_order: 4, is_active: true },
+    ]
+  },
+  {
+    id: 3,
+    parent_id: null,
+    name: "Unisex & Rare Oud",
+    slug: "unisex-rare-oud",
+    description: "Genderless high-perfumery blending rare agarwood and resins.",
+    sort_order: 3,
+    is_active: true,
+    children: [
+      { id: 31, parent_id: 3, name: "Cambodian & Laotian Oud", slug: "rare-oud", sort_order: 1, is_active: true },
+      { id: 32, parent_id: 3, name: "Incense & Silver Resins", slug: "incense-resins", sort_order: 2, is_active: true },
+      { id: 33, parent_id: 3, name: "Private Reserve Flacons", slug: "private-reserve", sort_order: 3, is_active: true },
+    ]
+  },
+  {
+    id: 4,
+    parent_id: null,
+    name: "Gifts & Sets",
+    slug: "gifts-sets",
+    description: "Curated discovery sets and luxury coffrets.",
+    sort_order: 4,
+    is_active: true,
+    children: [
+      { id: 41, parent_id: 4, name: "Discovery Quads", slug: "discovery-quads", sort_order: 1, is_active: true },
+      { id: 42, parent_id: 4, name: "Luxury Gift Coffrets", slug: "gift-coffrets", sort_order: 2, is_active: true },
+      { id: 43, parent_id: 4, name: "Pocket Atomizers", slug: "pocket-atomizers", sort_order: 3, is_active: true },
+    ]
+  },
+  {
+    id: 5,
+    parent_id: null,
+    name: "Iconic Editions",
+    slug: "iconic-editions",
+    description: "Master collections and evening flacons.",
+    sort_order: 5,
+    is_active: true,
+    children: [
+      { id: 51, parent_id: 5, name: "The Alchemy Series", slug: "alchemy-series", sort_order: 1, is_active: true },
+      { id: 52, parent_id: 5, name: "Night Flacons", slug: "night-flacons", sort_order: 2, is_active: true },
+    ]
+  }
+];
+
+// Fallback data for menu items with sub-items
 export const FALLBACK_MENU: MenuItem[] = [
-  { id: 1, parent_id: null, label: "Gifts", url: "/perfumes?category=gifts", sort_order: 1, is_active: true },
-  { id: 2, parent_id: null, label: "Men Perfume", url: "/perfumes?gender=men", sort_order: 2, is_active: true },
-  { id: 3, parent_id: null, label: "Women Perfume", url: "/perfumes?gender=women", sort_order: 3, is_active: true },
-  { id: 4, parent_id: null, label: "Kids Perfume", url: "/perfumes?gender=kids", sort_order: 4, is_active: true },
-  { id: 5, parent_id: null, label: "Common Item", url: "/perfumes?collection=common", sort_order: 5, is_active: true }
+  {
+    id: 1,
+    parent_id: null,
+    label: "Men Perfumes",
+    url: "/perfumes?category=men-perfumes",
+    sort_order: 1,
+    is_active: true,
+    children: [
+      { id: 11, parent_id: 1, label: "Eau de Parfum", url: "/perfumes?category=men-eau-de-parfum", sort_order: 1, is_active: true },
+      { id: 12, parent_id: 1, label: "Parfum Extraits", url: "/perfumes?category=men-parfum-extraits", sort_order: 2, is_active: true },
+      { id: 13, parent_id: 1, label: "Woody & Smoked Leather", url: "/perfumes?category=woody-leather", sort_order: 3, is_active: true },
+      { id: 14, parent_id: 1, label: "Fresh Citrus & Vetiver", url: "/perfumes?category=fresh-citrus", sort_order: 4, is_active: true },
+    ]
+  },
+  {
+    id: 2,
+    parent_id: null,
+    label: "Women Perfumes",
+    url: "/perfumes?category=women-perfumes",
+    sort_order: 2,
+    is_active: true,
+    children: [
+      { id: 21, parent_id: 2, label: "Floral & Damask Rose", url: "/perfumes?category=floral-rose", sort_order: 1, is_active: true },
+      { id: 22, parent_id: 2, label: "Amber & Bourbon Vanilla", url: "/perfumes?category=amber-vanilla", sort_order: 2, is_active: true },
+      { id: 23, parent_id: 2, label: "Parfum Extraits", url: "/perfumes?category=women-parfum-extraits", sort_order: 3, is_active: true },
+      { id: 24, parent_id: 2, label: "Gourmand & White Musk", url: "/perfumes?category=gourmand-musk", sort_order: 4, is_active: true },
+    ]
+  },
+  {
+    id: 3,
+    parent_id: null,
+    label: "Unisex & Rare Oud",
+    url: "/perfumes?category=unisex-rare-oud",
+    sort_order: 3,
+    is_active: true,
+    children: [
+      { id: 31, parent_id: 3, label: "Cambodian & Laotian Oud", url: "/perfumes?category=rare-oud", sort_order: 1, is_active: true },
+      { id: 32, parent_id: 3, label: "Incense & Silver Resins", url: "/perfumes?category=incense-resins", sort_order: 2, is_active: true },
+      { id: 33, parent_id: 3, label: "Private Reserve Flacons", url: "/perfumes?category=private-reserve", sort_order: 3, is_active: true },
+    ]
+  },
+  {
+    id: 4,
+    parent_id: null,
+    label: "Gifts & Sets",
+    url: "/perfumes?category=gifts-sets",
+    sort_order: 4,
+    is_active: true,
+    children: [
+      { id: 41, parent_id: 4, label: "Discovery Quads", url: "/perfumes?category=discovery-quads", sort_order: 1, is_active: true },
+      { id: 42, parent_id: 4, label: "Luxury Gift Coffrets", url: "/perfumes?category=gift-coffrets", sort_order: 2, is_active: true },
+      { id: 43, parent_id: 4, label: "Pocket Atomizers", url: "/perfumes?category=pocket-atomizers", sort_order: 3, is_active: true },
+    ]
+  },
+  {
+    id: 5,
+    parent_id: null,
+    label: "Iconic Editions",
+    url: "/perfumes?category=iconic-editions",
+    sort_order: 5,
+    is_active: true,
+    children: [
+      { id: 51, parent_id: 5, label: "The Alchemy Series", url: "/perfumes?category=alchemy-series", sort_order: 1, is_active: true },
+      { id: 52, parent_id: 5, label: "Night Flacons", url: "/perfumes?category=night-flacons", sort_order: 2, is_active: true },
+    ]
+  },
+  {
+    id: 6,
+    parent_id: null,
+    label: "All Fragrances",
+    url: "/perfumes",
+    sort_order: 6,
+    is_active: true,
+  }
 ];
 
 export const FALLBACK_PRODUCTS: Product[] = [
@@ -134,7 +293,17 @@ export const FALLBACK_PRODUCTS: Product[] = [
   }
 ];
 
-// Data optimizing fetch functions with SSR & ISR caching
+export async function getCategoriesTree(): Promise<Category[]> {
+  try {
+    const res = await fetch(`${API_BASE}/categories`);
+    if (!res.ok) return FALLBACK_CATEGORIES;
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0 ? data : FALLBACK_CATEGORIES;
+  } catch (err) {
+    return FALLBACK_CATEGORIES;
+  }
+}
+
 export async function getMenuTree(): Promise<MenuItem[]> {
   try {
     const res = await fetch(`${API_BASE}/menu`, {
@@ -231,4 +400,3 @@ export async function getProductBySlug(slug: string): Promise<{ product: Product
     return { product: found, related };
   }
 }
-
