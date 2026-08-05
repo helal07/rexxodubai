@@ -14,6 +14,9 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Product::count() > 0) {
+            return; // Safe policy: Never overwrite existing products
+        }
         $catRose = Category::where('slug', 'floral-rose')->first() ?? Category::first();
         $catLeather = Category::where('slug', 'woody-leather')->first() ?? Category::first();
         $catVanilla = Category::where('slug', 'amber-vanilla')->first() ?? Category::first();

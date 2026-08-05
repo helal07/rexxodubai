@@ -12,7 +12,9 @@ class MenuSeeder extends Seeder
      */
     public function run(): void
     {
-        MenuItem::truncate();
+        if (MenuItem::count() > 0) {
+            return; // Safe policy: Never overwrite existing menu items
+        }
 
         // 1. Men Perfumes
         $men = MenuItem::create([

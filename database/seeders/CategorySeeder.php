@@ -12,6 +12,9 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        if (Category::count() > 0) {
+            return; // Safe policy: Never overwrite existing categories
+        }
         $categoriesStructure = [
             [
                 'name' => 'Men Perfumes',

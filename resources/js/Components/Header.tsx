@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
-import { Search, Menu, X, Phone, Globe, Mail, MessageSquare, MessageCircle, ChevronDown, ChevronRight, ShoppingBag, Sparkles, Layers } from 'lucide-react';
+import { Search, Menu, X, Phone, Mail, MessageSquare, ChevronDown, ChevronRight, ShoppingBag, Sparkles } from 'lucide-react';
 import { useCart } from '@/Contexts/CartContext';
 import { useSiteSettings } from '@/Contexts/SiteSettingsContext';
 import { MenuItem, Category, FALLBACK_MENU, FALLBACK_CATEGORIES } from '@/lib/api';
-import MegaMenu from '@/Components/MegaMenu';
 
 interface HeaderProps {
   initialMenu?: MenuItem[];
@@ -19,16 +18,11 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
   const { totalCount, openCart } = useCart();
   const { settings, menuItems } = useSiteSettings();
 
-  // Dynamic menu items and categories
-  const activeMenuItems: MenuItem[] = (initialMenu && initialMenu.length > 0 && initialMenu !== FALLBACK_MENU)
-    ? initialMenu
-    : ((menuItems && menuItems.length > 0) ? menuItems : FALLBACK_MENU);
-
   const rawCategories: Category[] = (initialCategories && initialCategories.length > 0)
     ? initialCategories
     : FALLBACK_CATEGORIES;
 
-  // Enrich categories with fallback subcategories if DB children are not populated
+  // Enrich categories with fallback subcategories if DB children are not populated yet
   const enrichedCategories: Category[] = rawCategories.map(cat => {
     if (cat.children && cat.children.length > 0) {
       return cat;
@@ -57,12 +51,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
   const [searchQuery, setSearchQuery] = useState('');
 
   // Accordion state for Drawer categories
-  const [expandedCategories, setExpandedCategories] = useState<Record<number | string, boolean>>({
-    'products-master': true // Expand by default so subcategories are immediately visible
-  });
-
-  // Hover state for Desktop MegaMenu
-  const [hoveredCategory, setHoveredCategory] = useState<Category | MenuItem | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<number | string, boolean>>({});
 
   const toggleCategory = (id: number | string) => {
     setExpandedCategories(prev => ({
@@ -101,18 +90,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
   // On Homepage, header is transparent with white text by default at top.
   // When scrolled, hovered, or search is open, or on inner pages, header becomes solid white with black text.
   const isHomePage = pathname === '/' || pathname === '' || pathname.startsWith('/?');
-  const isTransparent = isHomePage && !isScrolled && !isHeaderHovered && !searchOpen && !hoveredCategory;
-
-  // Master Products item with all subcategories flattened for MegaMenu
-  const allProductsMegaItem: MenuItem = {
-    id: 88888,
-    parent_id: null,
-    label: 'All Fragrances',
-    url: '/perfumes',
-    sort_order: 0,
-    is_active: true,
-    children: enrichedCategories.flatMap(c => (c.children && c.children.length > 0) ? c.children : [c]) as any,
-  };
+  const isTransparent = isHomePage && !isScrolled && !isHeaderHovered && !searchOpen;
 
   return (
     <>
@@ -129,13 +107,10 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
         </div>
       )}
 
-      {/* Main Luxury Header Bar (Transparent by default on Home, White on scroll) */}
+      {/* Main Luxury Header Bar (Clean 1:1 Prada Layout: Left: Menu/Search | Center: Logo | Right: Contact/Cart) */}
       <header
         onMouseEnter={() => setIsHeaderHovered(true)}
-        onMouseLeave={() => {
-          setIsHeaderHovered(false);
-          setHoveredCategory(null);
-        }}
+        onMouseLeave={() => setIsHeaderHovered(false)}
         className={`fixed ${settings.announcement ? 'top-[29px]' : 'top-0'} left-0 w-full z-40 transition-all duration-300 ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
         } ${
@@ -145,7 +120,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
         }`}
       >
         <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Left Actions: Menu, Search, & Desktop Category Links */}
+          {/* Left Actions: 1:1 Prada Style [= Menu] and [Search] */}
           <div className="flex items-center space-x-6 sm:space-x-8 flex-1">
             <button
               onClick={() => {
@@ -180,79 +155,15 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
               <Search size={18} strokeWidth={2} />
               <span className="hidden sm:inline">Search</span>
             </button>
-
-            {/* Desktop Quick Category Links with Hover Dropdowns */}
-            <nav className={`hidden lg:flex items-center space-x-6 pl-4 border-l transition-colors ${
-              isTransparent ? 'border-white/20' : 'border-[#E5E5E5]'
-            }`}>
-              {/* Master Products Link */}
-              <div
-                className="relative py-4"
-                onMouseEnter={() => setHoveredCategory(allProductsMegaItem)}
-              >
-                <Link
-                  href="/perfumes"
-                  className={`text-[12px] uppercase font-bold tracking-wider transition-colors flex items-center gap-1 ${
-                    isTransparent
-                      ? hoveredCategory?.id === allProductsMegaItem.id ? 'text-[#B8712E]' : 'text-white hover:opacity-80 drop-shadow-xs'
-                      : hoveredCategory?.id === allProductsMegaItem.id ? 'text-[#B8712E]' : 'text-[#0A0A0A] hover:text-[#B8712E]'
-                  }`}
-                >
-                  <span>Products</span>
-                  <ChevronDown
-                    size={13}
-                    className={`transition-transform duration-200 ${
-                      hoveredCategory?.id === allProductsMegaItem.id ? 'rotate-180 text-[#B8712E]' : isTransparent ? 'text-white/70' : 'text-slate-400'
-                    }`}
-                  />
-                </Link>
-              </div>
-
-              {/* Individual Category Links */}
-              {enrichedCategories.slice(0, 5).map((cat) => {
-                const label = cat.name;
-                const url = `/perfumes?category=${cat.slug}`;
-                const hasSub = cat.children && cat.children.length > 0;
-                const isCurrentHovered = hoveredCategory && ((hoveredCategory as any).id === cat.id);
-
-                return (
-                  <div
-                    key={cat.id}
-                    className="relative py-4"
-                    onMouseEnter={() => hasSub && setHoveredCategory(cat)}
-                  >
-                    <Link
-                      href={url}
-                      className={`text-[12px] uppercase font-bold tracking-wider transition-colors flex items-center gap-1 ${
-                        isTransparent
-                          ? isCurrentHovered ? 'text-[#B8712E]' : 'text-white hover:opacity-80 drop-shadow-xs'
-                          : isCurrentHovered ? 'text-[#B8712E]' : 'text-[#0A0A0A] hover:text-[#B8712E]'
-                      }`}
-                    >
-                      <span>{label}</span>
-                      {hasSub && (
-                        <ChevronDown
-                          size={13}
-                          className={`transition-transform duration-200 ${
-                            isCurrentHovered ? 'rotate-180 text-[#B8712E]' : isTransparent ? 'text-white/70' : 'text-slate-400'
-                          }`}
-                        />
-                      )}
-                    </Link>
-                  </div>
-                );
-              })}
-            </nav>
           </div>
 
-          {/* Dynamic Brand Logo / Wordmark */}
+          {/* Center: Dynamic Brand Logo / Wordmark */}
           <div className="shrink-0 text-center px-4">
             <Link
               href="/"
               onClick={() => {
                 setMenuDrawerOpen(false);
                 setContactDrawerOpen(false);
-                setHoveredCategory(null);
               }}
               className="inline-block flex items-center justify-center group"
             >
@@ -309,15 +220,6 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
             </button>
           </div>
         </div>
-
-        {/* Desktop MegaMenu on Hover */}
-        {hoveredCategory && (
-          <MegaMenu
-            item={hoveredCategory}
-            isOpen={Boolean(hoveredCategory)}
-            onClose={() => setHoveredCategory(null)}
-          />
-        )}
 
         {/* Full-Width Search Overlay */}
         {searchOpen && (
@@ -383,7 +285,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
           />
 
           {/* Left White Slide-In Navigation Panel */}
-          <div className="relative w-full max-w-[380px] bg-white text-[#0A0A0A] h-full flex flex-col justify-between p-6 sm:p-8 shadow-2xl z-10 overflow-y-auto">
+          <div className="relative w-full max-w-[400px] bg-white text-[#0A0A0A] h-full flex flex-col justify-between p-6 sm:p-8 shadow-2xl z-10 overflow-y-auto">
             {/* Top Bar: Close & Search */}
             <div className="flex justify-between items-center pb-6 border-b border-[#F5F3EF]">
               <button
@@ -407,77 +309,24 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
             </div>
 
             {/* Dynamic Hierarchical Categories & Subcategories Accordion */}
-            <div className="py-6 flex-1 space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[#B8712E] block">
-                  PRODUCTS & CATEGORIES
-                </span>
+            <div className="py-6 flex-1 space-y-5">
+              {/* Master All Fragrances Link */}
+              <div className="pb-3 border-b border-[#F5F3EF]">
                 <Link
                   href="/perfumes"
                   onClick={() => setMenuDrawerOpen(false)}
-                  className="text-[11px] font-mono font-bold text-slate-500 hover:text-black uppercase underline"
+                  className="flex items-center justify-between text-[15px] font-bold uppercase tracking-wider text-[#0A0A0A] hover:text-[#B8712E] transition-colors py-1 group"
                 >
-                  View All &rarr;
+                  <span className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-[#B8712E]" />
+                    <span>All Products & Fragrances</span>
+                  </span>
+                  <span className="text-[#B8712E] text-[13px] font-mono group-hover:translate-x-1 transition-transform">&rarr;</span>
                 </Link>
               </div>
 
-              {/* Master Product Menu Accordion */}
-              <div className="bg-[#FBF9F6] border border-[#EBE7DF] rounded-xl p-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <Link
-                    href="/perfumes"
-                    onClick={() => setMenuDrawerOpen(false)}
-                    className="text-[13px] font-bold uppercase tracking-wider text-[#0A0A0A] hover:text-[#B8712E] flex items-center gap-2"
-                  >
-                    <Sparkles size={15} className="text-[#B8712E]" />
-                    <span>Product Catalog (All)</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory('products-master')}
-                    className="p-1 text-slate-400 hover:text-black cursor-pointer"
-                  >
-                    {expandedCategories['products-master'] ? (
-                      <ChevronDown size={16} className="text-[#B8712E]" />
-                    ) : (
-                      <ChevronRight size={16} />
-                    )}
-                  </button>
-                </div>
-
-                {expandedCategories['products-master'] && (
-                  <div className="mt-3 pt-3 border-t border-[#EBE7DF] space-y-2">
-                    {enrichedCategories.map((cat) => (
-                      <div key={'sub-group-' + cat.id} className="space-y-1">
-                        <Link
-                          href={`/perfumes?category=${cat.slug}`}
-                          onClick={() => setMenuDrawerOpen(false)}
-                          className="block text-[12px] font-bold uppercase text-[#0A0A0A] hover:text-[#B8712E] pl-2"
-                        >
-                          • {cat.name}
-                        </Link>
-                        {cat.children && cat.children.length > 0 && (
-                          <div className="pl-5 space-y-1">
-                            {cat.children.map((sub) => (
-                              <Link
-                                key={'drawer-sub-' + sub.id}
-                                href={`/perfumes?category=${sub.slug}`}
-                                onClick={() => setMenuDrawerOpen(false)}
-                                className="block text-[12px] text-slate-600 hover:text-[#B8712E] py-0.5"
-                              >
-                                ↳ {sub.name}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-slate-400 block pt-2 mb-2">
-                DIRECT CATEGORY ACCESS
+              <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[#B8712E] block mb-2">
+                COLLECTIONS & CATEGORIES
               </span>
 
               <div className="space-y-3">
@@ -536,7 +385,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                                     onClick={() => setMenuDrawerOpen(false)}
                                     className="block text-[13px] text-slate-700 hover:text-[#B8712E] hover:font-semibold transition-colors py-1"
                                   >
-                                    {subLabel}
+                                    ↳ {subLabel}
                                   </Link>
                                 );
                               })}
@@ -558,7 +407,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
               </div>
 
               {/* Direct Quick Link to All Fragrances */}
-              <div className="pt-4 border-t border-[#F5F3EF]">
+              <div className="pt-2">
                 <Link
                   href="/perfumes"
                   onClick={() => setMenuDrawerOpen(false)}
