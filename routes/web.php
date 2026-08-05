@@ -111,8 +111,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
 });
 
-// Setup / Migration helper route
-Route::get('/run-migrations', function () {
+// Setup / Migration helper route (Exempt from session middleware)
+Route::withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \App\Http\Middleware\HandleInertiaRequests::class,
+    \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+])->get('/run-migrations', function () {
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
@@ -127,13 +132,14 @@ Route::get('/run-migrations', function () {
 
         return '<div style="font-family: sans-serif; padding: 40px; background: #0f172a; color: #f8fafc; min-height: 100vh;">' .
                '<h1 style="color: #4ade80;">Setup & Migrations Completed Successfully!</h1>' .
-               '<pre style="background: #1e293b; padding: 15px; border-radius: 8px; overflow: auto;">' . htmlspecialchars($migrateOutput . "\n" . $seedOutput . "\n" . $storageOutput) . '</pre>' .
+               '<pre style="background: #1e293b; padding: 15px; border-radius: 8px; overflow: auto; color: #e2e8f0;">' . htmlspecialchars($migrateOutput . "\n" . $seedOutput . "\n" . $storageOutput) . '</pre>' .
                '<p style="margin-top: 20px;"><a href="/" style="color: #38bdf8; font-weight: bold; font-size: 18px; text-decoration: none;">&larr; Return to Website Home</a></p>' .
                '</div>';
     } catch (\Throwable $e) {
         return '<div style="font-family: sans-serif; padding: 40px; background: #0f172a; color: #f8fafc;">' .
                '<h1 style="color: #f87171;">Migration Error</h1>' .
-               '<p>' . htmlspecialchars($e->getMessage()) . '</p>' .
+               '<pre>' . htmlspecialchars($e->getMessage() . "\n" . $e->getTraceAsString()) . '</pre>' .
                '</div>';
     }
 });
+

@@ -36,6 +36,26 @@ Route::post('/clear-cache', function () {
     return response()->json(['message' => 'System cache cleared successfully']);
 });
 
+// Setup Migrations API Endpoint
+Route::get('/run-migrations', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrate = \Illuminate\Support\Facades\Artisan::output();
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $seed = \Illuminate\Support\Facades\Artisan::output();
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Migrations, seeds, and storage link completed successfully!',
+            'details' => $migrate . "\n" . $seed
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+});
+
+
 // Admin Auth Login
 Route::post('/admin/login', [AuthController::class, 'login'])->name('login');
 Route::get('/admin/login', function () {
