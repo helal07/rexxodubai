@@ -30,6 +30,7 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
 
   const [isVisible, setIsVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [contactDrawerOpen, setContactDrawerOpen] = useState(false);
@@ -75,6 +76,12 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
     }
   }, [menuDrawerOpen, contactDrawerOpen]);
 
+  // 1:1 Prada Header Transparency Rule:
+  // On Homepage, header is transparent with white text by default at top.
+  // When scrolled, hovered, or search is open, or on inner pages, header becomes solid white with black text.
+  const isHomePage = pathname === '/' || pathname === '' || pathname.startsWith('/?');
+  const isTransparent = isHomePage && !isScrolled && !isHeaderHovered && !searchOpen && !hoveredCategory;
+
   // Use categories as primary source if available with subcategories, or menu items
   const navigationItems = (activeCategories && activeCategories.length > 0) ? activeCategories : activeMenuItems;
 
@@ -82,17 +89,31 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
     <>
       {/* Dynamic Announcement Bar */}
       {settings.announcement && (
-        <div className="bg-[#0A0A0A] text-white text-[11px] font-mono py-1.5 px-4 text-center tracking-widest uppercase border-b border-[#1E283D] relative z-50">
+        <div
+          className={`text-[11px] font-mono py-1.5 px-4 text-center tracking-widest uppercase transition-colors duration-300 relative z-50 ${
+            isTransparent
+              ? 'bg-black/60 text-white border-b border-white/10 backdrop-blur-xs'
+              : 'bg-[#0A0A0A] text-white border-b border-[#1E283D]'
+          }`}
+        >
           <span>{settings.announcement}</span>
         </div>
       )}
 
-      {/* Main Luxury Header Bar */}
+      {/* Main Luxury Header Bar (Transparent by default on Home, White on scroll) */}
       <header
-        className={`fixed ${settings.announcement ? 'top-[29px]' : 'top-0'} left-0 w-full z-40 bg-white text-[#0A0A0A] border-b border-[#E5E5E5] shadow-xs transition-transform duration-300 ${
+        onMouseEnter={() => setIsHeaderHovered(true)}
+        onMouseLeave={() => {
+          setIsHeaderHovered(false);
+          setHoveredCategory(null);
+        }}
+        className={`fixed ${settings.announcement ? 'top-[29px]' : 'top-0'} left-0 w-full z-40 transition-all duration-300 ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
+        } ${
+          isTransparent
+            ? 'bg-transparent text-white border-b border-transparent shadow-none'
+            : 'bg-white text-[#0A0A0A] border-b border-[#E5E5E5] shadow-xs'
         }`}
-        onMouseLeave={() => setHoveredCategory(null)}
       >
         <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between">
           {/* Left Actions: Menu, Search, & Desktop Category Links */}
@@ -103,7 +124,11 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                 setContactDrawerOpen(false);
                 setSearchOpen(false);
               }}
-              className="flex items-center gap-2 text-[13px] uppercase font-bold tracking-wider text-[#0A0A0A] hover:text-[#B8712E] transition-colors cursor-pointer shrink-0"
+              className={`flex items-center gap-2 text-[13px] uppercase font-bold tracking-wider transition-colors cursor-pointer shrink-0 ${
+                isTransparent
+                  ? 'text-white hover:opacity-75 drop-shadow-xs'
+                  : 'text-[#0A0A0A] hover:text-[#B8712E]'
+              }`}
               aria-label="Open Navigation Menu"
             >
               <Menu size={18} strokeWidth={2} />
@@ -116,7 +141,11 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                 setMenuDrawerOpen(false);
                 setContactDrawerOpen(false);
               }}
-              className="flex items-center gap-2 text-[13px] uppercase font-bold tracking-wider text-[#0A0A0A] hover:text-[#B8712E] transition-colors cursor-pointer shrink-0"
+              className={`flex items-center gap-2 text-[13px] uppercase font-bold tracking-wider transition-colors cursor-pointer shrink-0 ${
+                isTransparent
+                  ? 'text-white hover:opacity-75 drop-shadow-xs'
+                  : 'text-[#0A0A0A] hover:text-[#B8712E]'
+              }`}
               aria-label="Search"
             >
               <Search size={18} strokeWidth={2} />
@@ -124,7 +153,9 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
             </button>
 
             {/* Desktop Quick Category Links with Hover Dropdowns */}
-            <nav className="hidden lg:flex items-center space-x-6 pl-4 border-l border-[#E5E5E5]">
+            <nav className={`hidden lg:flex items-center space-x-6 pl-4 border-l transition-colors ${
+              isTransparent ? 'border-white/20' : 'border-[#E5E5E5]'
+            }`}>
               {navigationItems.slice(0, 5).map((cat: any) => {
                 const label = cat.name || cat.label;
                 const url = cat.url || `/perfumes?category=${cat.slug}`;
@@ -140,11 +171,20 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                     <Link
                       href={url}
                       className={`text-[12px] uppercase font-bold tracking-wider transition-colors flex items-center gap-1 ${
-                        isCurrentHovered ? 'text-[#B8712E]' : 'text-[#0A0A0A] hover:text-[#B8712E]'
+                        isTransparent
+                          ? isCurrentHovered ? 'text-[#B8712E]' : 'text-white hover:opacity-80 drop-shadow-xs'
+                          : isCurrentHovered ? 'text-[#B8712E]' : 'text-[#0A0A0A] hover:text-[#B8712E]'
                       }`}
                     >
                       <span>{label}</span>
-                      {hasSub && <ChevronDown size={13} className={`transition-transform duration-200 ${isCurrentHovered ? 'rotate-180 text-[#B8712E]' : 'text-slate-400'}`} />}
+                      {hasSub && (
+                        <ChevronDown
+                          size={13}
+                          className={`transition-transform duration-200 ${
+                            isCurrentHovered ? 'rotate-180 text-[#B8712E]' : isTransparent ? 'text-white/70' : 'text-slate-400'
+                          }`}
+                        />
+                      )}
                     </Link>
                   </div>
                 );
@@ -167,10 +207,14 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                 <img
                   src={settings.logo_url || settings.site_logo}
                   alt={settings.siteName || 'Brand Logo'}
-                  className="h-8 md:h-10 w-auto max-w-[220px] object-contain transition-transform group-hover:opacity-90"
+                  className={`h-8 md:h-10 w-auto max-w-[220px] object-contain transition-all group-hover:opacity-90 ${
+                    isTransparent ? 'brightness-0 invert drop-shadow-xs' : ''
+                  }`}
                 />
               ) : (
-                <span className="font-serif text-[24px] md:text-[32px] tracking-[0.16em] font-extrabold uppercase text-[#0A0A0A] leading-none transition-transform group-hover:tracking-[0.18em]">
+                <span className={`font-serif text-[24px] md:text-[32px] tracking-[0.16em] font-extrabold uppercase leading-none transition-all group-hover:tracking-[0.18em] ${
+                  isTransparent ? 'text-white drop-shadow-xs' : 'text-[#0A0A0A]'
+                }`}>
                   {settings.siteName || 'REXXO BD'}
                 </span>
               )}
@@ -185,18 +229,28 @@ export default function Header({ initialMenu, initialCategories }: HeaderProps) 
                 setMenuDrawerOpen(false);
                 setSearchOpen(false);
               }}
-              className="text-[13px] uppercase font-bold tracking-wider text-[#0A0A0A] hover:text-[#B8712E] transition-colors cursor-pointer"
+              className={`text-[13px] uppercase font-bold tracking-wider transition-colors cursor-pointer ${
+                isTransparent
+                  ? 'text-white hover:opacity-75 drop-shadow-xs'
+                  : 'text-[#0A0A0A] hover:text-[#B8712E]'
+              }`}
             >
               Contact us
             </button>
 
             <button
               onClick={openCart}
-              className="flex items-center gap-1.5 text-[13px] uppercase font-bold tracking-wider text-[#0A0A0A] hover:text-[#B8712E] transition-colors cursor-pointer"
+              className={`flex items-center gap-1.5 text-[13px] uppercase font-bold tracking-wider transition-colors cursor-pointer ${
+                isTransparent
+                  ? 'text-white hover:opacity-75 drop-shadow-xs'
+                  : 'text-[#0A0A0A] hover:text-[#B8712E]'
+              }`}
               aria-label="View Shopping Cart"
             >
               <ShoppingBag size={18} strokeWidth={2} />
-              <span className="bg-[#0A0A0A] text-white text-[10px] font-mono px-1.5 py-0.5 rounded-full">
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full font-bold transition-colors ${
+                isTransparent ? 'bg-white text-black' : 'bg-[#0A0A0A] text-white'
+              }`}>
                 {totalCount}
               </span>
             </button>
