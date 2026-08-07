@@ -268,7 +268,12 @@
                     <i data-lucide="settings" class="w-4 h-4"></i> Site Setting
                 </button>
 
-                <!-- 7. SEO & PIXELS -->
+                <!-- 7. API SETTINGS -->
+                <button type="button" onclick="switchSection('api_settings')" id="sidebar-btn-api_settings" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                    <i data-lucide="plug" class="w-4 h-4"></i> API Settings
+                </button>
+
+                <!-- 8. SEO & PIXELS -->
                 <button type="button" onclick="switchSection('seo')" id="sidebar-btn-seo" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
                     <i data-lucide="bar-chart-2" class="w-4 h-4"></i> SEO & Pixels
                 </button>
@@ -793,6 +798,383 @@
                     </div>
                 </form>
             </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- SECTION: API SETTINGS (SMS, Courier, Meta Pixel, Google, etc.) -->
+        <!-- ================================================================= -->
+        <div id="section-api_settings" class="section-content hidden space-y-6 animate-fade-in">
+
+            <!-- Section Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="plug" class="w-5 h-5 text-[#0284c7]"></i> API Integration Settings
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Configure SMS gateways, courier APIs, and marketing pixel integrations. All credentials are encrypted and stored securely.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Credentials Encrypted
+                    </span>
+                </div>
+            </div>
+
+            <!-- API Tabs Navigation -->
+            <div class="flex items-center gap-2 overflow-x-auto bg-white/90 border border-[#e2e8f0] rounded-xl p-1.5 shadow-xs">
+                <button type="button" onclick="switchApiTab('sms')" id="api-tab-sms" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer whitespace-nowrap bg-[#0284c7] text-white shadow-xs">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> SMS Gateway
+                </button>
+                <button type="button" onclick="switchApiTab('courier_api')" id="api-tab-courier_api" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer whitespace-nowrap text-[#475569] hover:bg-[#f1f5f9]">
+                    <i data-lucide="truck" class="w-3.5 h-3.5"></i> Courier API
+                </button>
+                <button type="button" onclick="switchApiTab('meta')" id="api-tab-meta" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer whitespace-nowrap text-[#475569] hover:bg-[#f1f5f9]">
+                    <i data-lucide="facebook" class="w-3.5 h-3.5"></i> Meta / Facebook
+                </button>
+                <button type="button" onclick="switchApiTab('google')" id="api-tab-google" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer whitespace-nowrap text-[#475569] hover:bg-[#f1f5f9]">
+                    <i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i> Google Analytics
+                </button>
+            </div>
+
+            <!-- ============================= -->
+            <!-- TAB: SMS GATEWAY -->
+            <!-- ============================= -->
+            <div id="api-panel-sms" class="api-tab-panel space-y-6">
+
+                <!-- SMS Notifications Config -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-6">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                                <i data-lucide="message-square" class="w-5 h-5 text-[#0284c7]"></i> SMS Notification Settings
+                            </h3>
+                            <p class="text-[12px] text-[#64748b] mt-1">Automatically send SMS to customers on order placement, dispatch & delivery confirmation.</p>
+                        </div>
+                    </div>
+
+                    <!-- SMS Events Config -->
+                    <div class="space-y-3">
+                        <h4 class="text-[12px] font-bold uppercase text-[#0f172a] border-l-4 border-[#0284c7] pl-2">Trigger Events — When to Send SMS</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#f8fafc] p-4 rounded-xl border">
+                            <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                                <input type="checkbox" name="sms_on_new_order" id="sms_on_new_order" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_new_order'] ?? '0') === '1' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-[12px] font-bold text-[#0f172a] block">New Order Placed</span>
+                                    <span class="text-[11px] text-[#64748b]">Send SMS to customer when order is confirmed</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                                <input type="checkbox" name="sms_on_dispatch" id="sms_on_dispatch" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_dispatch'] ?? '0') === '1' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-[12px] font-bold text-[#0f172a] block">Order Dispatched / Shipped</span>
+                                    <span class="text-[11px] text-[#64748b]">Send SMS with courier tracking info</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                                <input type="checkbox" name="sms_on_delivered" id="sms_on_delivered" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_delivered'] ?? '0') === '1' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-[12px] font-bold text-[#0f172a] block">Order Delivered</span>
+                                    <span class="text-[11px] text-[#64748b]">Send SMS when order is delivered successfully</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                                <input type="checkbox" name="sms_on_cancelled" id="sms_on_cancelled" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_cancelled'] ?? '0') === '1' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-[12px] font-bold text-[#0f172a] block">Order Cancelled</span>
+                                    <span class="text-[11px] text-[#64748b]">Notify customer when order is cancelled</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- SMS Templates -->
+                    <div class="space-y-3">
+                        <h4 class="text-[12px] font-bold uppercase text-[#0f172a] border-l-4 border-[#0284c7] pl-2">SMS Message Templates</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Order Confirmation Template</label>
+                                <textarea name="sms_template_new_order" rows="2" placeholder="e.g. Dear {name}, your order #{order_id} of ৳{amount} BDT has been confirmed! We'll notify you when it ships. — {company}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a] resize-none">{{ $siteSettings['sms_template_new_order'] ?? '' }}</textarea>
+                                <p class="text-[10px] text-[#94a3b8] mt-1">Variables: {name} {order_id} {amount} {company} {tracking_id}</p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Dispatch / Shipment Template</label>
+                                <textarea name="sms_template_dispatch" rows="2" placeholder="e.g. Dear {name}, order #{order_id} has been dispatched via {courier}. Track: {tracking_id} — {company}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a] resize-none">{{ $siteSettings['sms_template_dispatch'] ?? '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BulkSMS BD Config Card -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <div class="flex items-center justify-between border-b pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-[14px] font-bold text-[#0f172a] uppercase">BulkSMS BD</h3>
+                                <p class="text-[11px] text-[#64748b]">bulksmsbd.net — Bangladeshi OTP & Transactional SMS</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_bulksmsbd_enabled" id="sms_bulksmsbd_enabled" value="1" class="sr-only peer" {{ ($siteSettings['sms_bulksmsbd_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-[#e2e8f0] rounded-full peer peer-checked:bg-[#0284c7] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Key</label>
+                            <input type="password" name="bulksmsbd_api_key" autocomplete="new-password" placeholder="Your BulkSMS BD API Key" value="{{ $siteSettings['bulksmsbd_api_key'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                            <p class="text-[10px] text-[#94a3b8] mt-1">Get from <a href="https://bulksmsbd.net" target="_blank" class="text-[#0284c7] underline">bulksmsbd.net</a> → Developer → API</p>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Sender ID (Masking)</label>
+                            <input type="text" name="bulksmsbd_sender_id" placeholder="e.g. RaaxO BD" value="{{ $siteSettings['bulksmsbd_sender_id'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                            <p class="text-[10px] text-[#94a3b8] mt-1">Approved Sender ID from BulkSMS BD panel</p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Base URL</label>
+                            <input type="text" name="bulksmsbd_base_url" placeholder="https://bulksmsbd.net/api/smsapi" value="{{ $siteSettings['bulksmsbd_base_url'] ?? 'https://bulksmsbd.net/api/smsapi' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+
+                    <!-- Test SMS -->
+                    <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 space-y-3">
+                        <h4 class="text-[11px] font-bold uppercase text-[#475569]">Test BulkSMS BD Connection</h4>
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="bulksmsbd_test_phone" placeholder="e.g. 01712345678" class="flex-1 border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white">
+                            <button type="button" onclick="testSmsGateway('bulksmsbd')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i> Send Test SMS
+                            </button>
+                        </div>
+                        <div id="bulksmsbd_test_result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- MiM SMS Config Card -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <div class="flex items-center justify-between border-b pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+                                <i data-lucide="send" class="w-5 h-5 text-violet-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-[14px] font-bold text-[#0f172a] uppercase">MiM SMS</h3>
+                                <p class="text-[11px] text-[#64748b]">mimsms.com — Bangladeshi Bulk, OTP & Promotional SMS</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sms_mimsms_enabled" id="sms_mimsms_enabled" value="1" class="sr-only peer" {{ ($siteSettings['sms_mimsms_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-[#e2e8f0] rounded-full peer peer-checked:bg-[#7c3aed] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Key</label>
+                            <input type="password" name="mimsms_api_key" autocomplete="new-password" placeholder="Your MiM SMS API Key" value="{{ $siteSettings['mimsms_api_key'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                            <p class="text-[10px] text-[#94a3b8] mt-1">Get from <a href="https://mimsms.com" target="_blank" class="text-violet-600 underline">mimsms.com</a> → My Profile → API</p>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Sender ID</label>
+                            <input type="text" name="mimsms_sender_id" placeholder="e.g. RAAXO" value="{{ $siteSettings['mimsms_sender_id'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Type</label>
+                            <select name="mimsms_type" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <option value="text" {{ ($siteSettings['mimsms_type'] ?? 'text') === 'text' ? 'selected' : '' }}>TEXT (Transactional)</option>
+                                <option value="unicode" {{ ($siteSettings['mimsms_type'] ?? '') === 'unicode' ? 'selected' : '' }}>UNICODE (Bengali support)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Base URL</label>
+                            <input type="text" name="mimsms_base_url" placeholder="https://api.mimsms.com/api/SmSAPI" value="{{ $siteSettings['mimsms_base_url'] ?? 'https://api.mimsms.com/api/SmSAPI' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+
+                    <!-- Test SMS -->
+                    <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 space-y-3">
+                        <h4 class="text-[11px] font-bold uppercase text-[#475569]">Test MiM SMS Connection</h4>
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="mimsms_test_phone" placeholder="e.g. 01712345678" class="flex-1 border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white">
+                            <button type="button" onclick="testSmsGateway('mimsms')" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i> Send Test SMS
+                            </button>
+                        </div>
+                        <div id="mimsms_test_result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Save SMS Settings -->
+                <div class="flex justify-end">
+                    <button type="button" onclick="saveApiSettings('sms')" class="bg-[#0f172a] hover:bg-[#0284c7] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save SMS Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- TAB: COURIER API -->
+            <!-- ============================= -->
+            <div id="api-panel-courier_api" class="api-tab-panel hidden space-y-6">
+
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 px-5 py-4 rounded-xl text-[13px] font-bold flex items-start gap-3">
+                    <i data-lucide="info" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="block mb-1">Courier API credentials are managed in the dedicated <strong>Courier Hub</strong> page.</span>
+                        <a href="{{ url('/admin/courier') }}" class="underline text-amber-700 font-bold">→ Go to Courier Hub & API Setup</a>
+                    </div>
+                </div>
+
+                <!-- Quick Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    @php
+                        $courierList = [
+                            ['key'=>'steadfast',  'name'=>'Steadfast Courier',  'icon'=>'truck', 'color'=>'sky',    'url'=>'https://steadfast.com.bd', 'doc'=>'https://developer.steadfast.com.bd'],
+                            ['key'=>'pathao',     'name'=>'Pathao Courier',     'icon'=>'navigation', 'color'=>'orange', 'url'=>'https://merchant.pathao.com', 'doc'=>'https://developer.pathao.com'],
+                            ['key'=>'redx',       'name'=>'RedX',               'icon'=>'package', 'color'=>'rose',   'url'=>'https://redx.com.bd', 'doc'=>'https://redx.com.bd/developers'],
+                        ];
+                    @endphp
+                    @foreach($courierList as $c)
+                    @php $isActive = !empty($siteSettings[$c['key'].'_api_key']); @endphp
+                    <div class="bg-white/90 border rounded-2xl p-5 space-y-3 shadow-xs hover:border-[#0284c7] transition-all">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-{{ $c['color'] }}-50 border border-{{ $c['color'] }}-200 flex items-center justify-center">
+                                    <i data-lucide="{{ $c['icon'] }}" class="w-4 h-4 text-{{ $c['color'] }}-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-[13px] font-bold text-[#0f172a]">{{ $c['name'] }}</h3>
+                                    <a href="{{ $c['url'] }}" target="_blank" class="text-[10px] text-[#64748b] hover:text-[#0284c7]">{{ $c['url'] }}</a>
+                                </div>
+                            </div>
+                            @if($isActive)
+                                <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">● Configured</span>
+                            @else
+                                <span class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">○ Not Set</span>
+                            @endif
+                        </div>
+                        <div class="pt-2 flex gap-2">
+                            <a href="{{ url('/admin/courier') }}" class="flex-1 text-center py-2 bg-[#f1f5f9] hover:bg-[#e0f2fe] text-[#0284c7] rounded-lg text-[11px] font-bold border border-[#e2e8f0] transition-all">Configure →</a>
+                            <a href="{{ $c['doc'] }}" target="_blank" class="px-3 py-2 bg-[#f1f5f9] hover:bg-[#f1f5f9] text-[#64748b] rounded-lg text-[11px] font-bold border border-[#e2e8f0]">Docs</a>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- TAB: META / FACEBOOK -->
+            <!-- ============================= -->
+            <div id="api-panel-meta" class="api-tab-panel hidden space-y-6">
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-6">
+                    <div class="border-b pb-4">
+                        <h3 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                <i data-lucide="facebook" class="w-4 h-4 text-blue-600"></i>
+                            </div>
+                            Meta / Facebook Integration
+                        </h3>
+                        <p class="text-[12px] text-[#64748b] mt-2">Configure Facebook Pixel, Conversion API (CAPI) and Catalog for retargeting ads.</p>
+                    </div>
+
+                    <form data-settings-form onsubmit="handleSettingsSave(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook / Meta Pixel ID</label>
+                                <input type="text" name="pixel_facebook" placeholder="e.g. 123456789012345" value="{{ $siteSettings['pixel_facebook'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">Found in <strong>Events Manager → Data Sources</strong> on Facebook Business Manager</p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Meta CAPI Access Token (Optional)</label>
+                                <input type="password" name="meta_capi_token" autocomplete="new-password" placeholder="Your CAPI server-side token" value="{{ $siteSettings['meta_capi_token'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">Server-side Conversions API for cookieless tracking</p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook Catalog ID (Optional)</label>
+                                <input type="text" name="meta_catalog_id" placeholder="e.g. 4567890123456" value="{{ $siteSettings['meta_catalog_id'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">Used for Dynamic Product Ads (DPA)</p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook App ID (Optional)</label>
+                                <input type="text" name="meta_app_id" placeholder="e.g. 9876543210" value="{{ $siteSettings['meta_app_id'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                            </div>
+                        </div>
+
+                        <!-- Meta Pixel Status -->
+                        <div class="bg-[#f8fafc] border rounded-xl p-4 flex items-center justify-between">
+                            <div>
+                                <p class="text-[12px] font-bold text-[#0f172a]">Pixel Status</p>
+                                @if(!empty($siteSettings['pixel_facebook']))
+                                    <span class="text-[11px] text-emerald-700 font-mono">✔ Pixel ID: {{ $siteSettings['pixel_facebook'] }} — Active</span>
+                                @else
+                                    <span class="text-[11px] text-[#94a3b8]">Not configured. Enter Pixel ID above.</span>
+                                @endif
+                            </div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer">
+                                <i data-lucide="save" class="w-4 h-4"></i> Save Meta Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ============================= -->
+            <!-- TAB: GOOGLE ANALYTICS -->
+            <!-- ============================= -->
+            <div id="api-panel-google" class="api-tab-panel hidden space-y-6">
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-6">
+                    <div class="border-b pb-4">
+                        <h3 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center">
+                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-red-500"></i>
+                            </div>
+                            Google Analytics & Tag Manager
+                        </h3>
+                        <p class="text-[12px] text-[#64748b] mt-2">Configure Google Analytics 4 (GA4), Tag Manager and Search Console verification.</p>
+                    </div>
+
+                    <form data-settings-form onsubmit="handleSettingsSave(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Analytics 4 (GA4) ID</label>
+                                <input type="text" name="pixel_google" placeholder="e.g. G-XXXXXXXXXX" value="{{ $siteSettings['pixel_google'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">Found in <strong>Google Analytics → Admin → Data Streams</strong></p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Tag Manager ID</label>
+                                <input type="text" name="pixel_gtm" placeholder="e.g. GTM-XXXXXXX" value="{{ $siteSettings['pixel_gtm'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">From Google Tag Manager → Admin → Container ID</p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Search Console Verification Code</label>
+                                <input type="text" name="google_site_verification" placeholder="e.g. abc123XYZ..." value="{{ $siteSettings['google_site_verification'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">Paste just the content value from the meta tag, not the full tag</p>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">TikTok Pixel ID</label>
+                                <input type="text" name="pixel_tiktok" placeholder="e.g. CXXXXXXXXXXXX" value="{{ $siteSettings['pixel_tiktok'] ?? '' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <p class="text-[10px] text-[#94a3b8] mt-1">From TikTok Ads Manager → Assets → Events</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#f8fafc] border rounded-xl p-4 flex items-center justify-between">
+                            <div>
+                                @if(!empty($siteSettings['pixel_google']))
+                                    <p class="text-[12px] font-bold text-emerald-700">✔ GA4 Active — {{ $siteSettings['pixel_google'] }}</p>
+                                @else
+                                    <p class="text-[12px] text-[#94a3b8]">No Google Analytics configured yet.</p>
+                                @endif
+                            </div>
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer">
+                                <i data-lucide="save" class="w-4 h-4"></i> Save Google Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
         </div>
 
         <!-- SECTION: SEO & PIXELS -->
@@ -2709,6 +3091,109 @@
             switchSection('menu');
             @endif
         });
+
+        // ── API SETTINGS: TAB SWITCHING ──
+        function switchApiTab(tabId) {
+            // Hide all api panels
+            document.querySelectorAll('.api-tab-panel').forEach(p => p.classList.add('hidden'));
+            // Deactivate all api tab buttons
+            document.querySelectorAll('[id^="api-tab-"]').forEach(btn => {
+                btn.classList.remove('bg-[#0284c7]', 'text-white', 'shadow-xs');
+                btn.classList.add('text-[#475569]', 'hover:bg-[#f1f5f9]');
+            });
+            // Show selected panel
+            const panel = document.getElementById('api-panel-' + tabId);
+            if (panel) panel.classList.remove('hidden');
+            // Activate selected tab button
+            const btn = document.getElementById('api-tab-' + tabId);
+            if (btn) {
+                btn.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs');
+                btn.classList.remove('text-[#475569]', 'hover:bg-[#f1f5f9]');
+            }
+            lucide.createIcons();
+        }
+
+        // ── SMS: SAVE SETTINGS ──
+        async function saveApiSettings(section) {
+            // Collect all SMS-related inputs
+            const fields = [
+                'sms_on_new_order', 'sms_on_dispatch', 'sms_on_delivered', 'sms_on_cancelled',
+                'sms_bulksmsbd_enabled', 'sms_mimsms_enabled',
+                'bulksmsbd_api_key', 'bulksmsbd_sender_id', 'bulksmsbd_base_url',
+                'mimsms_api_key', 'mimsms_sender_id', 'mimsms_base_url', 'mimsms_type',
+                'sms_template_new_order', 'sms_template_dispatch'
+            ];
+            const formData = new FormData();
+            fields.forEach(f => {
+                const el = document.querySelector(`[name="${f}"]`);
+                if (!el) return;
+                if (el.type === 'checkbox') {
+                    formData.append(f, el.checked ? '1' : '0');
+                } else {
+                    formData.append(f, el.value);
+                }
+            });
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    showToastNotice('SMS Settings saved successfully!');
+                } else {
+                    showToastNotice(result.message || 'Failed to save!');
+                }
+            } catch (e) {
+                showToastNotice('Network error while saving SMS settings.');
+            }
+        }
+
+        // ── SMS: TEST GATEWAY ──
+        async function testSmsGateway(gateway) {
+            const phoneInput = document.getElementById(gateway + '_test_phone');
+            const resultDiv = document.getElementById(gateway + '_test_result');
+            const phone = phoneInput ? phoneInput.value.trim() : '';
+
+            if (!phone || phone.length < 11) {
+                showToastNotice('Please enter a valid Bangladeshi phone number (11 digits)');
+                return;
+            }
+
+            resultDiv.className = 'text-[12px] font-mono p-3 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] text-[#475569]';
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = '<span class="animate-pulse">⏳ Sending test SMS...</span>';
+
+            try {
+                const formData = new FormData();
+                formData.append('gateway', gateway);
+                formData.append('phone', phone);
+                formData.append('message', `TEST: API connection from {{ $siteSettings['siteName'] ?? 'RaaxO Admin' }} is working! — {{ now()->format('d M Y H:i') }}`);
+
+                const res = await fetch('/admin/sms/test', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    resultDiv.className = 'text-[12px] font-mono p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800';
+                    resultDiv.innerHTML = `✔ ${data.message || 'SMS sent successfully!'}`;
+                    showToastNotice('Test SMS sent successfully!');
+                } else {
+                    resultDiv.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                    resultDiv.innerHTML = `✗ ${data.message || 'Failed to send SMS. Check credentials.'}`;
+                    showToastNotice('SMS test failed. Check credentials.');
+                }
+            } catch (e) {
+                resultDiv.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                resultDiv.innerHTML = `✗ Network error: ${e.message}`;
+            }
+        }
     </script>
 </body>
 </html>

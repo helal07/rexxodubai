@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminCourierController;
 use App\Http\Controllers\AdminWebController;
+use App\Http\Controllers\SmsController;
 use Illuminate\Support\Facades\Route;
 
 use Inertia\Inertia;
@@ -156,6 +157,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy'])->name('logout');
     Route::get('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
     Route::post('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
+
+    // SMS Gateway Routes
+    Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');
 });
 
 
