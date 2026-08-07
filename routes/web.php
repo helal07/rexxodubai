@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminCourierController;
 use App\Http\Controllers\AdminWebController;
 use Illuminate\Support\Facades\Route;
 
@@ -123,7 +124,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
     Route::put('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
     Route::delete('/admin/orders/{id}', [AdminWebController::class, 'destroyOrder']);
-    Route::get('/admin/courier', [AdminWebController::class, 'orders']);
+
+    // Courier Hub & Live API Routes
+    Route::get('/admin/courier', [AdminCourierController::class, 'index']);
+    Route::post('/admin/courier/settings', [AdminCourierController::class, 'saveSettings']);
+    Route::post('/admin/courier/save/{key}', [AdminCourierController::class, 'saveSingleCourier']);
+    Route::post('/admin/courier/test-connection', [AdminCourierController::class, 'testConnection']);
+    Route::post('/admin/courier/dispatch', [AdminCourierController::class, 'dispatchOrder']);
+    Route::get('/admin/courier/track/{id}', [AdminCourierController::class, 'trackOrder']);
 
     // Menu Builder CRUD Routes
     Route::post('/admin/menus', [AdminWebController::class, 'storeMenu']);

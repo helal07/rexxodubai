@@ -21,10 +21,18 @@ class Order extends Model
         'status',
         'payment_status',
         'payment_method',
+        'courier_name',
+        'courier_tracking_id',
+        'courier_consignment_id',
+        'courier_status',
+        'courier_response',
+        'dispatched_at',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'courier_response' => 'array',
+        'dispatched_at' => 'datetime',
     ];
 
     public function items()
