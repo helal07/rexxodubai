@@ -7,6 +7,9 @@ use App\Models\Setting;
 use App\Services\Courier\CourierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Database\Schema\Blueprint;
 use Exception;
 
 class AdminCourierController extends Controller
@@ -19,10 +22,45 @@ class AdminCourierController extends Controller
     }
 
     /**
+     * Self-healing check: automatically ensure all required courier columns exist in the database table.
+     */
+    protected function ensureCourierColumnsExist(): void
+    {
+        try {
+            if (Schema::hasTable('orders') && !Schema::hasColumn('orders', 'courier_tracking_id')) {
+                Schema::table('orders', function (Blueprint $table) {
+                    if (!Schema::hasColumn('orders', 'courier_name')) {
+                        $table->string('courier_name')->nullable()->after('status');
+                    }
+                    if (!Schema::hasColumn('orders', 'courier_tracking_id')) {
+                        $table->string('courier_tracking_id')->nullable()->index()->after('courier_name');
+                    }
+                    if (!Schema::hasColumn('orders', 'courier_consignment_id')) {
+                        $table->string('courier_consignment_id')->nullable()->index()->after('courier_tracking_id');
+                    }
+                    if (!Schema::hasColumn('orders', 'courier_status')) {
+                        $table->string('courier_status')->default('pending')->after('courier_consignment_id');
+                    }
+                    if (!Schema::hasColumn('orders', 'courier_response')) {
+                        $table->json('courier_response')->nullable()->after('courier_status');
+                    }
+                    if (!Schema::hasColumn('orders', 'dispatched_at')) {
+                        $table->timestamp('dispatched_at')->nullable()->after('courier_response');
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Self-healing schema migration for orders table: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Display the Courier Hub Management Console.
      */
     public function index(Request $request)
     {
+        $this->ensureCourierColumnsExist();
+
         $couriers = $this->courierService->getCouriers();
 
         // Orders needing dispatch
@@ -169,6 +207,8 @@ class AdminCourierController extends Controller
      */
     public function dispatchOrder(Request $request)
     {
+        $this->ensureCourierColumnsExist();
+
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'provider' => 'required|string',
@@ -210,9 +250,42 @@ class AdminCourierController extends Controller
      */
     public function trackOrder($id)
     {
+        $this->ensureCourierColumnsExist();
+
         $order = Order::findOrFail($id);
         $result = $this->courierService->trackOrder($order);
 
         return response()->json($result);
+    }
+
+    /**
+     * Run database migrations directly from browser (for cPanel shared hosting).
+     */
+    public function runMigrations(Request $request)
+    {
+        try {
+            $this->ensureCourierColumnsExist();
+            Artisan::call('migrate', ['--force' => true]);
+            $output = Artisan::output();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Database migrations executed successfully.',
+                    'output' => $output,
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Database migrations executed successfully: ' . $output);
+        } catch (\Throwable $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Migration error: ' . $e->getMessage(),
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Migration error: ' . $e->getMessage());
+        }
     }
 }

@@ -132,6 +132,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/courier/test-connection', [AdminCourierController::class, 'testConnection']);
     Route::post('/admin/courier/dispatch', [AdminCourierController::class, 'dispatchOrder']);
     Route::get('/admin/courier/track/{id}', [AdminCourierController::class, 'trackOrder']);
+    Route::get('/admin/run-migrations', [AdminCourierController::class, 'runMigrations']);
+    Route::get('/admin/courier/run-migrations', [AdminCourierController::class, 'runMigrations']);
 
     // Menu Builder CRUD Routes
     Route::post('/admin/menus', [AdminWebController::class, 'storeMenu']);
