@@ -22,7 +22,8 @@ export default function Footer() {
     setTimeout(() => setSubscribed(false), 5000);
   };
 
-  const brandName = (settings.siteName || 'PRADA').toUpperCase();
+  const businessName = settings.siteName || 'RaaxO BD';
+  const brandName = businessName.toUpperCase();
 
   return (
     <footer className="bg-white text-[#0A0A0A] border-t border-[#E5E5E5] pt-16 pb-10">
@@ -88,15 +89,15 @@ export default function Footer() {
               </svg>
             </a>
 
-            {/* X / Twitter */}
+            {/* X (formerly Twitter) */}
             <a
               href="https://twitter.com"
               target="_blank"
               rel="noreferrer"
-              aria-label="Twitter / X"
+              aria-label="X"
               className="hover:opacity-60 transition-opacity"
             >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
               </svg>
             </a>
@@ -137,27 +138,27 @@ export default function Footer() {
           <ul className="space-y-2.5 text-[13px] text-[#4A4744]">
             <li>
               <Link href="/about" className="hover:text-black transition-colors">
-                Fondazione {settings.siteName || 'House'}
+                About {businessName}
               </Link>
             </li>
             <li>
               <Link href="/about" className="hover:text-black transition-colors">
-                {settings.siteName || 'Maison'} Group
+                Our Story & Heritage
               </Link>
             </li>
             <li>
               <Link href="/about" className="hover:text-black transition-colors">
-                Maison Stories
-              </Link>
-            </li>
-            <li>
-              <Link href="/about" className="hover:text-black transition-colors">
-                Sustainability
+                Sustainability & Craft
               </Link>
             </li>
             <li>
               <Link href="/contact" className="hover:text-black transition-colors">
                 Work with us
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-black transition-colors">
+                Client Care & Contact
               </Link>
             </li>
           </ul>
@@ -193,10 +194,10 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Sub-Footer Bottom Bar (1:1 with Prada) */}
+      {/* Sub-Footer Bottom Bar */}
       <div className="max-w-[1440px] mx-auto px-6 pt-6 flex flex-col md:flex-row justify-between items-center text-[11px] text-[#6E6B66] tracking-wider uppercase font-medium space-y-4 md:space-y-0">
         <div>
-          ©{brandName} {new Date().getFullYear()} | VAT N. {settings.tax_rate ? '10115350154' : '10115350154'}
+          ©{brandName} {new Date().getFullYear()} {settings.footerText ? `| ${settings.footerText}` : '| Fine Fragrance & Luxury Extraits'}
         </div>
 
         <div className="flex items-center space-x-8">

@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title inertia>{{ $siteSettings['siteName'] ?? 'REXXO BD' }} — {{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}</title>
+        <title inertia>{{ $siteSettings['siteName'] ?? 'RaaxO BD' }} — {{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}</title>
         
         <!-- Dynamic Favicon from Site Settings -->
         @php
@@ -13,7 +13,7 @@
 
         <!-- Dynamic Brand Meta -->
         <meta name="description" content="{{ $siteSettings['tagline'] ?? 'Luxury handcrafted fragrances and pure parfums.' }}">
-        <meta property="og:title" content="{{ $siteSettings['siteName'] ?? 'REXXO BD' }} — Luxury Fragrances">
+        <meta property="og:title" content="{{ $siteSettings['siteName'] ?? 'RaaxO BD' }} — Luxury Fragrances">
         <meta property="og:description" content="{{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}">
         @if(!empty($siteSettings['logo_url']) || !empty($siteSettings['site_logo']))
             <meta property="og:image" content="{{ $siteSettings['logo_url'] ?? $siteSettings['site_logo'] }}">
