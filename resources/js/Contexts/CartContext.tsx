@@ -18,7 +18,7 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>, qty?: number, openDrawer?: boolean) => void;
   removeItem: (id: number, size: string) => void;
   updateQuantity: (id: number, size: string, qty: number) => void;
   clearCart: () => void;
@@ -59,17 +59,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
-  const addItem = (newItem: Omit<CartItem, 'quantity'>) => {
+  const addItem = (newItem: Omit<CartItem, 'quantity'>, qty = 1, openDrawer = true) => {
+    const validQty = Math.max(1, qty);
     setItems(prev => {
       const existingIndex = prev.findIndex(i => i.id === newItem.id && i.size === newItem.size);
       if (existingIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex].quantity += 1;
+        updated[existingIndex].quantity += validQty;
         return updated;
       }
-      return [...prev, { ...newItem, quantity: 1 }];
+      return [...prev, { ...newItem, quantity: validQty }];
     });
-    setIsOpen(true);
+    if (openDrawer) {
+      setIsOpen(true);
+    }
   };
 
   const removeItem = (id: number, size: string) => {

@@ -1,9 +1,8 @@
-'use client';
-
 import React, { useState } from 'react';
-
+import { router } from '@inertiajs/react';
 import { Product } from '@/lib/api';
-import { ChevronDown, ChevronUp, ShieldCheck, Truck, RefreshCw, PhoneCall } from 'lucide-react';
+import { useCart } from '@/Contexts/CartContext';
+import { ChevronDown, ChevronUp, ShieldCheck, Truck, RefreshCw, ShoppingBag, Zap, Check, Sparkles, MessageCircle } from 'lucide-react';
 import ScentTrail from './ScentTrail';
 
 interface PDPClientProps {
@@ -11,7 +10,11 @@ interface PDPClientProps {
 }
 
 export default function PDPClient({ product }: PDPClientProps) {
+  const { addItem } = useCart();
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '100ml');
+  const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [activeImage, setActiveImage] = useState(product.primary_image_url);
   const [activeAccordion, setActiveAccordion] = useState<string | null>('notes');
 
@@ -19,61 +22,115 @@ export default function PDPClient({ product }: PDPClientProps) {
     product.primary_image_url,
     ...(product.secondary_image_url ? [product.secondary_image_url] : []),
     ...(product.images?.map(i => i.image_url) || [])
-  ];
+  ].filter(Boolean);
 
   const toggleAccordion = (section: string) => {
     setActiveAccordion(prev => (prev === section ? null : section));
   };
 
-  const handleInquire = () => {
-    // Open Contact drawer via custom event or header trigger
-    window.location.href = '/contact';
+  const handleAddToCart = () => {
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: Number(product.price) || 0,
+        size: selectedSize,
+        image: product.primary_image_url,
+        concentration: product.concentration || 'Extrait De Parfum',
+      },
+      quantity,
+      true
+    );
+
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2200);
   };
+
+  const handleBuyNow = () => {
+    setIsBuyingNow(true);
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: Number(product.price) || 0,
+        size: selectedSize,
+        image: product.primary_image_url,
+        concentration: product.concentration || 'Extrait De Parfum',
+      },
+      quantity,
+      false
+    );
+    router.visit('/checkout');
+  };
+
+  const formattedUnitPrice = product.price ? `$${Number(product.price).toFixed(2)}` : '$0.00';
+  const totalPrice = product.price ? `$${(Number(product.price) * quantity).toFixed(2)}` : '$0.00';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
       {/* Left: Sticky Image Gallery */}
       <div className="lg:col-span-7 space-y-4 lg:sticky lg:top-28">
-        <ScentTrail className="w-full aspect-[4/5] bg-[#F5F3EF] border border-[#DEDBD4] relative overflow-hidden">
+        <ScentTrail className="w-full aspect-[4/5] bg-[#F5F3EF] border border-[#DEDBD4] relative overflow-hidden flex items-center justify-center">
           <img
             src={activeImage}
             alt={product.name}
-
-
-
-
-            className="object-cover"
+            className="w-full h-full object-contain p-6 md:p-10 transition-transform duration-500 hover:scale-105"
           />
         </ScentTrail>
 
         {/* Thumbnail Selector */}
         {allImages.length > 1 && (
-          <div className="flex space-x-3 overflow-x-auto pb-2">
+          <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-none">
             {allImages.map((img, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveImage(img)}
-                className={`w-20 h-24 relative bg-[#F5F3EF] border transition-all shrink-0 ${
+                className={`w-20 h-24 relative bg-[#F5F3EF] border transition-all shrink-0 cursor-pointer ${
                   activeImage === img ? 'border-[#B8712E] ring-1 ring-[#B8712E]' : 'border-[#DEDBD4] opacity-70 hover:opacity-100'
                 }`}
               >
-                <img  src={img} alt={`${product.name} view ${idx + 1}`}  className="absolute inset-0 w-full h-full object-cover" />
+                <img src={img} alt={`${product.name} view ${idx + 1}`} className="absolute inset-0 w-full h-full object-contain p-2" />
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Right: Product Details & Contact Inquire Action */}
-      <div className="lg:col-span-5 space-y-8">
-        <div>
-          <span className="text-[11px] uppercase tracking-[0.14em] text-[#6E6B66] font-semibold block mb-2">
-            {product.concentration} · {product.scent_family}
-          </span>
-          <h1 className="font-serif text-[36px] md:text-[44px] text-[#0A0A0A] font-light leading-tight mb-3">
+      {/* Right: Product Details, Pricing, Size & Modern Classic Purchase Actions */}
+      <div className="lg:col-span-5 space-y-7">
+        <div className="border-b border-[#DEDBD4] pb-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#B8712E] font-semibold block">
+              {product.concentration || 'EXTRAIT DE PARFUM'} {product.scent_family ? `· ${product.scent_family}` : ''}
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              IN STOCK
+            </span>
+          </div>
+
+          <h1 className="font-serif text-[34px] md:text-[42px] text-[#0A0A0A] font-semibold leading-tight tracking-tight">
             {product.name}
           </h1>
-          <p className="text-[14px] text-[#6E6B66] font-light leading-relaxed">
+
+          {/* Pricing Header */}
+          <div className="flex items-baseline gap-3 pt-1">
+            <span className="text-[24px] font-sans font-bold text-[#0A0A0A] tracking-tight">
+              {formattedUnitPrice} <span className="text-[13px] font-normal text-[#6E6B66]">USD</span>
+            </span>
+            {quantity > 1 && (
+              <span className="text-[13px] text-[#B8712E] font-semibold tracking-wide">
+                ({totalPrice} total)
+              </span>
+            )}
+            <span className="text-[11px] text-[#6E6B66] uppercase tracking-wider pl-2 border-l border-[#DEDBD4]">
+              Taxes Included · Free Shipping
+            </span>
+          </div>
+
+          <p className="text-[13px] text-[#4A4744] font-normal leading-relaxed pt-2">
             {product.description || product.short_description}
           </p>
         </div>
@@ -81,18 +138,24 @@ export default function PDPClient({ product }: PDPClientProps) {
         {/* Size Selector */}
         {product.sizes && product.sizes.length > 0 && (
           <div className="space-y-3">
-            <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#0A0A0A] block">
-              BOTTLE SIZE:
-            </span>
-            <div className="flex space-x-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#0A0A0A]">
+                SELECT FLACON SIZE:
+              </span>
+              <span className="text-[11px] text-[#6E6B66] uppercase tracking-wider font-mono">
+                {selectedSize}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
               {product.sizes.map(sz => (
                 <button
                   key={sz}
+                  type="button"
                   onClick={() => setSelectedSize(sz)}
-                  className={`px-5 py-2.5 text-[12px] font-semibold uppercase tracking-wider transition-all border ${
+                  className={`px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer border ${
                     selectedSize === sz
-                      ? 'bg-[#0A0A0A] text-white border-[#0A0A0A]'
-                      : 'bg-white text-[#0A0A0A] border-[#DEDBD4] hover:border-[#B8712E]'
+                      ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-xs ring-1 ring-[#0A0A0A]'
+                      : 'bg-[#FAF8F5] text-[#0A0A0A] border-[#DEDBD4] hover:border-[#0A0A0A] hover:bg-white'
                   }`}
                 >
                   {sz}
@@ -102,13 +165,82 @@ export default function PDPClient({ product }: PDPClientProps) {
           </div>
         )}
 
-        {/* Contact Us / Inquire Button */}
-        <button
-          onClick={handleInquire}
-          className="w-full bg-[#0A0A0A] text-white py-5 text-[12px] uppercase font-bold tracking-[0.16em] hover:bg-[#B8712E] transition-colors duration-300 shadow-md flex items-center justify-center gap-3"
-        >
-          <PhoneCall size={18} /> CONTACT US TO INQUIRE
-        </button>
+        {/* Quantity & CTA Buttons Section */}
+        <div className="space-y-4 pt-1">
+          <div className="flex items-center gap-4">
+            {/* Quantity Stepper */}
+            <div className="flex items-center border border-[#DEDBD4] bg-[#FAF8F5] shrink-0">
+              <button
+                type="button"
+                onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                disabled={quantity <= 1}
+                className="w-11 h-12 flex items-center justify-center text-[#0A0A0A] hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent transition-colors cursor-pointer text-[15px] font-bold"
+                aria-label="Decrease quantity"
+              >
+                −
+              </button>
+              <span className="w-12 text-center text-[13px] font-bold font-mono text-[#0A0A0A]">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity(prev => Math.min(10, prev + 1))}
+                disabled={quantity >= 10}
+                className="w-11 h-12 flex items-center justify-center text-[#0A0A0A] hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent transition-colors cursor-pointer text-[15px] font-bold"
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Primary Action: Modern Classic ADD TO BAG Button */}
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className={`flex-1 h-12 px-6 text-[12px] uppercase font-bold tracking-[0.16em] transition-all duration-300 shadow-sm flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden shimmer-btn ${
+                isAdded
+                  ? 'bg-emerald-700 text-white border border-emerald-700'
+                  : 'bg-[#0A0A0A] text-white hover:bg-[#B8712E] border border-[#0A0A0A] hover:border-[#B8712E]'
+              }`}
+            >
+              {isAdded ? (
+                <>
+                  <Check size={16} className="animate-bounce" />
+                  <span>ADDED TO BAG</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={16} />
+                  <span>ADD TO BAG — {totalPrice}</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Secondary Action: BUY NOW / EXPRESS CHECKOUT Button */}
+          <button
+            type="button"
+            onClick={handleBuyNow}
+            disabled={isBuyingNow}
+            className="w-full h-12 bg-gradient-to-r from-[#B8712E] to-[#9E5F24] hover:from-[#A56325] hover:to-[#8B501B] text-white text-[12px] uppercase font-bold tracking-[0.18em] transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg active:scale-[0.99]"
+          >
+            <Zap size={16} className="fill-current text-white/90" />
+            <span>{isBuyingNow ? 'PROCEEDING...' : 'BUY NOW · EXPRESS CHECKOUT'}</span>
+          </button>
+
+          {/* Discreet Concierge Inquire Link */}
+          <div className="text-center pt-1">
+            <a
+              href={`https://wa.me/?text=Hello%20ReXxo%20Bd,%20I%20would%20like%20to%20inquire%20about%20${encodeURIComponent(product.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] font-medium text-[#6E6B66] hover:text-[#B8712E] transition-colors"
+            >
+              <MessageCircle size={13} />
+              <span>Questions about this formulation? Ask Scent Concierge</span>
+            </a>
+          </div>
+        </div>
 
         {/* Guarantee Badges */}
         <div className="grid grid-cols-3 gap-2 border-y border-[#DEDBD4] py-4 text-center text-[11px] text-[#6E6B66] uppercase tracking-wider">

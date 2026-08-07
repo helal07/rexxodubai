@@ -58,8 +58,11 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <a href="{{ url('/admin') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
+                <a href="{{ url('/admin/dashboard') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
                     <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400"></i> Dashboard
+                </a>
+                <a href="{{ url('/admin/orders') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
+                    <i data-lucide="shopping-bag" class="w-4 h-4 text-[#B8712E]"></i> Orders
                 </a>
                 <a href="{{ url('/perfumes') }}" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-md">
                     <i data-lucide="external-link" class="w-4 h-4"></i> Catalog Live

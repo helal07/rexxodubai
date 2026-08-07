@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\MenuItem;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -307,6 +309,82 @@ class AdminWebController extends Controller
         Cache::flush();
 
         return redirect('/admin/products')->with('success', 'Product removed from database.');
+    }
+
+    public function orders(Request $request)
+    {
+        $query = Order::with('items')->orderBy('created_at', 'desc');
+
+        // Status filter
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Payment status filter
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        // Keyword Search (order number, customer name, email, phone, city)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_email', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%");
+            });
+        }
+
+        $orders = $query->paginate(25)->withQueryString();
+        $totalOrdersCount = Order::count();
+        $pendingOrdersCount = Order::where('status', 'pending')->count();
+        $processingOrdersCount = Order::where('status', 'processing')->count();
+        $completedOrdersCount = Order::where('status', 'completed')->count();
+        $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
+        $siteSettings = Setting::pluck('value', 'key')->all();
+
+        return view('admin.orders', compact(
+            'orders',
+            'totalOrdersCount',
+            'pendingOrdersCount',
+            'processingOrdersCount',
+            'completedOrdersCount',
+            'totalRevenue',
+            'siteSettings'
+        ));
+    }
+
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'nullable|string|in:pending,processing,completed,cancelled',
+            'payment_status' => 'nullable|string|in:unpaid,paid,refunded',
+        ]);
+
+        if (isset($validated['status'])) {
+            $order->status = $validated['status'];
+        }
+
+        if (isset($validated['payment_status'])) {
+            $order->payment_status = $validated['payment_status'];
+        }
+
+        $order->save();
+
+        return redirect()->back()->with('success', "Order #{$order->order_number} status updated successfully.");
+    }
+
+    public function destroyOrder($id)
+    {
+        $order = Order::findOrFail($id);
+        $orderNumber = $order->order_number;
+        $order->delete();
+
+        return redirect()->back()->with('success', "Order #{$orderNumber} has been removed.");
     }
 }
 

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { Product } from '@/lib/api';
+import { useCart } from '@/Contexts/CartContext';
+import { ShoppingBag, Check, Plus } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -10,9 +12,33 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, variant = 'prada' }: ProductCardProps) {
+  const { addItem } = useCart();
   const [isHovered, setIsHovered] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const priceFormatted = product.price ? `$${Number(product.price).toFixed(2)}` : '';
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: Number(product.price) || 0,
+        size: product.sizes?.[0] || '100ml',
+        image: product.primary_image_url,
+        concentration: product.concentration || 'Extrait De Parfum',
+      },
+      1,
+      true
+    );
+
+    setIsAdding(true);
+    setTimeout(() => setIsAdding(false), 2000);
+  };
 
   return (
     <div
@@ -58,6 +84,31 @@ export default function ProductCard({ product, variant = 'prada' }: ProductCardP
               loading="lazy"
             />
           )}
+
+          {/* Modern Classic Quick Add Overlay Button (Slides up on Hover) */}
+          <div className="absolute inset-x-3 bottom-3 z-30 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 md:block">
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              className={`w-full py-2.5 px-3 text-[11px] uppercase font-bold tracking-[0.14em] shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all duration-200 ${
+                isAdding
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-[#0A0A0A]/95 hover:bg-[#B8712E] text-white backdrop-blur-xs'
+              }`}
+            >
+              {isAdding ? (
+                <>
+                  <Check size={13} />
+                  <span>ADDED TO BAG</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={13} />
+                  <span>QUICK ADD TO BAG</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Centered Prada Product Title & Price Label */}

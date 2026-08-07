@@ -119,8 +119,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/menus', [AdminWebController::class, 'menus']);
     Route::get('/admin/categories', [AdminWebController::class, 'categories']);
     Route::get('/admin/products', [AdminWebController::class, 'products']);
-    Route::get('/admin/orders', [AdminWebController::class, 'dashboard']);
-    Route::get('/admin/courier', [AdminWebController::class, 'dashboard']);
+    Route::get('/admin/orders', [AdminWebController::class, 'orders']);
+    Route::post('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
+    Route::put('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
+    Route::delete('/admin/orders/{id}', [AdminWebController::class, 'destroyOrder']);
+    Route::get('/admin/courier', [AdminWebController::class, 'orders']);
 
     // Menu Builder CRUD Routes
     Route::post('/admin/menus', [AdminWebController::class, 'storeMenu']);
