@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, Head, usePage } from '@inertiajs/react';
 import HeroVideo from '@/Components/HeroVideo';
 import ProductCard from '@/Components/ProductCard';
 
@@ -11,6 +11,12 @@ interface HomePageProps {
 }
 
 export default function HomePage({ featuredProducts = [], newArrivals = [] }: HomePageProps) {
+  const { siteSettings, apiSettings }: any = usePage().props;
+  const settings = siteSettings || apiSettings || {};
+  const brandName = settings.siteName || 'RaaxO BD';
+  const tagline = settings.tagline || 'Fine Fragrance & Luxury Extraits';
+  const metaDesc = settings.seo_meta_description || 'Explore handcrafted luxury perfumes, pure extrait de parfums, and bespoke fragrances online in Bangladesh.';
+
   const [section1Gender, setSection1Gender] = useState<'women' | 'men'>('women');
   const [section2Gender, setSection2Gender] = useState<'women' | 'men'>('women');
 
@@ -129,6 +135,13 @@ export default function HomePage({ featuredProducts = [], newArrivals = [] }: Ho
 
   return (
     <div className="bg-white text-[#0A0A0A]">
+      <Head>
+        <title>{`${brandName} — ${tagline}`}</title>
+        <meta name="description" content={metaDesc} />
+        <meta property="og:title" content={`${brandName} — ${tagline}`} />
+        <meta property="og:description" content={metaDesc} />
+      </Head>
+
       {/* ── 1. HERO CAMPAIGN SECTION (Dynamic Video / Poster Background) ── */}
       <HeroVideo />
 

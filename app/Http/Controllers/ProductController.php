@@ -142,6 +142,10 @@ class ProductController extends Controller
             'gender' => 'nullable|in:women,men,unisex',
             'is_featured' => 'nullable|boolean',
             'is_new_arrival' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:500',
+            'og_image_url' => 'nullable|string',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(4);

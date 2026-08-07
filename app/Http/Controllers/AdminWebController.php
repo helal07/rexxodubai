@@ -191,6 +191,11 @@ class AdminWebController extends Controller
             'description' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
             'is_new_arrival' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:500',
+            'og_image_url' => 'nullable|string',
+            'og_image_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg,gif|max:5120',
         ]);
 
         $uploadDir = public_path('uploads/products');
@@ -210,6 +215,13 @@ class AdminWebController extends Controller
             $fileName = 'prod_sec_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
             $validated['secondary_image_url'] = '/uploads/products/' . $fileName;
+        }
+
+        if ($request->hasFile('og_image_file')) {
+            $file = $request->file('og_image_file');
+            $fileName = 'prod_og_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $fileName);
+            $validated['og_image_url'] = '/uploads/products/' . $fileName;
         }
 
         // Handle sizes array
@@ -258,6 +270,11 @@ class AdminWebController extends Controller
             'notes_base' => 'nullable|string|max:255',
             'short_description' => 'nullable|string',
             'description' => 'nullable|string',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keywords' => 'nullable|string|max:500',
+            'og_image_url' => 'nullable|string',
+            'og_image_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg,gif|max:5120',
         ]);
 
         $uploadDir = public_path('uploads/products');
@@ -277,6 +294,13 @@ class AdminWebController extends Controller
             $fileName = 'prod_sec_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
             $validated['secondary_image_url'] = '/uploads/products/' . $fileName;
+        }
+
+        if ($request->hasFile('og_image_file')) {
+            $file = $request->file('og_image_file');
+            $fileName = 'prod_og_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $fileName);
+            $validated['og_image_url'] = '/uploads/products/' . $fileName;
         }
 
         // Handle slug

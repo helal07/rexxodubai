@@ -28,6 +28,10 @@ class Product extends Model
         'is_featured',
         'is_new_arrival',
         'stock',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'og_image_url',
     ];
 
     protected $casts = [

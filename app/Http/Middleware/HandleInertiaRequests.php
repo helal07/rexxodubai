@@ -87,6 +87,16 @@ class HandleInertiaRequests extends Middleware
                 } catch (\Throwable $e) {
                     return [];
                 }
+            },
+            'siteSettings' => function () {
+                try {
+                    if (!Schema::hasTable('settings')) {
+                        return [];
+                    }
+                    return Setting::pluck('value', 'key')->toArray();
+                } catch (\Throwable $e) {
+                    return [];
+                }
             }
         ]);
     }

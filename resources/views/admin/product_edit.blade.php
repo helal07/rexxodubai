@@ -698,6 +698,176 @@
                 </div>
             </div>
 
+            <!-- SECTION 5: Per-Product SEO & Social Search Optimization -->
+            <div class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 sm:p-8 rounded-2xl space-y-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f0] pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide flex items-center gap-2">
+                                Per-Product SEO & Social Meta
+                                <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full uppercase">Google & Social Optimized</span>
+                            </h2>
+                            <p class="text-[11px] text-[#64748b]">Customize how this specific fragrance appears on Google Search, Facebook, Instagram, and WhatsApp.</p>
+                        </div>
+                    </div>
+
+                    <button 
+                        type="button" 
+                        onclick="autoGenerateProductSeo()" 
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#f0f9ff] hover:bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd] rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-2xs self-start sm:self-auto"
+                        title="Auto-fill Meta Title and Description based on current product details"
+                    >
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        Auto-Generate from Details
+                    </button>
+                </div>
+
+                <!-- Google Search Snippet Live Preview -->
+                <div class="bg-[#f8fafc] border border-[#cbd5e1] p-5 rounded-2xl space-y-2.5">
+                    <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[#64748b]">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="globe" class="w-3.5 h-3.5 text-[#0284c7]"></i>
+                            Google Search Result Preview
+                        </span>
+                        <span class="text-[10px] font-mono text-[#94a3b8]">Live SERP Simulator</span>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-[#e2e8f0] shadow-2xs space-y-1 font-sans">
+                        <div class="flex items-center gap-2 text-[12px] text-[#202124]">
+                            <div class="w-5 h-5 rounded-full bg-[#f1f5f9] flex items-center justify-center text-[10px] font-bold text-[#0284c7] overflow-hidden">
+                                @if(!empty($siteSettings['favicon_url']))
+                                    <img src="{{ $siteSettings['favicon_url'] }}" class="w-full h-full object-contain">
+                                @else
+                                    R
+                                @endif
+                            </div>
+                            <span class="text-[12px] text-[#202124] font-medium">{{ $siteSettings['siteName'] ?? 'RaaxO BD' }}</span>
+                            <span class="text-[12px] text-[#5f6368]">› product › <span id="serp-slug-preview">{{ $product->slug }}</span></span>
+                        </div>
+                        <h4 id="serp-title-preview" class="text-[18px] text-[#1a0dab] hover:underline cursor-pointer font-normal leading-snug">
+                            {{ $product->meta_title ?: ($product->name . ' — ' . ($product->scent_family ?: 'Luxury Fragrance') . ' | ' . ($siteSettings['siteName'] ?? 'RaaxO BD')) }}
+                        </h4>
+                        <p id="serp-desc-preview" class="text-[13px] text-[#4d5156] leading-relaxed line-clamp-2">
+                            {{ $product->meta_description ?: ($product->short_description ?: 'Discover ' . $product->name . '. Luxury handcrafted perfume extrait with high concentration longevity, available exclusively at ' . ($siteSettings['siteName'] ?? 'RaaxO BD') . '.') }}
+                        </p>
+                        <div class="flex items-center gap-3 pt-1 text-[11px] text-[#0f766e] font-medium">
+                            <span>৳ {{ number_format($product->price, 2) }}</span>
+                            <span>•</span>
+                            <span class="text-emerald-700 font-bold">✔ In stock</span>
+                            <span>•</span>
+                            <span>{{ $product->concentration ?: 'Extrait de Parfum' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Meta Title -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider">
+                            Custom Meta Title (Google Page Title)
+                        </label>
+                        <span id="title-char-count" class="text-[11px] font-mono text-[#64748b]">
+                            0 / 60 chars (Recommended: 50-60)
+                        </span>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="input_meta_title"
+                        name="meta_title" 
+                        value="{{ old('meta_title', $product->meta_title) }}" 
+                        placeholder="e.g. {{ $product->name }} — Luxury Extrait de Parfum | {{ $siteSettings['siteName'] ?? 'RaaxO BD' }}"
+                        maxlength="100"
+                        oninput="updateSeoPreview()"
+                        class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-semibold text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] transition-all shadow-xs"
+                    >
+                    <span class="text-[11px] text-[#64748b] mt-1 block">
+                        Leave blank to automatically fallback to: <strong class="text-[#334155]">{{ $product->name }} — {{ $siteSettings['siteName'] ?? 'RaaxO BD' }}</strong>
+                    </span>
+                </div>
+
+                <!-- Custom Meta Description -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider">
+                            Custom Meta Description (Google Snippet)
+                        </label>
+                        <span id="desc-char-count" class="text-[11px] font-mono text-[#64748b]">
+                            0 / 160 chars (Recommended: 120-160)
+                        </span>
+                    </div>
+                    <textarea 
+                        id="input_meta_description"
+                        name="meta_description" 
+                        rows="3" 
+                        maxlength="300"
+                        placeholder="e.g. Experience {{ $product->name }}, a refined {{ $product->scent_family ?: 'luxury' }} fragrance crafted with notes of {{ $product->notes_top ?: 'bergamot' }}. Free delivery across Bangladesh."
+                        oninput="updateSeoPreview()"
+                        class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[13px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all leading-relaxed shadow-xs"
+                    >{{ old('meta_description', $product->meta_description) }}</textarea>
+                    <span class="text-[11px] text-[#64748b] mt-1 block">
+                        Leave blank to automatically fallback to the product's short editorial excerpt.
+                    </span>
+                </div>
+
+                <!-- Meta Keywords & Custom Social Image -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            SEO Meta Keywords (Comma separated)
+                        </label>
+                        <input 
+                            type="text" 
+                            id="input_meta_keywords"
+                            name="meta_keywords" 
+                            value="{{ old('meta_keywords', $product->meta_keywords) }}" 
+                            placeholder="e.g. {{ strtolower($product->name) }}, luxury perfume bangladesh, extrait de parfum, {{ strtolower($product->scent_family ?: 'oud') }}"
+                            class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[13px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
+                        >
+                        <span class="text-[11px] text-[#64748b] mt-1 block">
+                            Helps secondary search engines and local directory indexing.
+                        </span>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            Custom Social Share (OG) Image
+                        </label>
+                        <div class="space-y-2">
+                            <input 
+                                type="file" 
+                                name="og_image_file" 
+                                accept="image/*"
+                                class="w-full border border-[#cbd5e1] text-[12px] text-[#475569] rounded-xl file:mr-3 file:py-2 file:px-3 file:rounded-l-xl file:border-0 file:text-[11px] file:font-bold file:bg-emerald-600 file:text-white cursor-pointer bg-white"
+                            >
+                            <input 
+                                type="text" 
+                                name="og_image_url" 
+                                value="{{ old('og_image_url', $product->og_image_url) }}" 
+                                placeholder="Or image URL (https://...)"
+                                class="w-full border border-[#cbd5e1] px-3.5 py-2 rounded-xl text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a] shadow-xs"
+                            >
+                        </div>
+                        <span class="text-[11px] text-[#64748b] mt-1 block">
+                            If empty, defaults to the product's primary bottle photo on Facebook/WhatsApp shares.
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Structured Data (Schema.org JSON-LD) Rich Snippet Badge -->
+                <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-start gap-3">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
+                    <div class="text-[12px] text-emerald-900 space-y-1">
+                        <strong class="font-bold block">Automatic Schema.org Product Rich Snippet Enabled</strong>
+                        <p class="text-emerald-800 text-[11px]">
+                            Google search crawlers will automatically receive structured JSON-LD data including product name, price (৳{{ number_format($product->price, 2) }} BDT), stock availability ({{ $product->stock > 0 ? 'InStock' : 'OutOfStock' }}), brand ({{ $siteSettings['siteName'] ?? 'RaaxO BD' }}), and scent family.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sticky Bottom Form Actions Bar -->
             <div class="sticky bottom-6 bg-white/95 backdrop-blur-xl border border-[#38bdf8]/40 p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 z-30">
                 <div class="flex items-center gap-2 text-[12px] text-[#64748b]">
@@ -814,6 +984,76 @@
         // Load saved theme on boot
         const savedTheme = localStorage.getItem('admin_theme') || '{{ $siteSettings["admin_theme"] ?? "default" }}';
         applyTheme(savedTheme);
+
+        // ── PER-PRODUCT SEO PREVIEW & AUTO-GENERATION ──
+        const defaultSiteName = @json($siteSettings['siteName'] ?? 'RaaxO BD');
+        const prodBaseName = @json($product->name);
+        const prodScentFamily = @json($product->scent_family ?? 'Luxury Fragrance');
+        const prodShortDesc = @json($product->short_description ?? '');
+
+        function updateSeoPreview() {
+            const titleInput = document.getElementById('input_meta_title');
+            const descInput = document.getElementById('input_meta_description');
+            const serpTitle = document.getElementById('serp-title-preview');
+            const serpDesc = document.getElementById('serp-desc-preview');
+            const titleCount = document.getElementById('title-char-count');
+            const descCount = document.getElementById('desc-char-count');
+
+            const currentTitle = titleInput?.value.trim() || `${prodBaseName} — ${prodScentFamily} | ${defaultSiteName}`;
+            const currentDesc = descInput?.value.trim() || prodShortDesc || `Discover ${prodBaseName}. Luxury handcrafted perfume extrait with exceptional longevity, available at ${defaultSiteName}.`;
+
+            if (serpTitle) serpTitle.textContent = currentTitle;
+            if (serpDesc) serpDesc.textContent = currentDesc;
+
+            if (titleCount && titleInput) {
+                const len = titleInput.value.length;
+                titleCount.textContent = `${len} / 60 chars` + (len > 60 ? ' ⚠ (May be truncated by Google)' : ' (Recommended: 50-60)');
+                titleCount.className = len > 60 ? 'text-[11px] font-mono text-amber-600 font-bold' : 'text-[11px] font-mono text-[#64748b]';
+            }
+
+            if (descCount && descInput) {
+                const len = descInput.value.length;
+                descCount.textContent = `${len} / 160 chars` + (len > 160 ? ' ⚠ (May be truncated by Google)' : ' (Recommended: 120-160)');
+                descCount.className = len > 160 ? 'text-[11px] font-mono text-amber-600 font-bold' : 'text-[11px] font-mono text-[#64748b]';
+            }
+        }
+
+        function autoGenerateProductSeo() {
+            const titleInput = document.getElementById('input_meta_title');
+            const descInput = document.getElementById('input_meta_description');
+            const keywordsInput = document.getElementById('input_meta_keywords');
+
+            const prodName = document.querySelector('input[name="name"]')?.value || prodBaseName;
+            const scent = document.querySelector('input[name="scent_family"]')?.value || prodScentFamily;
+            const concentration = document.querySelector('input[name="concentration"]')?.value || 'Extrait de Parfum';
+            const shortDesc = document.querySelector('input[name="short_description"]')?.value || '';
+            const topNotes = document.querySelector('input[name="notes_top"]')?.value || '';
+
+            if (titleInput) {
+                titleInput.value = `${prodName} — ${concentration} | ${defaultSiteName}`;
+            }
+
+            if (descInput) {
+                if (shortDesc) {
+                    descInput.value = `${shortDesc} Buy ${prodName} authentic fragrance online at ${defaultSiteName} with fast delivery in Bangladesh.`;
+                } else {
+                    descInput.value = `Shop ${prodName} ${concentration} by ${defaultSiteName}. Handcrafted ${scent} with notes of ${topNotes || 'luxury oils'}. 100% authentic fragrance in BD.`;
+                }
+            }
+
+            if (keywordsInput && !keywordsInput.value) {
+                const kw = [prodName.toLowerCase(), 'perfume bd', 'luxury fragrance', scent.toLowerCase(), 'buy perfume online bangladesh'];
+                keywordsInput.value = kw.join(', ');
+            }
+
+            updateSeoPreview();
+        }
+
+        // Initialize preview on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSeoPreview();
+        });
+        updateSeoPreview();
     </script>
 </body>
 </html>

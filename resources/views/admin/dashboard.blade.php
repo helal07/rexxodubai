@@ -257,6 +257,22 @@
                 <button type="button" onclick="switchSection('api_settings')" id="sidebar-btn-api_settings" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
                     <i data-lucide="plug" class="w-4 h-4"></i> API Settings
                 </button>
+
+                <!-- 8. SEO & SITEMAP -->
+                <div>
+                    <button type="button" onclick="toggleSubmenu('seo_sub')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="search" class="w-4 h-4"></i> SEO & Sitemap
+                        </div>
+                        <span data-chevron="seo_sub" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    </button>
+                    <div id="sub-seo_sub" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
+                        <button type="button" onclick="switchSection('seo')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• SEO Meta Settings</button>
+                        <button type="button" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Sitemap Generator</button>
+                        <button type="button" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Robots.txt Manager</button>
+                        <button type="button" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Ping Google / Bing</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1222,6 +1238,165 @@
                 </form>
             </div>
         </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION: SITEMAP & ROBOTS.TXT GENERATOR                       -->
+        <!-- ============================================================= -->
+        <div id="section-sitemap" class="section-content hidden space-y-6 animate-fade-in">
+
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="map" class="w-5 h-5 text-[#0284c7]"></i> Sitemap & SEO Indexing Manager
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Auto-generate sitemap.xml and robots.txt, then ping Google & Bing to instantly re-crawl your site.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <i data-lucide="globe" class="w-3.5 h-3.5"></i> Google-Friendly SEO
+                    </span>
+                </div>
+            </div>
+
+            <!-- Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="seo-status-grid">
+                <!-- Sitemap Status -->
+                <div class="bg-white/90 border rounded-2xl p-5 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center">
+                                <i data-lucide="file-code-2" class="w-5 h-5 text-sky-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-[14px] font-bold text-[#0f172a]">sitemap.xml</h3>
+                                <a href="/sitemap.xml" target="_blank" class="text-[10px] text-[#0284c7] hover:underline font-mono">{{ url('/sitemap.xml') }}</a>
+                            </div>
+                        </div>
+                        <span id="sitemap-status-badge" class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Checking...</span>
+                    </div>
+                    <div class="bg-[#f8fafc] rounded-xl border p-3 space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-[#64748b] font-bold uppercase">Last Generated</span>
+                            <span id="sitemap-last-updated" class="font-mono text-[#475569]">—</span>
+                        </div>
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-[#64748b] font-bold uppercase">URL Entries</span>
+                            <span id="sitemap-entries" class="font-mono font-bold text-[#0284c7]">—</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="generateSitemap()" id="btn-gen-sitemap" class="w-full py-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save sitemap.xml
+                    </button>
+                    <div id="sitemap-result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+                </div>
+
+                <!-- Robots.txt Status -->
+                <div class="bg-white/90 border rounded-2xl p-5 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+                                <i data-lucide="bot" class="w-5 h-5 text-violet-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-[14px] font-bold text-[#0f172a]">robots.txt</h3>
+                                <a href="/robots.txt" target="_blank" class="text-[10px] text-violet-600 hover:underline font-mono">{{ url('/robots.txt') }}</a>
+                            </div>
+                        </div>
+                        <span id="robots-status-badge" class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Checking...</span>
+                    </div>
+                    <div class="bg-[#f8fafc] rounded-xl border p-3 space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-[#64748b] font-bold uppercase">Last Generated</span>
+                            <span id="robots-last-updated" class="font-mono text-[#475569]">—</span>
+                        </div>
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-[#64748b] font-bold uppercase">Sitemap Link</span>
+                            <span class="font-mono text-emerald-700">Included ✔</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="generateRobots()" id="btn-gen-robots" class="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save robots.txt
+                    </button>
+                    <div id="robots-result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- Google & Bing Ping -->
+            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-5">
+                <div class="border-b pb-4">
+                    <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                        <i data-lucide="satellite" class="w-4 h-4 text-[#0284c7]"></i> Ping Search Engines
+                    </h3>
+                    <p class="text-[12px] text-[#64748b] mt-1">Notify Google and Bing about your updated sitemap so they re-crawl your site faster.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Google -->
+                    <div class="bg-[#f8fafc] border rounded-xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-white border shadow-xs flex items-center justify-center shrink-0">
+                            <svg viewBox="0 0 48 48" class="w-7 h-7"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[13px] font-bold text-[#0f172a]">Google Search Console</p>
+                            <p class="text-[11px] text-[#64748b]">google.com/ping?sitemap=...</p>
+                        </div>
+                        <span id="ping-google-badge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-[#94a3b8] border border-slate-200 shrink-0">Idle</span>
+                    </div>
+
+                    <!-- Bing -->
+                    <div class="bg-[#f8fafc] border rounded-xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-white border shadow-xs flex items-center justify-center shrink-0">
+                            <svg viewBox="0 0 48 48" class="w-7 h-7"><path d="M10 4l8 23.5-4.5 2.7L26 39l12-7-7-4.4 2-11.6z" fill="#0078D4"/><path d="M10 4l8 23.5 5-3L10 4z" fill="#004C97"/></svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[13px] font-bold text-[#0f172a]">Bing Webmaster Tools</p>
+                            <p class="text-[11px] text-[#64748b]">bing.com/ping?sitemap=...</p>
+                        </div>
+                        <span id="ping-bing-badge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-[#94a3b8] border border-slate-200 shrink-0">Idle</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="pingSeo()" id="btn-ping" class="w-full py-3.5 bg-gradient-to-r from-[#0284c7] to-emerald-600 hover:from-[#0369a1] hover:to-emerald-700 text-white rounded-xl text-[13px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm">
+                    <i data-lucide="send" class="w-4 h-4"></i> 🚀 Ping Google & Bing Now
+                </button>
+                <div id="ping-result" class="hidden text-[12px] font-mono p-4 rounded-lg"></div>
+            </div>
+
+            <!-- SEO Health Checklist -->
+            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-4">
+                <h3 class="text-[14px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> SEO Health Checklist
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="seo-checklist">
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
+                        <div><p class="text-[12px] font-bold text-emerald-800">Meta Title & Description</p><p class="text-[10px] text-emerald-700">Configured in Site Settings</p></div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
+                        <div><p class="text-[12px] font-bold text-emerald-800">Open Graph (OG) Tags</p><p class="text-[10px] text-emerald-700">og:title, og:description, og:image set</p></div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
+                        <div><p class="text-[12px] font-bold text-emerald-800">Canonical URLs</p><p class="text-[10px] text-emerald-700">Inertia SSR renders unique URLs per page</p></div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl" id="sitemap-check-card">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
+                        <div><p class="text-[12px] font-bold text-amber-800">sitemap.xml</p><p class="text-[10px] text-amber-700">Generate to enable Google indexing</p></div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl" id="robots-check-card">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
+                        <div><p class="text-[12px] font-bold text-amber-800">robots.txt</p><p class="text-[10px] text-amber-700">Generate to guide crawlers correctly</p></div>
+                    </div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl {{ !empty($siteSettings['pixel_google']) ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200' }}">
+                        <i data-lucide="{{ !empty($siteSettings['pixel_google']) ? 'check-circle-2' : 'clock' }}" class="w-4 h-4 {{ !empty($siteSettings['pixel_google']) ? 'text-emerald-600' : 'text-amber-500' }} mt-0.5 shrink-0"></i>
+                        <div><p class="text-[12px] font-bold {{ !empty($siteSettings['pixel_google']) ? 'text-emerald-800' : 'text-amber-800' }}">Google Analytics 4</p><p class="text-[10px] {{ !empty($siteSettings['pixel_google']) ? 'text-emerald-700' : 'text-amber-700' }}">{{ !empty($siteSettings['pixel_google']) ? 'GA4 ID: ' . $siteSettings['pixel_google'] : 'Configure in API Settings → Google' }}</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="section-menu" class="section-content hidden bg-white/90 border p-6 rounded-2xl space-y-6">
             <div class="flex justify-between items-center border-b pb-4">
                 <div>
@@ -1487,6 +1662,38 @@
                 <div>
                     <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1.5">Product Description</label>
                     <textarea name="description" rows="4" placeholder="Describe the perfume's story, inspiration, and scent profile..." class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20 outline-none transition-all"></textarea>
+                </div>
+
+                <!-- Per-Product SEO & Social Meta (Optional / Collapsible) -->
+                <div class="bg-[#f8fafc] border border-[#cbd5e1] rounded-xl p-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[12px] font-bold uppercase tracking-wide text-[#0f172a] flex items-center gap-2">
+                            <i data-lucide="search" class="w-4 h-4 text-[#0284c7]"></i> Per-Product SEO & Social Meta (Optional)
+                        </span>
+                        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Google Rich Snippets</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold uppercase text-[#475569] block mb-1">Custom Meta Title</label>
+                            <input type="text" name="meta_title" placeholder="e.g. Perfume Name — Extrait de Parfum | Brand" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] bg-white focus:border-[#0284c7] outline-none">
+                            <span class="text-[10px] text-[#64748b] mt-0.5 block">Leave empty to auto-generate</span>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold uppercase text-[#475569] block mb-1">SEO Meta Keywords</label>
+                            <input type="text" name="meta_keywords" placeholder="e.g. perfume, luxury fragrance, oud, bd" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] bg-white focus:border-[#0284c7] outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-[#475569] block mb-1">Custom Meta Description</label>
+                        <textarea name="meta_description" rows="2" placeholder="Custom snippet for Google search results..." class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] bg-white focus:border-[#0284c7] outline-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold uppercase text-[#475569] block mb-1">Custom Social Share (OG) Image</label>
+                        <input type="file" name="og_image_file" accept="image/*" class="w-full border border-[#cbd5e1] text-[11px] rounded-lg file:mr-3 file:py-1 file:px-3 file:border-0 file:text-[10px] file:font-bold file:bg-[#0284c7] file:text-white cursor-pointer bg-white">
+                    </div>
                 </div>
 
                 <!-- Footer / Submit -->
@@ -3173,6 +3380,163 @@
                 resultDiv.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
                 resultDiv.innerHTML = `✗ Network error: ${e.message}`;
             }
+        }
+
+        // ── SEO: LOAD STATUS ON SECTION OPEN ──
+        const _origSwitchSection = switchSection;
+        switchSection = function(secId) {
+            _origSwitchSection(secId);
+            if (secId === 'sitemap') loadSeoStatus();
+        };
+
+        async function loadSeoStatus() {
+            try {
+                const r = await fetch('/admin/seo/status', { headers: { 'Accept': 'application/json' } });
+                const d = await r.json();
+
+                // Sitemap
+                const sBadge = document.getElementById('sitemap-status-badge');
+                const sUpdated = document.getElementById('sitemap-last-updated');
+                const sEntries = document.getElementById('sitemap-entries');
+                const sCheck = document.getElementById('sitemap-check-card');
+                if (d.sitemap?.exists) {
+                    sBadge.className = 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase';
+                    sBadge.textContent = '✔ Exists';
+                    if (sUpdated) sUpdated.textContent = d.sitemap.last_updated ?? '—';
+                    if (sEntries) sEntries.textContent = (d.sitemap.entries ?? 0) + ' URLs';
+                    if (sCheck) { sCheck.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200'; sCheck.querySelector('i').setAttribute('data-lucide','check-circle-2'); sCheck.querySelector('i').className='w-4 h-4 text-emerald-600 mt-0.5 shrink-0'; sCheck.querySelector('p:first-child').className='text-[12px] font-bold text-emerald-800'; sCheck.querySelectorAll('p')[1].className='text-[10px] text-emerald-700'; sCheck.querySelectorAll('p')[1].textContent='Sitemap exists — '+d.sitemap.entries+' URLs indexed'; lucide.createIcons(); }
+                } else {
+                    sBadge.className = 'bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase';
+                    sBadge.textContent = '⚠ Not Found';
+                    if (sUpdated) sUpdated.textContent = 'Never';
+                    if (sEntries) sEntries.textContent = '0';
+                }
+
+                // Robots
+                const rBadge = document.getElementById('robots-status-badge');
+                const rUpdated = document.getElementById('robots-last-updated');
+                const rCheck = document.getElementById('robots-check-card');
+                if (d.robots?.exists) {
+                    rBadge.className = 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase';
+                    rBadge.textContent = '✔ Exists';
+                    if (rUpdated) rUpdated.textContent = d.robots.last_updated ?? '—';
+                    if (rCheck) { rCheck.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200'; rCheck.querySelector('i').setAttribute('data-lucide','check-circle-2'); rCheck.querySelector('i').className='w-4 h-4 text-emerald-600 mt-0.5 shrink-0'; rCheck.querySelector('p:first-child').className='text-[12px] font-bold text-emerald-800'; rCheck.querySelectorAll('p')[1].className='text-[10px] text-emerald-700'; rCheck.querySelectorAll('p')[1].textContent='robots.txt is live and guides crawlers'; lucide.createIcons(); }
+                } else {
+                    rBadge.className = 'bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase';
+                    rBadge.textContent = '⚠ Not Found';
+                    if (rUpdated) rUpdated.textContent = 'Never';
+                }
+                lucide.createIcons();
+            } catch(e) { console.warn('SEO status load error:', e); }
+        }
+
+        // ── SEO: GENERATE SITEMAP ──
+        async function generateSitemap() {
+            const btn = document.getElementById('btn-gen-sitemap');
+            const res = document.getElementById('sitemap-result');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Generating...';
+            res.className = 'text-[12px] font-mono p-3 rounded-lg bg-[#f8fafc] border text-[#475569]';
+            res.classList.remove('hidden');
+            res.innerHTML = '⏳ Building sitemap from products and pages...';
+            try {
+                const r = await fetch('/admin/seo/generate-sitemap', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' }
+                });
+                const d = await r.json();
+                if (r.ok && d.success) {
+                    res.className = 'text-[12px] font-mono p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800';
+                    res.innerHTML = `✔ ${d.message}<br>📄 ${d.entries} URLs · Generated: ${d.generated_at}<br><a href="/sitemap.xml" target="_blank" class="underline">View sitemap.xml ↗</a>`;
+                    showToastNotice('sitemap.xml generated successfully!');
+                    loadSeoStatus();
+                } else {
+                    res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                    res.innerHTML = `✗ ${d.message}`;
+                }
+            } catch(e) {
+                res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                res.innerHTML = `✗ Network error: ${e.message}`;
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save sitemap.xml';
+            lucide.createIcons();
+        }
+
+        // ── SEO: GENERATE ROBOTS.TXT ──
+        async function generateRobots() {
+            const btn = document.getElementById('btn-gen-robots');
+            const res = document.getElementById('robots-result');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Generating...';
+            res.className = 'text-[12px] font-mono p-3 rounded-lg bg-[#f8fafc] border text-[#475569]';
+            res.classList.remove('hidden');
+            res.innerHTML = '⏳ Building robots.txt with sitemap reference...';
+            try {
+                const r = await fetch('/admin/seo/generate-robots', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' }
+                });
+                const d = await r.json();
+                if (r.ok && d.success) {
+                    res.className = 'text-[12px] font-mono p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800';
+                    res.innerHTML = `✔ ${d.message}<br>Generated: ${d.generated_at}<br><a href="/robots.txt" target="_blank" class="underline">View robots.txt ↗</a>`;
+                    showToastNotice('robots.txt generated successfully!');
+                    loadSeoStatus();
+                } else {
+                    res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                    res.innerHTML = `✗ ${d.message}`;
+                }
+            } catch(e) {
+                res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                res.innerHTML = `✗ Network error: ${e.message}`;
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save robots.txt';
+            lucide.createIcons();
+        }
+
+        // ── SEO: PING GOOGLE & BING ──
+        async function pingSeo() {
+            const btn = document.getElementById('btn-ping');
+            const res = document.getElementById('ping-result');
+            const gBadge = document.getElementById('ping-google-badge');
+            const bBadge = document.getElementById('ping-bing-badge');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Pinging...';
+            if(gBadge) { gBadge.className='text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0 animate-pulse'; gBadge.textContent='Pinging...'; }
+            if(bBadge) { bBadge.className='text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0 animate-pulse'; bBadge.textContent='Pinging...'; }
+            res.className = 'text-[12px] font-mono p-4 rounded-lg bg-[#f8fafc] border text-[#475569]';
+            res.classList.remove('hidden');
+            res.innerHTML = '⏳ Sending ping to Google & Bing...';
+            try {
+                const r = await fetch('/admin/seo/ping-search-engines', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' }
+                });
+                const d = await r.json();
+                if(gBadge) {
+                    const gOk = d.results?.Google?.success;
+                    gBadge.className = gOk ? 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0' : 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0';
+                    gBadge.textContent = gOk ? '✔ Pinged' : '⚠ Check';
+                }
+                if(bBadge) {
+                    const bOk = d.results?.Bing?.success;
+                    bBadge.className = bOk ? 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0' : 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0';
+                    bBadge.textContent = bOk ? '✔ Pinged' : '⚠ Check';
+                }
+                res.className = d.success
+                    ? 'text-[12px] font-mono p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800'
+                    : 'text-[12px] font-mono p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800';
+                res.innerHTML = `${d.success ? '✔' : '⚠'} ${d.message}`;
+                showToastNotice(d.message);
+            } catch(e) {
+                res.className = 'text-[12px] font-mono p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                res.innerHTML = `✗ Network error: ${e.message}`;
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> 🚀 Ping Google & Bing Now';
+            lucide.createIcons();
         }
     </script>
 </body>

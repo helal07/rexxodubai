@@ -1,6 +1,6 @@
 import React from 'react';
 import ProductCard from '@/Components/ProductCard';
-import { Link } from '@inertiajs/react';
+import { Link, Head, usePage } from '@inertiajs/react';
 
 export const revalidate = 30;
 
@@ -19,6 +19,9 @@ interface PageProps {
 }
 
 export default function PLPPage({ products = [], filters: params = {}, isFallback = false }: PageProps) {
+  const { siteSettings, apiSettings }: any = usePage().props;
+  const settings = siteSettings || apiSettings || {};
+  const brandName = settings.siteName || 'RaaxO BD';
   // Human-readable titles mapping
   const categoryTitles: Record<string, string> = {
     'men-perfumes': 'MEN PERFUMES',
@@ -75,6 +78,11 @@ export default function PLPPage({ products = [], filters: params = {}, isFallbac
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 pt-24 pb-16 space-y-8 animate-fade-in">
+      <Head>
+        <title>{`${pageTitle} — Fine Fragrances | ${brandName}`}</title>
+        <meta name="description" content={`Explore ${pageTitle.toLowerCase()} collection at ${brandName}. Handcrafted extraits, rare absolutes, and long-lasting perfumes in Bangladesh.`} />
+      </Head>
+
       {/* Category Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#DEDBD4] pb-6 gap-4">
         <div>

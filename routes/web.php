@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminCourierController;
 use App\Http\Controllers\AdminWebController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SmsController;
 use Illuminate\Support\Facades\Route;
 
@@ -107,6 +108,10 @@ Route::get('/login', function () {
     return redirect('/admin');
 });
 
+// ── Public SEO routes (must be before auth middleware) ──
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
+Route::get('/robots.txt',  [SeoController::class, 'robots']);
+
 // Admin Root Route: Shows Login if guest, or Dashboard if authenticated admin
 Route::get('/admin', function () {
     if (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()->is_admin) {
@@ -160,6 +165,12 @@ Route::middleware('auth')->group(function () {
 
     // SMS Gateway Routes
     Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');
+
+    // SEO — Sitemap & Robots Generator Routes
+    Route::get('/admin/seo/status',              [SeoController::class, 'status'])->name('admin.seo.status');
+    Route::post('/admin/seo/generate-sitemap',   [SeoController::class, 'generateSitemap'])->name('admin.seo.sitemap');
+    Route::post('/admin/seo/generate-robots',    [SeoController::class, 'generateRobots'])->name('admin.seo.robots');
+    Route::post('/admin/seo/ping-search-engines',[SeoController::class, 'pingSearchEngines'])->name('admin.seo.ping');
 });
 
 
