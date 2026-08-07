@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ $siteSettings['admin_theme'] ?? 'default' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,10 +16,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .font-serif { font-family: 'Fraunces', Georgia, serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
         
         /* Custom Luxury Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -60,6 +61,48 @@
         }
         .submenu-chevron.chevron-open {
             transform: rotate(180deg);
+        }
+
+        /* Night Mode Overrides */
+        body.theme-night {
+            background: linear-gradient(135deg, #07090E 0%, #0D121F 50%, #05070B 100%) !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-night aside,
+        body.theme-night header,
+        body.theme-night .theme-card,
+        body.theme-night .theme-panel {
+            background-color: rgba(13, 18, 31, 0.9) !important;
+            border-color: #1E283D !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-night table thead {
+            background-color: #090D17 !important;
+            border-color: #1E283D !important;
+            color: #94a3b8 !important;
+        }
+        body.theme-night table tbody tr {
+            border-color: #1E283D !important;
+        }
+        body.theme-night table tbody tr:hover {
+            background-color: rgba(19, 26, 43, 0.6) !important;
+        }
+        body.theme-night input,
+        body.theme-night select,
+        body.theme-night textarea {
+            background-color: #131A2B !important;
+            border-color: #1E283D !important;
+            color: #ffffff !important;
+        }
+        body.theme-night .theme-subcard {
+            background-color: #131A2B !important;
+            border-color: #1E283D !important;
+        }
+
+        /* Light Mode Clean */
+        body.theme-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+            color: #0f172a !important;
         }
     </style>
 </head>
@@ -152,10 +195,38 @@
             </div>
         </div>
 
-        <div class="pt-6 border-t border-[#e2e8f0]">
-            <a href="{{ url('/admin/logout') }}" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 border border-rose-500/30 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center font-bold">
-                <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+        <div class="space-y-4 pt-6 border-t border-[#e2e8f0]">
+            <!-- Theme Toggle Bar -->
+            <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] px-1">Theme</span>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="setAdminTheme('default')" title="Sky Executive (Default)" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all bg-[#0284c7] text-white shadow-xs" id="theme-btn-default">Default</button>
+                    <button type="button" onclick="setAdminTheme('light')" title="Clean Light" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-light">Light</button>
+                    <button type="button" onclick="setAdminTheme('night')" title="Night / Dark Mode" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-night">Night</button>
+                </div>
+            </div>
+
+            <a href="{{ url('/') }}" target="_blank" class="w-full px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#0284c7] text-[12px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs">
+                <i data-lucide="external-link" class="w-4 h-4"></i> View Storefront
             </a>
+
+            <div class="flex items-center justify-between px-2 pt-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-[#0284c7]/10 text-[#0284c7] flex items-center justify-center font-bold text-sm">
+                        AD
+                    </div>
+                    <div>
+                        <span class="text-[12px] font-bold block leading-none">Super Admin</span>
+                        <span class="text-[10px] text-[#64748b] block mt-0.5">Active Session</span>
+                    </div>
+                </div>
+                <form action="{{ url('/logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" title="Logout" class="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </aside>
 
@@ -518,6 +589,9 @@
                 @endif
             </div>
         </div>
+
+        <!-- Classic Minimal Admin Footer -->
+        @include('admin.partials.footer')
     </main>
 
     <!-- ===================================================================== -->
@@ -1012,6 +1086,51 @@
         function closeTrackingModal() {
             document.getElementById('trackingModal').classList.add('hidden');
         }
+
+        // Theme Mode Handler
+        function setAdminTheme(mode) {
+            localStorage.setItem('admin_theme', mode);
+            applyTheme(mode);
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    settings: { admin_theme: mode }
+                })
+            }).catch(e => console.log('Theme sync note:', e));
+        }
+
+        function applyTheme(mode) {
+            document.body.classList.remove('theme-night', 'theme-light');
+            const btns = ['default', 'light', 'night'];
+            btns.forEach(b => {
+                const el = document.getElementById('theme-btn-' + b);
+                if (el) {
+                    el.classList.remove('bg-[#0284c7]', 'text-white', 'shadow-xs');
+                    el.classList.add('text-[#64748b]');
+                }
+            });
+
+            if (mode === 'night') {
+                document.body.classList.add('theme-night');
+                const el = document.getElementById('theme-btn-night');
+                if (el) { el.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs'); el.classList.remove('text-[#64748b]'); }
+            } else if (mode === 'light') {
+                document.body.classList.add('theme-light');
+                const el = document.getElementById('theme-btn-light');
+                if (el) { el.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs'); el.classList.remove('text-[#64748b]'); }
+            } else {
+                const el = document.getElementById('theme-btn-default');
+                if (el) { el.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs'); el.classList.remove('text-[#64748b]'); }
+            }
+        }
+
+        // Load saved theme on boot
+        const savedTheme = localStorage.getItem('admin_theme') || '{{ $siteSettings["admin_theme"] ?? "default" }}';
+        applyTheme(savedTheme);
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();

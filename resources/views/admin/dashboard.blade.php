@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ $siteSettings['admin_theme'] ?? 'default' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,10 +15,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .font-serif { font-family: 'Fraunces', Georgia, serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
         
         /* Custom Luxury Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -97,6 +98,51 @@
         }
         .btn-shimmer:hover::after {
             transform: translateX(100%);
+        }
+
+        /* Night Mode Theme Overrides */
+        body.theme-night {
+            background: linear-gradient(135deg, #07090E 0%, #0D121F 50%, #05070B 100%) !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-night aside,
+        body.theme-night header,
+        body.theme-night .section-content > div,
+        body.theme-night .bg-white\/90,
+        body.theme-night .bg-white\/80 {
+            background-color: rgba(13, 18, 31, 0.9) !important;
+            border-color: #1E283D !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-night table thead {
+            background-color: #090D17 !important;
+            border-color: #1E283D !important;
+            color: #94a3b8 !important;
+        }
+        body.theme-night table tbody tr {
+            border-color: #1E283D !important;
+        }
+        body.theme-night table tbody tr:hover {
+            background-color: rgba(19, 26, 43, 0.6) !important;
+        }
+        body.theme-night input,
+        body.theme-night select,
+        body.theme-night textarea {
+            background-color: #131A2B !important;
+            border-color: #1E283D !important;
+            color: #ffffff !important;
+        }
+        body.theme-night .bg-\[\#f8fafc\],
+        body.theme-night .bg-\[\#f1f5f9\] {
+            background-color: #131A2B !important;
+            border-color: #1E283D !important;
+            color: #f1f5f9 !important;
+        }
+
+        /* Light Mode Clean */
+        body.theme-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+            color: #0f172a !important;
         }
     </style>
 </head>
@@ -229,10 +275,38 @@
             </div>
         </div>
 
-        <div class="pt-6 border-t border-[#e2e8f0]">
-            <a href="{{ url('/admin/logout') }}" class="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 border border-rose-500/30 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-center font-bold">
-                <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+        <div class="space-y-4 pt-6 border-t border-[#e2e8f0]">
+            <!-- Theme Toggle Bar -->
+            <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] px-1">Theme</span>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="setAdminTheme('default')" title="Sky Executive (Default)" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all bg-[#0284c7] text-white shadow-xs" id="theme-btn-default">Default</button>
+                    <button type="button" onclick="setAdminTheme('light')" title="Clean Light" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-light">Light</button>
+                    <button type="button" onclick="setAdminTheme('night')" title="Night / Dark Mode" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-night">Night</button>
+                </div>
+            </div>
+
+            <a href="{{ url('/') }}" target="_blank" class="w-full px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#0284c7] text-[12px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs">
+                <i data-lucide="external-link" class="w-4 h-4"></i> View Storefront
             </a>
+
+            <div class="flex items-center justify-between px-2 pt-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-[#0284c7]/10 text-[#0284c7] flex items-center justify-center font-bold text-sm">
+                        AD
+                    </div>
+                    <div>
+                        <span class="text-[12px] font-bold block leading-none">Super Admin</span>
+                        <span class="text-[10px] text-[#64748b] block mt-0.5">Active Session</span>
+                    </div>
+                </div>
+                <form action="{{ url('/logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" title="Logout" class="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </aside>
 
@@ -480,6 +554,37 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Admin Panel Appearance Theme (Default, Light, Night) -->
+                    <div class="space-y-4">
+                        <h3 class="text-[13px] font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-2">Admin Dashboard Theme Appearance</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#f8fafc] p-4 rounded-xl border border-[#e2e8f0]">
+                            <label class="relative flex flex-col p-4 bg-white border-2 rounded-xl cursor-pointer hover:border-[#0284c7] transition-all has-[:checked]:border-[#0284c7] has-[:checked]:bg-sky-50/40">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-bold text-[13px] text-[#0f172a]">Sky Executive (Default)</span>
+                                    <input type="radio" name="admin_theme" value="default" onchange="setAdminTheme('default')" {{ ($siteSettings['admin_theme'] ?? 'default') === 'default' ? 'checked' : '' }} class="w-4 h-4 text-[#0284c7]">
+                                </div>
+                                <p class="text-[11px] text-[#64748b]">Signature executive sky-blue luxury gradient backdrop for high productivity.</p>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 bg-white border-2 rounded-xl cursor-pointer hover:border-[#0284c7] transition-all has-[:checked]:border-[#0284c7] has-[:checked]:bg-sky-50/40">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-bold text-[13px] text-[#0f172a]">Clean Light Mode</span>
+                                    <input type="radio" name="admin_theme" value="light" onchange="setAdminTheme('light')" {{ ($siteSettings['admin_theme'] ?? '') === 'light' ? 'checked' : '' }} class="w-4 h-4 text-[#0284c7]">
+                                </div>
+                                <p class="text-[11px] text-[#64748b]">Crisp white and soft slate modern clean aesthetic for daylight operations.</p>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 bg-white border-2 rounded-xl cursor-pointer hover:border-[#0284c7] transition-all has-[:checked]:border-[#0284c7] has-[:checked]:bg-sky-50/40">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-bold text-[13px] text-[#0f172a]">Obsidian Night Mode</span>
+                                    <input type="radio" name="admin_theme" value="night" onchange="setAdminTheme('night')" {{ ($siteSettings['admin_theme'] ?? '') === 'night' ? 'checked' : '' }} class="w-4 h-4 text-[#0284c7]">
+                                </div>
+                                <p class="text-[11px] text-[#64748b]">Ultra-sleek dark theme designed for late hours and OLED contrast.</p>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Brand Assets (Logo, Favicon & Brand Identity) -->
                     <div class="space-y-4">
                         <h3 class="text-[13px] font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-2">Brand Assets (Logo & Favicon)</h3>
@@ -1877,7 +1982,54 @@
                     if (brandNameEl) brandNameEl.innerText = siteName;
                     document.title = siteName + ' — Master Admin Panel';
                 }
+
+                const currentTheme = data.admin_theme || localStorage.getItem('admin_theme') || document.documentElement.getAttribute('data-theme') || 'default';
+                applyTheme(currentTheme);
             } catch(e) { console.error('Failed to load settings', e); }
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.body.classList.remove('theme-night', 'theme-light');
+            if (theme === 'night') {
+                document.body.classList.add('theme-night');
+            } else if (theme === 'light') {
+                document.body.classList.add('theme-light');
+            }
+
+            // Sync sidebar theme buttons
+            ['default', 'light', 'night'].forEach(t => {
+                const btn = document.getElementById('theme-btn-' + t);
+                if (!btn) return;
+                if (t === theme) {
+                    btn.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs');
+                    btn.classList.remove('text-[#64748b]', 'hover:bg-[#e2e8f0]');
+                } else {
+                    btn.classList.remove('bg-[#0284c7]', 'text-white', 'shadow-xs');
+                    btn.classList.add('text-[#64748b]', 'hover:bg-[#e2e8f0]');
+                }
+            });
+
+            // Sync radio button in Site Settings
+            const radio = document.querySelector(`input[name="admin_theme"][value="${theme}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        async function setAdminTheme(theme) {
+            applyTheme(theme);
+            localStorage.setItem('admin_theme', theme);
+            try {
+                const formData = new FormData();
+                formData.append('admin_theme', theme);
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: formData
+                });
+                showToastNotice(`Theme switched to ${theme.toUpperCase()}!`);
+            } catch (e) {
+                console.error('Failed to persist theme setting:', e);
+            }
         }
 
         async function handleSettingsSave(e) {
@@ -1904,6 +2056,11 @@
                 if (res.ok) {
                     const settings = result.settings || {};
                     
+                    if (settings.admin_theme) {
+                        applyTheme(settings.admin_theme);
+                        localStorage.setItem('admin_theme', settings.admin_theme);
+                    }
+
                     // Instant reactive updates across admin panel
                     const heroVideo = settings.hero_video_url || settings.hero_video;
                     if (heroVideo) {
@@ -1974,7 +2131,7 @@
                 btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Clearing...`;
                 lucide.createIcons();
                 
-                const res = await fetch('http://localhost:8000/api/clear-cache', { method: 'POST' });
+                const res = await fetch('/api/clear-cache', { method: 'POST' });
                 
                 if (res.ok) {
                     showToastNotice('System Cache Cleared Successfully!');

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ $siteSettings['admin_theme'] ?? 'default' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $siteSettings['siteName'] ?? 'REXXO BD' }} — Navigation Menu Builder</title>
-    
+    <title>{{ $siteSettings['siteName'] ?? 'RaaxO BD' }} — Navigation Menu Builder</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <!-- Dynamic Favicon -->
     @php
         $adminFavicon = !empty($siteSettings['favicon_url']) ? $siteSettings['favicon_url'] : (!empty($siteSettings['site_favicon']) ? $siteSettings['site_favicon'] : '/uploads/settings/favicon_1785930191.ico');
@@ -15,87 +16,293 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .font-serif { font-family: 'Fraunces', Georgia, serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         
+        /* Custom Luxury Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0c0f17; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #B8712E; }
+        ::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0284c7; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        .card-elevated {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card-elevated:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -4px rgba(2, 132, 199, 0.14);
+        }
+
+        .submenu-panel {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-top 0.35s ease;
+            margin-top: 0;
+        }
+        .submenu-panel.submenu-open {
+            max-height: 220px;
+            opacity: 1;
+            margin-top: 0.35rem;
+        }
+        .submenu-chevron {
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .submenu-chevron.chevron-open {
+            transform: rotate(180deg);
+        }
+
+        /* Night Mode Overrides */
+        body.theme-night {
+            background: linear-gradient(135deg, #07090E 0%, #0D121F 50%, #05070B 100%) !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-night aside,
+        body.theme-night header,
+        body.theme-night .theme-card,
+        body.theme-night .theme-panel {
+            background-color: rgba(13, 18, 31, 0.9) !important;
+            border-color: #1E283D !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-night table thead {
+            background-color: #090D17 !important;
+            border-color: #1E283D !important;
+            color: #94a3b8 !important;
+        }
+        body.theme-night table tbody tr {
+            border-color: #1E283D !important;
+        }
+        body.theme-night table tbody tr:hover {
+            background-color: rgba(19, 26, 43, 0.6) !important;
+        }
+        body.theme-night input,
+        body.theme-night select,
+        body.theme-night textarea {
+            background-color: #131A2B !important;
+            border-color: #1E283D !important;
+            color: #ffffff !important;
+        }
+        body.theme-night .theme-subcard {
+            background-color: #131A2B !important;
+            border-color: #1E283D !important;
+        }
+
+        /* Light Mode Clean */
+        body.theme-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+            color: #0f172a !important;
+        }
     </style>
 </head>
-<body class="bg-[#07090E] text-slate-100 min-h-screen p-6 md:p-10 relative selection:bg-[#B8712E] selection:text-white">
-    <!-- Ambient Glow Background -->
-    <div class="fixed top-0 right-1/4 w-[600px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(184,113,46,0.12),transparent_70%)] pointer-events-none z-0"></div>
+<body class="bg-gradient-to-br from-[#e0f2fe] via-[#f0f9ff] to-[#bae6fd] text-[#0f172a] font-sans flex min-h-screen relative overflow-x-hidden selection:bg-[#0284c7] selection:text-white">
 
-    <div class="max-w-7xl mx-auto space-y-8 relative z-10 animate-fade-in">
-        <!-- Top Navigation Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0D121F]/90 backdrop-blur-xl border border-[#1E283D] p-6 rounded-2xl shadow-xl">
-            <div class="flex items-center gap-4">
-                @if(!empty($siteSettings['logo_url']) || !empty($siteSettings['site_logo']))
-                    <img src="{{ $siteSettings['logo_url'] ?? $siteSettings['site_logo'] }}" alt="Logo" class="h-10 w-auto max-w-[140px] object-contain rounded-lg shadow-sm" />
-                @else
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#B8712E] to-[#8d4f18] text-white flex items-center justify-center shadow-lg">
-                        <i data-lucide="menu" class="w-5 h-5"></i>
-                    </div>
-                @endif
+    <!-- 1. LEFT SIDEBAR MENU BAR -->
+    <aside class="w-64 lg:w-72 bg-white/90 backdrop-blur-xl border-r border-[#38bdf8]/30 min-h-screen p-6 flex flex-col justify-between shrink-0 relative z-20 shadow-sm">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-6">
+                <div id="sidebarLogoContainer" class="flex items-center justify-center">
+                    @if(!empty($siteSettings['logo_url']) || !empty($siteSettings['site_logo']))
+                        <img id="sidebarLogoImg" src="{{ $siteSettings['logo_url'] ?? $siteSettings['site_logo'] }}" alt="Logo" class="max-h-10 max-w-[120px] object-contain rounded-lg shadow-sm" />
+                    @else
+                        <div class="w-10 h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-md">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                    @endif
+                </div>
                 <div>
-                    <span class="text-[10px] text-[#B8712E] uppercase font-bold tracking-[0.2em] font-mono block">
-                        {{ $siteSettings['siteName'] ?? 'REXXO BD' }} NAVIGATION ARCHITECTURE
-                    </span>
-                    <h1 class="text-[22px] font-serif font-bold text-white uppercase tracking-tight">
-                        Navigation Menu Builder
+                    <h1 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide leading-none" id="sidebarBrandName">
+                        {{ $siteSettings['siteName'] ?? 'RaaxO BD' }}
                     </h1>
+                    <span class="text-[10px] text-[#0284c7] font-bold uppercase tracking-wider block mt-1">
+                        EXECUTIVE CONTROL HUB
+                    </span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ url('/admin/categories') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-[#B8712E] px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
-                    <i data-lucide="folder-tree" class="w-4 h-4 text-[#B8712E]"></i> Categories & Subcategories
+
+            <div class="space-y-1.5">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8] px-3 block mb-2">
+                    MAIN MENU NAVIGATION
+                </span>
+
+                <!-- 1. DASHBOARD -->
+                <a href="{{ url('/admin/dashboard') }}" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
                 </a>
-                <a href="{{ url('/admin') }}" class="inline-flex items-center gap-2 bg-[#131A2B] hover:bg-[#1c263d] border border-[#1E283D] text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-sm">
-                    <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400"></i> Dashboard
+
+                <!-- 2. ORDERS -->
+                <div>
+                    <button type="button" onclick="toggleSubmenu('orders')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="shopping-bag" class="w-4 h-4"></i> Orders
+                        </div>
+                        <span data-chevron="orders" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    </button>
+                    <div id="sub-orders" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
+                        <a href="{{ url('/admin/orders') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Total Orders</a>
+                        <a href="{{ url('/admin/orders?status=completed') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-emerald-700 hover:bg-[#f8fafc] rounded-lg">• Success Orders</a>
+                        <a href="{{ url('/admin/orders?status=cancelled') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-rose-700 hover:bg-[#f8fafc] rounded-lg">• Return / Cancelled</a>
+                    </div>
+                </div>
+
+                <!-- 3. PRODUCT -->
+                <div>
+                    <button type="button" onclick="toggleSubmenu('product')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="package" class="w-4 h-4"></i> Product
+                        </div>
+                        <span data-chevron="product" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    </button>
+                    <div id="sub-product" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
+                        <a href="{{ url('/admin/products') }}#addProductForm" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Add Product</a>
+                        <a href="{{ url('/admin/products') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• List Products</a>
+                        <a href="{{ url('/admin/categories') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Category & Sub Category</a>
+                    </div>
+                </div>
+
+                <!-- 4. MENUS / NAVIGATION (ACTIVE) -->
+                <a href="{{ url('/admin/menus') }}" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer bg-[#0284c7] text-white shadow-md">
+                    <i data-lucide="menu" class="w-4 h-4"></i> Navigation Menus
                 </a>
-                <a href="{{ url('/') }}" target="_blank" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-md">
-                    <i data-lucide="external-link" class="w-4 h-4"></i> Preview Live
+
+                <!-- 5. COURIER -->
+                <div>
+                    <button type="button" onclick="toggleSubmenu('courier')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="truck" class="w-4 h-4"></i> Courier
+                        </div>
+                        <span data-chevron="courier" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    </button>
+                    <div id="sub-courier" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
+                        <a href="{{ url('/admin/courier') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Courier Hub & API</a>
+                        <a href="{{ url('/admin/courier') }}#dispatch-section" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Send Courier</a>
+                        <a href="{{ url('/admin/courier') }}#history-section" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Courier History</a>
+                    </div>
+                </div>
+
+                <!-- 6. SITE SETTING -->
+                <a href="{{ url('/admin/dashboard') }}#site_setting" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
+                    <i data-lucide="sliders" class="w-4 h-4"></i> Site Settings
                 </a>
             </div>
         </div>
 
+        <div class="space-y-4 pt-6 border-t border-[#e2e8f0]">
+            <!-- Theme Toggle Bar -->
+            <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] px-1">Theme</span>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="setAdminTheme('default')" title="Sky Executive (Default)" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all bg-[#0284c7] text-white shadow-xs" id="theme-btn-default">Default</button>
+                    <button type="button" onclick="setAdminTheme('light')" title="Clean Light" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-light">Light</button>
+                    <button type="button" onclick="setAdminTheme('night')" title="Night / Dark Mode" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-night">Night</button>
+                </div>
+            </div>
+
+            <a href="{{ url('/') }}" target="_blank" class="w-full px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#0284c7] text-[12px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs">
+                <i data-lucide="external-link" class="w-4 h-4"></i> View Storefront
+            </a>
+
+            <div class="flex items-center justify-between px-2 pt-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-[#0284c7]/10 text-[#0284c7] flex items-center justify-center font-bold text-sm">
+                        AD
+                    </div>
+                    <div>
+                        <span class="text-[12px] font-bold block leading-none">Super Admin</span>
+                        <span class="text-[10px] text-[#64748b] block mt-0.5">Active Session</span>
+                    </div>
+                </div>
+                <form action="{{ url('/logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" title="Logout" class="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN CONTENT WRAPPER -->
+    <main class="flex-1 min-h-screen p-6 lg:p-10 max-w-[1600px] w-full mx-auto space-y-8 relative z-10">
+
+        <!-- Top Navigation Header -->
+        <header class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm animate-fade-in">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0284c7] to-[#0369a1] text-white flex items-center justify-center shadow-lg shadow-[#0284c7]/20">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-widest text-[#0284c7]">NAVIGATION ARCHITECTURE</span>
+                        @php
+                            $itemsList = $items ?? ($menuItems ?? collect([]));
+                        @endphp
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]">
+                            {{ count($itemsList) }} ITEMS
+                        </span>
+                    </div>
+                    <h2 class="text-[22px] font-serif font-bold text-[#0f172a] uppercase tracking-tight">
+                        Header Navigation Menu Builder
+                    </h2>
+                </div>
+            </div>
+
+            <div class="flex items-center flex-wrap gap-2.5">
+                <a href="{{ url('/admin/categories') }}" class="px-4 py-2.5 bg-white hover:bg-[#f8fafc] border border-[#cbd5e1] text-[#475569] text-[12px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-2">
+                    <i data-lucide="folder-tree" class="w-4 h-4"></i> Categories
+                </a>
+                <a href="{{ url('/admin/products') }}" class="px-4 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-[12px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#0284c7]/20 flex items-center gap-2">
+                    <i data-lucide="package" class="w-4 h-4"></i> Products
+                </a>
+                <a href="{{ url('/') }}" target="_blank" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs flex items-center gap-2">
+                    <i data-lucide="external-link" class="w-4 h-4"></i> Storefront ↗
+                </a>
+            </div>
+        </header>
+
+        <!-- Flash Success Notification -->
         @if (session('success'))
-            <div class="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[13px] rounded-xl flex items-center gap-2.5 font-medium animate-fade-in">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            <div class="p-4 bg-emerald-50 border border-emerald-300 text-emerald-800 text-[13px] rounded-xl flex items-center gap-3 font-semibold shadow-xs animate-fade-in">
+                <div class="p-1.5 bg-emerald-500 text-white rounded-lg">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                </div>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
             <!-- Add New Menu Item Form -->
-            <div class="lg:col-span-5 bg-[#0D121F]/90 backdrop-blur-xl border border-[#1E283D] p-7 rounded-2xl space-y-6 shadow-xl">
-                <div class="flex items-center gap-3 border-b border-[#1E283D] pb-4">
-                    <div class="p-2 bg-[#B8712E]/10 border border-[#B8712E]/30 text-[#B8712E] rounded-lg">
+            <div class="lg:col-span-5 bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 rounded-2xl space-y-6 shadow-sm">
+                <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-4">
+                    <div class="p-2.5 bg-[#e0f2fe] text-[#0284c7] rounded-xl">
                         <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     </div>
-                    <h2 class="text-[16px] font-serif font-bold text-white uppercase tracking-wide">
-                        Create Navigation Item
-                    </h2>
+                    <div>
+                        <h3 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide">
+                            Create Navigation Link
+                        </h3>
+                        <p class="text-[11px] text-[#64748b]">Add a menu link to the storefront header bar</p>
+                    </div>
                 </div>
 
                 <form action="{{ url('/admin/menus') }}" method="POST" class="space-y-4">
                     @csrf
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">
-                            PARENT ITEM (LEAVE EMPTY FOR MAIN MENU)
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            PARENT ITEM (LEAVE EMPTY FOR TOP MENU)
                         </label>
-                        <select name="parent_id" class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-4 py-3 rounded-xl text-[13px] focus:outline-none focus:border-[#B8712E] transition-all">
+                        <select name="parent_id" class="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs">
                             <option value="">None (Top-Level Menu Item)</option>
                             @if(isset($parentItems))
                                 @foreach ($parentItems as $pItem)
@@ -106,60 +313,60 @@
                     </div>
 
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">
-                            MENU LABEL NAME
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            MENU LABEL NAME *
                         </label>
-                        <input type="text" name="label" required placeholder="e.g. Rare Extraits, Gifts, Discovery Set" class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-4 py-3 rounded-xl text-[13px] focus:outline-none focus:border-[#B8712E] focus:ring-1 focus:ring-[#B8712E] transition-all">
+                        <input type="text" name="label" required placeholder="e.g. Discovery Set, Men, Gifts, Extrait" class="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-semibold text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs">
                     </div>
 
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">
-                            TARGET URL LINK
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            TARGET URL LINK *
                         </label>
-                        <input type="text" name="url" required placeholder="/perfumes?category=gifts" class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-4 py-3 rounded-xl text-[13px] focus:outline-none focus:border-[#B8712E] focus:ring-1 focus:ring-[#B8712E] transition-all">
+                        <input type="text" name="url" required placeholder="/perfumes?category=gifts" class="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-mono text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs">
                     </div>
 
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5 font-mono">
+                        <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
                             SORT ORDER POSITION
                         </label>
-                        <input type="number" name="sort_order" value="1" class="w-full bg-[#131A2B] border border-[#1E283D] text-white px-4 py-3 rounded-xl text-[13px] focus:outline-none focus:border-[#B8712E] focus:ring-1 focus:ring-[#B8712E] transition-all">
+                        <input type="number" name="sort_order" value="1" class="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs">
                     </div>
 
-                    <button type="submit" class="w-full bg-gradient-to-r from-[#B8712E] to-[#9a5b20] hover:from-[#a66324] hover:to-[#844c18] text-white py-3.5 rounded-xl text-[12px] font-bold uppercase tracking-[0.14em] cursor-pointer transition-all shadow-lg shadow-[#B8712E]/20 flex items-center justify-center gap-2">
-                        <i data-lucide="save" class="w-4 h-4"></i> Save Navigation Item
+                    <button type="submit" class="w-full bg-[#0284c7] hover:bg-[#0369a1] text-white py-3.5 rounded-xl text-[12px] font-bold uppercase tracking-wider cursor-pointer transition-all shadow-md shadow-[#0284c7]/20 flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Navigation Link
                     </button>
                 </form>
             </div>
 
             <!-- Existing Menu Items List & Inline Editors -->
-            <div class="lg:col-span-7 bg-[#0D121F]/90 backdrop-blur-xl border border-[#1E283D] p-7 rounded-2xl space-y-6 shadow-xl">
-                <div class="flex items-center justify-between border-b border-[#1E283D] pb-4">
+            <div class="lg:col-span-7 bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 rounded-2xl space-y-6 shadow-sm">
+                <div class="flex items-center justify-between border-b border-[#e2e8f0] pb-4">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 bg-slate-800 border border-slate-700 text-slate-300 rounded-lg">
+                        <div class="p-2.5 bg-[#e0f2fe] text-[#0284c7] rounded-xl">
                             <i data-lucide="list-tree" class="w-5 h-5"></i>
                         </div>
-                        <h2 class="text-[16px] font-serif font-bold text-white uppercase tracking-wide">
-                            Active Menu Tree
-                        </h2>
+                        <div>
+                            <h3 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide">
+                                Active Navigation Items
+                            </h3>
+                            <p class="text-[11px] text-[#64748b]">Live items rendered on storefront header</p>
+                        </div>
                     </div>
-                    @php
-                        $itemsList = $items ?? ($menuItems ?? collect([]));
-                    @endphp
-                    <span class="text-[11px] font-mono text-slate-400 bg-[#131A2B] px-3 py-1 rounded-full border border-[#1E283D]">
+                    <span class="text-[11px] font-mono text-[#0284c7] bg-[#f0f9ff] px-3 py-1 rounded-full border border-[#bae6fd]">
                         {{ count($itemsList) }} ACTIVE ITEMS
                     </span>
                 </div>
 
                 <div class="space-y-3">
                     @forelse ($itemsList as $item)
-                        <div class="bg-[#131A2B] border border-[#1E283D] p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:border-slate-600 transition-all">
+                        <div class="bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 hover:border-[#cbd5e1] transition-all shadow-2xs">
                             <form action="{{ url('/admin/menus/' . $item->id) }}" method="POST" class="flex-1 flex flex-col sm:flex-row items-center gap-2.5 w-full">
                                 @csrf
                                 @method('PUT')
-                                <input type="text" name="label" value="{{ $item->label }}" class="bg-[#0D121F] border border-[#1E283D] text-white px-3.5 py-2 text-[12px] font-bold rounded-lg w-full sm:w-44 focus:outline-none focus:border-[#B8712E]">
-                                <input type="text" name="url" value="{{ $item->url }}" class="bg-[#0D121F] border border-[#1E283D] text-slate-400 font-mono px-3.5 py-2 text-[11px] rounded-lg w-full sm:w-56 focus:outline-none focus:border-[#B8712E]">
-                                <button type="submit" class="bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/40 text-emerald-300 hover:text-white text-[11px] uppercase font-bold px-3.5 py-2 rounded-lg transition-all shrink-0">
+                                <input type="text" name="label" value="{{ $item->label }}" class="bg-white border border-[#cbd5e1] text-[#0f172a] px-3.5 py-2 text-[12px] font-bold rounded-lg w-full sm:w-44 focus:outline-none focus:border-[#0284c7] shadow-xs">
+                                <input type="text" name="url" value="{{ $item->url }}" class="bg-white border border-[#cbd5e1] text-[#475569] font-mono px-3.5 py-2 text-[11px] rounded-lg w-full sm:w-56 focus:outline-none focus:border-[#0284c7] shadow-xs">
+                                <button type="submit" class="bg-[#e0f2fe] hover:bg-[#0284c7] border border-[#bae6fd] hover:border-[#0284c7] text-[#0284c7] hover:text-white text-[11px] uppercase font-bold px-3.5 py-2 rounded-lg transition-all shrink-0 shadow-xs cursor-pointer">
                                     Update
                                 </button>
                             </form>
@@ -167,13 +374,13 @@
                             <form action="{{ url('/admin/menus/' . $item->id) }}" method="POST" onsubmit="return confirm('Delete this menu item?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="bg-rose-500/10 hover:bg-rose-500 border border-rose-500/30 text-rose-400 hover:text-white text-[11px] uppercase font-bold px-3.5 py-2 rounded-lg transition-all shrink-0 cursor-pointer">
+                                <button type="submit" class="bg-rose-50 hover:bg-rose-600 border border-rose-200 hover:border-rose-600 text-rose-600 hover:text-white text-[11px] uppercase font-bold px-3.5 py-2 rounded-lg transition-all shrink-0 cursor-pointer shadow-xs">
                                     Delete
                                 </button>
                             </form>
                         </div>
                     @empty
-                        <div class="text-center py-10 text-slate-500 text-[13px] border border-dashed border-[#1E283D] rounded-xl font-mono">
+                        <div class="text-center py-10 text-[#64748b] text-[13px] bg-[#f8fafc] border border-dashed border-[#cbd5e1] rounded-xl font-medium">
                             No custom menu items yet. Create one on the left.
                         </div>
                     @endforelse
@@ -183,10 +390,66 @@
 
         <!-- Classic Minimal Admin Footer -->
         @include('admin.partials.footer')
-    </div>
+    </main>
 
     <script>
         lucide.createIcons();
+
+        function toggleSubmenu(id) {
+            const panel = document.getElementById('sub-' + id);
+            const chevron = document.querySelector('[data-chevron="' + id + '"]');
+            if (panel) {
+                panel.classList.toggle('submenu-open');
+            }
+            if (chevron) {
+                chevron.classList.toggle('chevron-open');
+            }
+        }
+
+        // Theme Mode Handler
+        function setAdminTheme(mode) {
+            localStorage.setItem('admin_theme', mode);
+            applyTheme(mode);
+            fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    settings: { admin_theme: mode }
+                })
+            }).catch(e => console.log('Theme sync note:', e));
+        }
+
+        function applyTheme(mode) {
+            document.body.classList.remove('theme-night', 'theme-light');
+            const btns = ['default', 'light', 'night'];
+            btns.forEach(b => {
+                const el = document.getElementById('theme-btn-' + b);
+                if (el) {
+                    el.classList.remove('bg-[#0284c7]', 'text-white', 'shadow-xs');
+                    el.classList.add('text-[#64748b]');
+                }
+            });
+
+            if (mode === 'night') {
+                document.body.classList.add('theme-night');
+                const el = document.getElementById('theme-btn-night');
+                if (el) { el.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs'); el.classList.remove('text-[#64748b]'); }
+            } else if (mode === 'light') {
+                document.body.classList.add('theme-light');
+                const el = document.getElementById('theme-btn-light');
+                if (el) { el.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs'); el.classList.remove('text-[#64748b]'); }
+            } else {
+                const el = document.getElementById('theme-btn-default');
+                if (el) { el.classList.add('bg-[#0284c7]', 'text-white', 'shadow-xs'); el.classList.remove('text-[#64748b]'); }
+            }
+        }
+
+        // Load saved theme on boot
+        const savedTheme = localStorage.getItem('admin_theme') || '{{ $siteSettings["admin_theme"] ?? "default" }}';
+        applyTheme(savedTheme);
     </script>
 </body>
 </html>
