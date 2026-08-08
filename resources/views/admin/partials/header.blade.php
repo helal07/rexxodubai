@@ -1,8 +1,11 @@
 @php
     $siteName = $siteSettings['siteName'] ?? $siteSettings['site_name'] ?? 'IT Solution';
     $logoUrl = $siteSettings['logo_url'] ?? $siteSettings['site_logo'] ?? '';
-    $userName = Auth::user()->name ?? 'Md Al Helal';
-    $userEmail = Auth::user()->email ?? 'admin@helal.com';
+    $currentUser = Auth::user();
+    $userName = $currentUser->name ?? 'Md Al Helal';
+    $userEmail = $currentUser->email ?? 'admin@helal.com';
+    $userRole = $currentUser->role ?? ($currentUser && $currentUser->is_admin ? 'Super Administrator' : 'Staff');
+    $userAvatar = $currentUser ? ($currentUser->avatar_url ?? $currentUser->avatar) : '';
     $todayDate = date('d-m-Y');
 @endphp
 
@@ -82,8 +85,13 @@
         <!-- User Profile Pill -->
         <div class="relative" id="profileDropdownContainer">
             <button type="button" onclick="toggleProfileDropdown()" class="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-lg hover:bg-white/10 border border-transparent hover:border-white/15 transition-all cursor-pointer group">
-                <div class="w-7 h-7 rounded-full bg-white text-[#4338ca] flex items-center justify-center font-bold text-[11px] shadow-sm shrink-0">
-                    {{ strtoupper(substr($userName, 0, 2)) }}
+                <div class="w-7 h-7 rounded-full overflow-hidden bg-white text-[#4338ca] flex items-center justify-center font-bold text-[11px] shadow-sm shrink-0 border border-white/30">
+                    @if(!empty($userAvatar))
+                        <img src="{{ $userAvatar }}" alt="{{ $userName }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+                        <span class="hidden">{{ strtoupper(substr($userName, 0, 2)) }}</span>
+                    @else
+                        <span>{{ strtoupper(substr($userName, 0, 2)) }}</span>
+                    @endif
                 </div>
                 <span class="text-[12px] font-bold text-white group-hover:text-indigo-100 transition-colors leading-tight hidden sm:inline">
                     {{ $userName }}
@@ -92,58 +100,106 @@
             </button>
 
             <!-- Profile Dropdown Menu -->
-            <div id="profileDropdownMenu" class="hidden absolute right-0 top-full mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-2xl py-2 z-50 animate-fade-in text-slate-800">
+            <div id="profileDropdownMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 z-50 animate-fade-in text-slate-800 divide-y divide-slate-100">
                 <!-- User Header -->
-                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/80 rounded-t-lg">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-full bg-[#4338ca] text-white flex items-center justify-center font-bold text-[11px]">
-                            {{ strtoupper(substr($userName, 0, 2)) }}
+                <div class="px-4 py-3 bg-gradient-to-r from-slate-50 to-indigo-50/50 rounded-t-xl">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full overflow-hidden bg-[#4338ca] text-white flex items-center justify-center font-bold text-[12px] shrink-0 border-2 border-white shadow-xs">
+                            @if(!empty($userAvatar))
+                                <img src="{{ $userAvatar }}" alt="{{ $userName }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+                                <span class="hidden">{{ strtoupper(substr($userName, 0, 2)) }}</span>
+                            @else
+                                <span>{{ strtoupper(substr($userName, 0, 2)) }}</span>
+                            @endif
                         </div>
-                        <div class="min-w-0">
-                            <p class="text-[12px] font-bold text-slate-900 truncate">{{ $userName }}</p>
-                            <p class="text-[10px] text-slate-500 truncate">{{ $userEmail }}</p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-[13px] font-bold text-slate-900 truncate leading-tight">{{ $userName }}</p>
+                            <p class="text-[10.5px] text-slate-500 truncate font-mono">{{ $userEmail }}</p>
+                            <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-100 text-[#4338ca]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                {{ $userRole }}
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Links -->
-                <div class="py-1">
-                    <a href="{{ url('/') }}" target="_blank" class="flex items-center gap-3 px-4 py-2 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors">
-                        <i data-lucide="store" class="w-4 h-4 text-slate-400"></i>
-                        <span>View Live Store</span>
-                    </a>
-
+                <!-- Profile & Account Actions (Standard Management) -->
+                <div class="py-1.5">
                     @if(request()->is('admin/dashboard') || request()->is('admin'))
-                        <button type="button" onclick="switchSection('settings'); toggleProfileDropdown();" class="w-full flex items-center gap-3 px-4 py-2 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left">
-                            <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
-                            <span>Business Settings</span>
+                        <button type="button" onclick="switchSection('profile'); toggleProfileDropdown();" class="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left group">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center text-[#4338ca] shrink-0 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[12.5px] font-bold text-slate-800 group-hover:text-[#4338ca]">My Profile & Info</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">Photo, address & contacts</span>
+                            </div>
                         </button>
                     @else
-                        <a href="{{ url('/admin/dashboard#settings') }}" class="flex items-center gap-3 px-4 py-2 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors">
-                            <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
-                            <span>Business Settings</span>
+                        <a href="{{ url('/admin/dashboard#profile') }}" class="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left group">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center text-[#4338ca] shrink-0 transition-colors">
+                                <i data-lucide="user" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[12.5px] font-bold text-slate-800 group-hover:text-[#4338ca]">My Profile & Info</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">Photo, address & contacts</span>
+                            </div>
                         </a>
                     @endif
 
                     @if(request()->is('admin/dashboard') || request()->is('admin'))
-                        <button type="button" onclick="switchSection('api_payment'); toggleProfileDropdown();" class="w-full flex items-center gap-3 px-4 py-2 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left">
-                            <i data-lucide="credit-card" class="w-4 h-4 text-slate-400"></i>
-                            <span>Payment Gateways</span>
+                        <button type="button" onclick="switchSection('profile_password'); toggleProfileDropdown();" class="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left group">
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 transition-colors">
+                                <i data-lucide="key-round" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[12.5px] font-bold text-slate-800 group-hover:text-[#4338ca]">Security & Password</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">Update login credentials</span>
+                            </div>
                         </button>
                     @else
-                        <a href="{{ url('/admin/dashboard#api_payment') }}" class="flex items-center gap-3 px-4 py-2 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors">
-                            <i data-lucide="credit-card" class="w-4 h-4 text-slate-400"></i>
-                            <span>Payment Gateways</span>
+                        <a href="{{ url('/admin/dashboard#profile_password') }}" class="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left group">
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center text-amber-600 shrink-0 transition-colors">
+                                <i data-lucide="key-round" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[12.5px] font-bold text-slate-800 group-hover:text-[#4338ca]">Security & Password</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">Update login credentials</span>
+                            </div>
+                        </a>
+                    @endif
+
+                    @if(request()->is('admin/dashboard') || request()->is('admin'))
+                        <button type="button" onclick="switchSection('users_management'); toggleProfileDropdown();" class="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left group">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 transition-colors">
+                                <i data-lucide="users-round" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[12.5px] font-bold text-slate-800 group-hover:text-[#4338ca]">Admin Users & Staff</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">Full user management</span>
+                            </div>
+                        </button>
+                    @else
+                        <a href="{{ url('/admin/dashboard#users_management') }}" class="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-semibold text-slate-700 hover:bg-indigo-50 hover:text-[#4338ca] transition-colors cursor-pointer text-left group">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 transition-colors">
+                                <i data-lucide="users-round" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block text-[12.5px] font-bold text-slate-800 group-hover:text-[#4338ca]">Admin Users & Staff</span>
+                                <span class="block text-[10px] text-slate-400 font-normal">Full user management</span>
+                            </div>
                         </a>
                     @endif
                 </div>
 
                 <!-- Sign Out -->
-                <div class="border-t border-slate-100 pt-1">
+                <div class="p-1.5 bg-slate-50/50 rounded-b-xl">
                     <form action="{{ url('/logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-[12px] font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer">
-                            <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-[12px] font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer">
+                            <div class="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
+                                <i data-lucide="log-out" class="w-4 h-4"></i>
+                            </div>
                             <span>Sign Out</span>
                         </button>
                     </form>

@@ -8,7 +8,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -31,8 +33,10 @@ class AdminWebController extends Controller
 
         $categories = Category::all();
         $siteSettings = Setting::pluck('value', 'key')->all();
+        $users = User::orderBy('created_at', 'desc')->get();
+        $currentUser = Auth::user();
 
-        return view('admin.dashboard', compact('menuCount', 'productCount', 'menuItems', 'products', 'categories', 'siteSettings'));
+        return view('admin.dashboard', compact('menuCount', 'productCount', 'menuItems', 'products', 'categories', 'siteSettings', 'users', 'currentUser'));
     }
 
     public function menus()

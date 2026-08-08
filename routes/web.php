@@ -174,6 +174,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/seo/generate-sitemap',   [SeoController::class, 'generateSitemap'])->name('admin.seo.sitemap');
     Route::post('/admin/seo/generate-robots',    [SeoController::class, 'generateRobots'])->name('admin.seo.robots');
     Route::post('/admin/seo/ping-search-engines',[SeoController::class, 'pingSearchEngines'])->name('admin.seo.ping');
+
+    // User Profile & Staff Management Routes
+    Route::get('/admin/profile', [\App\Http\Controllers\AdminProfileController::class, 'index']);
+    Route::post('/admin/profile/update', [\App\Http\Controllers\AdminProfileController::class, 'updateProfile']);
+    Route::post('/admin/profile/remove-avatar', [\App\Http\Controllers\AdminProfileController::class, 'removeAvatar']);
+    Route::post('/admin/profile/password', [\App\Http\Controllers\AdminProfileController::class, 'updatePassword']);
+    Route::post('/admin/users', [\App\Http\Controllers\AdminProfileController::class, 'storeUser']);
+    Route::put('/admin/users/{id}', [\App\Http\Controllers\AdminProfileController::class, 'updateUser']);
+    Route::delete('/admin/users/{id}', [\App\Http\Controllers\AdminProfileController::class, 'deleteUser']);
 });
 
 

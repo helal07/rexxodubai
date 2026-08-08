@@ -62,11 +62,11 @@
                 </button>
                 <div id="sub-product" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['products', 'categories', 'product_edit']) ? 'submenu-open' : '' }}">
                     @if($isDashboard)
-                        <button type="button" onclick="switchSection('products')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• List Products</button>
-                        <button type="button" onclick="switchSection('product_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</button>
+                        <button type="button" id="sidebar-btn-products" onclick="switchSection('products')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• List Products</button>
+                        <button type="button" id="sidebar-btn-product_add" onclick="switchSection('product_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</button>
                     @else
-                        <a href="{{ url('/admin/products') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'products' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• List Products</a>
-                        <a href="{{ url('/admin/products#addProductForm') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</a>
+                        <a href="{{ url('/admin/products') }}" id="sidebar-btn-products" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'products' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• List Products</a>
+                        <a href="{{ url('/admin/products#addProductForm') }}" id="sidebar-btn-product_add" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</a>
                     @endif
                     <a href="{{ url('/admin/categories') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'categories' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Category & Sub Category</a>
                 </div>
@@ -83,11 +83,11 @@
                 </button>
                 <div id="sub-purchase" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1">
                     @if($isDashboard)
-                        <button type="button" onclick="switchSection('purchase_list')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Purchase List</button>
-                        <button type="button" onclick="switchSection('purchase_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Purchase</button>
+                        <button type="button" id="sidebar-btn-purchase_list" onclick="switchSection('purchase_list')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Purchase List</button>
+                        <button type="button" id="sidebar-btn-purchase_add" onclick="switchSection('purchase_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Purchase</button>
                     @else
-                        <a href="{{ url('/admin/dashboard#purchase_list') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Purchase List</a>
-                        <a href="{{ url('/admin/dashboard#purchase_add') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Purchase</a>
+                        <a href="{{ url('/admin/dashboard#purchase_list') }}" id="sidebar-btn-purchase_list" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Purchase List</a>
+                        <a href="{{ url('/admin/dashboard#purchase_add') }}" id="sidebar-btn-purchase_add" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Purchase</a>
                     @endif
                 </div>
             </div>
@@ -103,11 +103,11 @@
                 </button>
                 <div id="sub-contact" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1">
                     @if($isDashboard)
-                        <button type="button" onclick="switchSection('customers')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Customers</button>
-                        <button type="button" onclick="switchSection('supplier')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Suppliers</button>
+                        <button type="button" id="sidebar-btn-customers" onclick="switchSection('customers')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Customers</button>
+                        <button type="button" id="sidebar-btn-supplier" onclick="switchSection('supplier')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Suppliers</button>
                     @else
-                        <a href="{{ url('/admin/dashboard#customers') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Customers</a>
-                        <a href="{{ url('/admin/dashboard#supplier') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Suppliers</a>
+                        <a href="{{ url('/admin/dashboard#customers') }}" id="sidebar-btn-customers" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Customers</a>
+                        <a href="{{ url('/admin/dashboard#supplier') }}" id="sidebar-btn-supplier" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Suppliers</a>
                     @endif
                 </div>
             </div>
@@ -168,12 +168,34 @@
                 </div>
             </div>
 
-            <!-- DIVIDER: SYSTEM -->
+            <!-- DIVIDER: SYSTEM & ACCOUNTS -->
             <div class="pt-3 mt-3 border-t border-slate-100">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block mb-1.5">Settings & Configuration</span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 block mb-1.5">Settings & Accounts</span>
             </div>
 
-            <!-- 9. SITE SETTING -->
+            <!-- 9. USER & STAFF MANAGEMENT -->
+            <div class="menu-search-item">
+                <button type="button" onclick="toggleSubmenu('user_mgmt')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['profile', 'users']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="user-check" class="w-4 h-4 {{ in_array($activePage, ['profile', 'users']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
+                        <span class="menu-text">User & Profile</span>
+                    </div>
+                    <span data-chevron="user_mgmt" class="submenu-chevron {{ in_array($activePage, ['profile', 'users']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                </button>
+                <div id="sub-user_mgmt" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['profile', 'users']) ? 'submenu-open' : '' }}">
+                    @if($isDashboard)
+                        <button type="button" id="sidebar-btn-profile" onclick="switchSection('profile')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• My Profile & Photo</button>
+                        <button type="button" id="sidebar-btn-profile_password" onclick="switchSection('profile_password')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Change Password</button>
+                        <button type="button" id="sidebar-btn-users_management" onclick="switchSection('users_management')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Admin Users & Staff</button>
+                    @else
+                        <a href="{{ url('/admin/profile') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'profile' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• My Profile & Photo</a>
+                        <a href="{{ url('/admin/profile#passwordSection') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Change Password</a>
+                        <a href="{{ url('/admin/profile#usersSection') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Admin Users & Staff</a>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 10. SITE SETTING -->
             <div class="menu-search-item">
                 @if($isDashboard)
                     <button type="button" onclick="switchSection('settings')" id="sidebar-btn-settings" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center gap-3 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">

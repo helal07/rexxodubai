@@ -22,6 +22,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'avatar',
+        'phone',
+        'address',
+        'city',
+        'country',
+        'role',
+        'designation',
         'password',
         'is_admin',
     ];
@@ -47,5 +54,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's avatar URL with fallback.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if (!empty($this->avatar) && file_exists(public_path(ltrim($this->avatar, '/')))) {
+            return $this->avatar;
+        }
+
+        // Generate UI Avatars SVG/Image URL based on user's name
+        $name = urlencode($this->name ?: 'Admin');
+        return "https://ui-avatars.com/api/?name={$name}&background=4338ca&color=ffffff&bold=true&size=128";
     }
 }

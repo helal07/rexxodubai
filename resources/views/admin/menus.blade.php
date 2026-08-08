@@ -12,6 +12,15 @@
     @endphp
     <link rel="icon" id="admin-favicon" href="{{ $adminFavicon }}">
 
+    <script>
+        (function() {
+            const origWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+                origWarn.apply(console, args);
+            };
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -279,7 +288,7 @@
     <script>
         lucide.createIcons();
 
-        const allSubmenus = ['orders', 'product', 'courier', 'purchase', 'contact', 'seo_sub'];
+        const allSubmenus = ['orders', 'product', 'purchase', 'contact', 'courier', 'api_gateway', 'seo_sub', 'user_mgmt'];
         function toggleSubmenu(menuId) {
             allSubmenus.forEach(id => {
                 if (id !== menuId) {
