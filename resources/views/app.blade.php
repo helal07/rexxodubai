@@ -95,6 +95,39 @@
         <script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('{{ $siteSettings["pixel_tiktok"] }}');ttq.page();}(window,document,'ttq');</script>
         @endif
 
+        @if(!empty($siteSettings['meta_domain_verification']))
+            <meta name="facebook-domain-verification" content="{{ $siteSettings['meta_domain_verification'] }}">
+        @endif
+        @if(!empty($siteSettings['bing_site_verification']))
+            <meta name="msvalidate.01" content="{{ $siteSettings['bing_site_verification'] }}">
+        @endif
+
+        {{-- ── Pinterest Tag ── --}}
+        @if(!empty($siteSettings['pixel_pinterest']))
+        <script>
+        !function(e){if(!window.pintrk){window.pintrk=function(){window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var n=window.pintrk;n.queue=[],n.version="3.0";var t=document.createElement("script");t.async=!0,t.src=e;var r=document.getElementsByTagName("script")[0];r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
+        pintrk('load', '{{ $siteSettings["pixel_pinterest"] }}');
+        pintrk('page');
+        </script>
+        <noscript><img height="1" width="1" style="display:none;" alt="" src="https://ct.pinterest.com/v3/?event=init&tid={{ $siteSettings['pixel_pinterest'] }}&noscript=1"/></noscript>
+        @endif
+
+        {{-- ── Microsoft Clarity ── --}}
+        @if(!empty($siteSettings['pixel_clarity']))
+        <script type="text/javascript">
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "{{ $siteSettings['pixel_clarity'] }}");
+        </script>
+        @endif
+
+        {{-- ── Custom Head Scripts ── --}}
+        @if(!empty($siteSettings['custom_head_scripts']))
+            {!! $siteSettings['custom_head_scripts'] !!}
+        @endif
+
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.jsx'])
         @inertiaHead
@@ -105,5 +138,10 @@
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $siteSettings['pixel_gtm'] }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif
         @inertia
+
+        {{-- ── Custom Body Scripts (Bottom of body) ── --}}
+        @if(!empty($siteSettings['custom_body_scripts']))
+            {!! $siteSettings['custom_body_scripts'] !!}
+        @endif
     </body>
 </html>

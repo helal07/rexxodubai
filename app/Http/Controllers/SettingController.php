@@ -192,9 +192,13 @@ class SettingController extends Controller
 
         $allSettings = Setting::all()->pluck('value', 'key')->toArray();
 
-        return response()->json([
-            'message' => 'Settings updated successfully',
-            'settings' => $allSettings,
-        ]);
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'message' => 'Settings updated successfully',
+                'settings' => $allSettings,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Settings updated successfully!');
     }
 }

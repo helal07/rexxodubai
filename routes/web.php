@@ -163,6 +163,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
     Route::post('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
 
+    // Settings Route
+    Route::post('/admin/settings', [\App\Http\Controllers\SettingController::class, 'store'])->name('admin.settings.store');
+
     // SMS Gateway Routes
     Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');
 

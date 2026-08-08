@@ -30,6 +30,16 @@ Route::post('/settings', [SettingController::class, 'store']);
 // Checkout & order creation
 Route::post('/orders', [OrderController::class, 'store']);
 
+// Payment Gateways (SSLCommerz, EPS, bKash Merchant, COD)
+Route::get('/payment-gateways/active', [\App\Http\Controllers\PaymentGatewayController::class, 'getActiveGateways']);
+Route::post('/payment/initiate', [\App\Http\Controllers\PaymentGatewayController::class, 'initiatePayment']);
+Route::match(['get', 'post'], '/payment/sslcommerz/success', [\App\Http\Controllers\PaymentGatewayController::class, 'sslcommerzSuccess']);
+Route::match(['get', 'post'], '/payment/sslcommerz/fail', [\App\Http\Controllers\PaymentGatewayController::class, 'sslcommerzFail']);
+Route::match(['get', 'post'], '/payment/sslcommerz/cancel', [\App\Http\Controllers\PaymentGatewayController::class, 'sslcommerzCancel']);
+Route::post('/payment/sslcommerz/ipn', [\App\Http\Controllers\PaymentGatewayController::class, 'sslcommerzIpn']);
+Route::match(['get', 'post'], '/payment/eps/callback', [\App\Http\Controllers\PaymentGatewayController::class, 'sslcommerzSuccess']);
+Route::match(['get', 'post'], '/payment/bkash/callback', [\App\Http\Controllers\PaymentGatewayController::class, 'sslcommerzSuccess']);
+
 // Clear Cache System
 Route::post('/clear-cache', function () {
     \Illuminate\Support\Facades\Artisan::call('optimize:clear');

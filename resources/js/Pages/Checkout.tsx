@@ -132,6 +132,31 @@ export default function CheckoutPage() {
         throw new Error(data.message || 'Failed to place order. Please review your details.');
       }
 
+      // If user selected an online payment gateway (SSLCommerz, EPS, bKash)
+      if (['sslcommerz', 'eps', 'bkash'].includes(formData.paymentMethod)) {
+        try {
+          const payRes = await fetch('/api/payment/initiate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              order_id: data.order.id,
+              gateway: formData.paymentMethod,
+            }),
+          });
+          const payData = await payRes.json();
+          if (payRes.ok && payData.redirect_url) {
+            clearCart();
+            window.location.href = payData.redirect_url;
+            return;
+          }
+        } catch (gatewayErr) {
+          console.warn('Payment gateway redirection issue, fallback to order summary:', gatewayErr);
+        }
+      }
+
       setCompletedOrder(data.order);
       clearCart();
     } catch (err: any) {
@@ -146,7 +171,9 @@ export default function CheckoutPage() {
   if (completedOrder) {
     const paymentLabels: Record<string, string> = {
       cod: 'Cash on Delivery (Concierge Hand-Over)',
-      bkash: 'bKash VIP Instant Transfer',
+      bkash: 'bKash Direct Merchant Instant Checkout',
+      sslcommerz: 'SSLCommerz (Cards, MFS & NetBanking)',
+      eps: 'Easy Payment System (EPS Gateway)',
       card: 'Credit / Debit Card Secured',
     };
 
@@ -617,12 +644,38 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                         <p className="text-[12px] text-[#6E6B66] leading-relaxed">
-                          Pay upon receipt after physical inspection of the package and tamper-proof wax seal.
+                          Pay in cash upon receipt after physical inspection of the package and tamper-proof wax seal.
                         </p>
                       </div>
                     </label>
 
-                    {/* Option 2: bKash */}
+                    {/* Option 2: SSLCommerz */}
+                    <label className={`flex items-start gap-4 p-4 border transition-all cursor-pointer ${
+                      formData.paymentMethod === 'sslcommerz'
+                        ? 'border-[#0A0A0A] bg-[#FAF8F5] ring-1 ring-[#0A0A0A]'
+                        : 'border-[#DEDBD4] hover:border-[#0A0A0A]'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={formData.paymentMethod === 'sslcommerz'}
+                        onChange={() => setFormData({ ...formData, paymentMethod: 'sslcommerz' })}
+                        className="mt-1 accent-[#0A0A0A]"
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <CreditCard size={16} className="text-[#0284c7]" />
+                          <span className="text-[13px] font-bold text-[#0A0A0A] uppercase tracking-wide">
+                            SSLCOMMERZ (CARDS, BKASH, NAGAD, ROCKET, NETBANKING)
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-[#6E6B66] leading-relaxed">
+                          Pay securely via Visa, MasterCard, Amex, bKash, Nagad, Rocket, Upay, or any Bangladeshi bank.
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Option 3: bKash Direct Merchant */}
                     <label className={`flex items-start gap-4 p-4 border transition-all cursor-pointer ${
                       formData.paymentMethod === 'bkash'
                         ? 'border-[#0A0A0A] bg-[#FAF8F5] ring-1 ring-[#0A0A0A]'
@@ -639,37 +692,37 @@ export default function CheckoutPage() {
                         <div className="flex items-center gap-2">
                           <Smartphone size={16} className="text-[#E2136E]" />
                           <span className="text-[13px] font-bold text-[#0A0A0A] uppercase tracking-wide">
-                            bKash / MOBILE BANKING
+                            bKash DIRECT MERCHANT GATEWAY
                           </span>
                         </div>
                         <p className="text-[12px] text-[#6E6B66] leading-relaxed">
-                          Instant bKash merchant gateway or concierge transaction with instant receipt.
+                          Direct tokenized bKash instant checkout with automated order confirmation.
                         </p>
                       </div>
                     </label>
 
-                    {/* Option 3: Card */}
+                    {/* Option 4: Easy Payment System (EPS) */}
                     <label className={`flex items-start gap-4 p-4 border transition-all cursor-pointer ${
-                      formData.paymentMethod === 'card'
+                      formData.paymentMethod === 'eps'
                         ? 'border-[#0A0A0A] bg-[#FAF8F5] ring-1 ring-[#0A0A0A]'
                         : 'border-[#DEDBD4] hover:border-[#0A0A0A]'
                     }`}>
                       <input
                         type="radio"
                         name="payment"
-                        checked={formData.paymentMethod === 'card'}
-                        onChange={() => setFormData({ ...formData, paymentMethod: 'card' })}
+                        checked={formData.paymentMethod === 'eps'}
+                        onChange={() => setFormData({ ...formData, paymentMethod: 'eps' })}
                         className="mt-1 accent-[#0A0A0A]"
                       />
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <CreditCard size={16} className="text-[#B8712E]" />
+                          <Sparkles size={16} className="text-emerald-700" />
                           <span className="text-[13px] font-bold text-[#0A0A0A] uppercase tracking-wide">
-                            CREDIT / DEBIT CARD (VISA / MASTERCARD / AMEX)
+                            EASY PAYMENT SYSTEM (EPS)
                           </span>
                         </div>
                         <p className="text-[12px] text-[#6E6B66] leading-relaxed">
-                          Encrypted 3D-Secure payment processed via bank authorization.
+                          Direct account, card & QR gateway authorized by Bangladesh Bank.
                         </p>
                       </div>
                     </label>

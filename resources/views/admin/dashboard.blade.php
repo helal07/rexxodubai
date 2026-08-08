@@ -17,6 +17,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Instant Zero-Flicker Pre-Router: Prevents brief flash of dashboard when loading a direct hash menu URL -->
+    <script>
+        (function() {
+            var h = window.location.hash.replace('#', '');
+            if (h && h !== 'dashboard') {
+                document.write('<style id="pre-route-hide">#section-dashboard { display: none !important; } #section-' + h + ' { display: block !important; }</style>');
+            }
+        })();
+    </script>
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .font-serif { font-family: 'Fraunces', Georgia, serif; }
@@ -147,198 +156,23 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-[#e0f2fe] via-[#f0f9ff] to-[#bae6fd] text-[#0f172a] font-sans flex min-h-screen relative overflow-x-hidden selection:bg-[#0284c7] selection:text-white">
+<body class="bg-[#f8fafc] text-[#0f172a] font-sans flex flex-col min-h-screen relative overflow-x-hidden selection:bg-[#4338ca] selection:text-white">
     
-    <div id="toast" class="hidden fixed top-6 right-6 z-50 bg-[#0284c7] text-white px-5 py-3 rounded-xl shadow-2xl border border-white/30 flex items-center gap-3 animate-fade-in text-[13px] font-bold">
-        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+    <div id="toast" class="hidden fixed top-16 right-6 z-50 bg-[#4338ca] text-white px-5 py-3 rounded-xl shadow-2xl border border-white/20 flex items-center gap-3 animate-fade-in text-[13px] font-bold">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-300"></i>
         <span id="toastMsg">Action completed successfully!</span>
     </div>
 
-    <!-- 1. LEFT SIDEBAR MENU BAR -->
-    <aside class="w-64 lg:w-72 bg-white/90 backdrop-blur-xl border-r border-[#38bdf8]/30 min-h-screen p-6 flex flex-col justify-between shrink-0 relative z-20 shadow-sm">
-        <div class="space-y-8">
-            <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-6">
-                <div id="sidebarLogoContainer" class="flex items-center justify-center">
-                    @if(!empty($siteSettings['logo_url']) || !empty($siteSettings['site_logo']))
-                        <img id="sidebarLogoImg" src="{{ $siteSettings['logo_url'] ?? $siteSettings['site_logo'] }}" alt="Logo" class="max-h-10 max-w-[120px] object-contain rounded-lg shadow-sm" />
-                        <div id="sidebarDefaultIcon" class="hidden w-10 h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="shield-check" class="w-6 h-6"></i>
-                        </div>
-                    @else
-                        <img id="sidebarLogoImg" src="" alt="Logo" class="hidden max-h-10 max-w-[120px] object-contain rounded-lg shadow-sm" />
-                        <div id="sidebarDefaultIcon" class="w-10 h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="shield-check" class="w-6 h-6"></i>
-                        </div>
-                    @endif
-                </div>
-                <div>
-                    <h1 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide leading-none" id="sidebarBrandName">
-                        {{ $siteSettings['siteName'] ?? 'REXXO BD' }}
-                    </h1>
-                    <span class="text-[10px] text-[#0284c7] font-bold uppercase tracking-wider block mt-1">
-                        EXECUTIVE CONTROL HUB
-                    </span>
-                </div>
-            </div>
+    <!-- 1. FULL WIDTH MASTER TOP APP BAR -->
+    @include('admin.partials.header')
 
-            <div class="space-y-1.5">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8] px-3 block mb-2">
-                    MAIN MENU NAVIGATION
-                </span>
+    <!-- 2. APP WORKSPACE (SIDEBAR ON LEFT + MAIN CONTENT ON RIGHT) -->
+    <div class="flex flex-1 w-full min-h-0 relative overflow-hidden">
+        <!-- 1. LEFT SIDEBAR MENU BAR -->
+        @include('admin.partials.sidebar', ['activePage' => 'dashboard', 'siteSettings' => $siteSettings])
 
-                <!-- 1. DASHBOARD -->
-                <button type="button" onclick="switchSection('dashboard')" id="sidebar-btn-dashboard" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer bg-[#0284c7] text-white shadow-md">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-                </button>
-
-                <!-- 2. ORDERS (SUBMENU: TOTAL ORDERS, SUCCESS ORDERS, RETURN ORDERS) -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('orders')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="shopping-bag" class="w-4 h-4"></i> Orders
-                        </div>
-                        <span data-chevron="orders" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-orders" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <a href="{{ url('/admin/orders') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Total Orders</a>
-                        <a href="{{ url('/admin/orders?status=completed') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-emerald-700 hover:bg-[#f8fafc] rounded-lg">• Success Orders</a>
-                        <a href="{{ url('/admin/orders?status=cancelled') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-rose-700 hover:bg-[#f8fafc] rounded-lg">• Return / Cancelled</a>
-                    </div>
-                </div>
-
-                <!-- 3. PRODUCT (SUBMENU: ADD PRODUCT, LIST PRODUCTS, CATEGORY & SUB CATEGORY) -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('product')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="package" class="w-4 h-4"></i> Product
-                        </div>
-                        <span data-chevron="product" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-product" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <button type="button" onclick="switchSection('product_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Add Product</button>
-                        <button type="button" onclick="switchSection('products')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• List Products</button>
-                        <a href="{{ url('/admin/categories') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Category & Sub Category</a>
-                    </div>
-                </div>
-
-                <!-- 4. PURCHASE (SUBMENU: ADD PURCHASE, PURCHASE LIST) -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('purchase')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="shopping-cart" class="w-4 h-4"></i> Purchase
-                        </div>
-                        <span data-chevron="purchase" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-purchase" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <button type="button" onclick="switchSection('purchase_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Add Purchase</button>
-                        <button type="button" onclick="switchSection('purchase_list')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Purchase List</button>
-                    </div>
-                </div>
-
-                <!-- 5. CONTACT (SUBMENU: CUSTOMERS, SUPPLIER) -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('contact')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="users" class="w-4 h-4"></i> Contact
-                        </div>
-                        <span data-chevron="contact" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-contact" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <button type="button" onclick="switchSection('customers')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Customers</button>
-                        <button type="button" onclick="switchSection('supplier')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Supplier</button>
-                    </div>
-                </div>
-
-                <!-- 6. SITE SETTING -->
-                <button type="button" onclick="switchSection('settings')" id="sidebar-btn-settings" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                    <i data-lucide="settings" class="w-4 h-4"></i> Site Setting
-                </button>
-
-                <!-- 7. API SETTINGS -->
-                <button type="button" onclick="switchSection('api_settings')" id="sidebar-btn-api_settings" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                    <i data-lucide="plug" class="w-4 h-4"></i> API Settings
-                </button>
-
-                <!-- 8. SEO & SITEMAP -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('seo_sub')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="search" class="w-4 h-4"></i> SEO & Sitemap
-                        </div>
-                        <span data-chevron="seo_sub" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-seo_sub" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <button type="button" onclick="switchSection('seo')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• SEO Meta Settings</button>
-                        <button type="button" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Sitemap Generator</button>
-                        <button type="button" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Robots.txt Manager</button>
-                        <button type="button" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Ping Google / Bing</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="space-y-4 pt-6 border-t border-[#e2e8f0]">
-            <!-- Theme Toggle Bar -->
-            <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-2 flex items-center justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] px-1">Theme</span>
-                <div class="flex items-center gap-1">
-                    <button type="button" onclick="setAdminTheme('default')" title="Sky Executive (Default)" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all bg-[#0284c7] text-white shadow-xs" id="theme-btn-default">Default</button>
-                    <button type="button" onclick="setAdminTheme('light')" title="Clean Light" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-light">Light</button>
-                    <button type="button" onclick="setAdminTheme('night')" title="Night / Dark Mode" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-night">Night</button>
-                </div>
-            </div>
-
-            <a href="{{ url('/') }}" target="_blank" class="w-full px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#0284c7] text-[12px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs">
-                <i data-lucide="external-link" class="w-4 h-4"></i> View Storefront
-            </a>
-
-            <div class="flex items-center justify-between px-2 pt-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-[#0284c7]/10 text-[#0284c7] flex items-center justify-center font-bold text-sm">
-                        AD
-                    </div>
-                    <div>
-                        <span class="text-[12px] font-bold block leading-none">Super Admin</span>
-                        <span class="text-[10px] text-[#64748b] block mt-0.5">Active Session</span>
-                    </div>
-                </div>
-                <form action="{{ url('/logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" title="Logout" class="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </aside>
-
-    <!-- 2. MAIN CONTENT AREA -->
-    <main class="flex-1 p-6 space-y-6 relative z-10 overflow-y-auto max-h-screen">
-        
-        <header class="bg-white/80 backdrop-blur-xl border border-[#38bdf8]/40 rounded-2xl shadow-sm px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-2 overflow-x-auto bg-[#f1f5f9]/80 p-1.5 rounded-xl border border-[#cbd5e1]/60">
-                <button type="button" onclick="switchSection('menu')" id="top-btn-menu" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
-                    <i data-lucide="sliders" class="w-4 h-4"></i> MENU BUILDER
-                </button>
-
-                <a href="{{ url('/admin/categories') }}" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
-                    <i data-lucide="folder-tree" class="w-4 h-4"></i> CATEGORIES & SUB
-                </a>
-
-                <button type="button" onclick="switchSection('create_order')" id="top-btn-create_order" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer bg-emerald-600/10 text-emerald-700 border border-emerald-600/30 whitespace-nowrap">
-                    <i data-lucide="plus" class="w-4 h-4"></i> CREATE ORDER 🛍️
-                </button>
-            </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-                <button type="button" onclick="clearSystemCache()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Clear Cache
-                </button>
-                <a href="{{ url('/') }}" target="_blank" class="bg-white hover:bg-[#f1f5f9] text-[#0f172a] border border-[#cbd5e1] px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors">
-                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Storefront ↗
-                </a>
-            </div>
-        </header>
+        <!-- 2. MAIN CONTENT AREA -->
+        <main class="flex-1 p-6 space-y-6 relative z-10 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
 
         <!-- SECTION 1: EXECUTIVE DASHBOARD (FULL POPULATED ANALYTICS & LIVE STREAM) -->
         <div id="section-dashboard" class="section-content space-y-6 animate-fade-in">
@@ -492,41 +326,212 @@
             </div>
         </div>
 
-        <!-- SECTION 3: CREATE ORDERS TERMINAL -->
-        <div id="section-create_order" class="section-content hidden bg-white/90 border p-6 rounded-2xl space-y-6 max-w-2xl mx-auto">
-            <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase">Create Orders</h2>
-            
-            <form onsubmit="handleCreateOrderSubmit(event)" class="space-y-6 bg-[#f8fafc] border p-6 rounded-2xl">
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <label class="text-[12px] font-bold uppercase text-[#0f172a]">FIELD 1: SELECT CUSTOMER</label>
-                        <button type="button" onclick="openAddCustomerPrompt()" class="bg-[#0284c7] text-white px-3 py-1 rounded text-[11px] font-bold uppercase">+ Add Customer</button>
+        <!-- SECTION 3: POS & CREATE SALE TERMINAL -->
+        <div id="section-create_order" class="section-content hidden space-y-6">
+            <!-- Header Bar -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
                     </div>
-                    <select id="coCustomerSelect" class="w-full border p-3 rounded-xl text-[13px] font-bold">
-                        <option value="">-- Choose Customer --</option>
-                        <option value="Shakib Al Hasan">Shakib Al Hasan (+8801700112233)</option>
-                        <option value="Tanvir Hossain">Tanvir Hossain (+8801822334455)</option>
-                        <option value="Mahmudur Rahman">Mahmudur Rahman (+8801711223344)</option>
-                    </select>
-                </div>
-
-                <div class="space-y-3">
-                    <label class="text-[12px] font-bold uppercase text-[#0f172a] border-b pb-2 block">FIELD 2: SELECT MULTI-PRODUCTS & QUANTITY</label>
-                    <select id="coProductSelect" onchange="handleAddProductToCart()" class="w-full border p-3 rounded-xl text-[13px] font-bold">
-                        <option value="">+ Choose Product to Add...</option>
-                        <option value="L'Ombre d'Ambre 100ml|3200">L'Ombre d'Ambre 100ml — ৳3,200 BDT</option>
-                        <option value="Velours de Rose 100ml|2850">Velours de Rose 100ml — ৳2,850 BDT</option>
-                        <option value="Cuir Noir Extrait 100ml|3800">Cuir Noir Extrait 100ml — ৳3,800 BDT</option>
-                    </select>
-                    <div id="cartItemsList" class="space-y-2 pt-2"></div>
-                </div>
-
-                <div class="bg-[#e0f2fe] border p-4 rounded-xl flex justify-between items-center">
                     <div>
-                        <span class="text-[11px] font-bold uppercase text-[#0284c7] block">CALCULATED TOTAL BILL:</span>
-                        <span class="text-[22px] font-bold text-[#0f172a] font-serif" id="coTotalBillDisplay">৳0 BDT</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">POINT OF SALE TERMINAL</span>
+                            <span class="text-[10px] text-slate-500 font-mono">LIVE COUNTER DISPATCH</span>
+                        </div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase">Create New Sale / POS Order</h2>
                     </div>
-                    <button type="submit" class="bg-[#0284c7] text-white px-6 py-3 rounded-xl font-bold uppercase text-[12px]">SUBMIT & CREATE ORDER</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="resetSaleForm()" class="px-3.5 py-2 text-[12px] font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Form
+                    </button>
+                    <button type="button" onclick="switchSection('orders')" class="px-3.5 py-2 text-[12px] font-bold text-[#0284c7] bg-sky-50 border border-sky-200 rounded-xl hover:bg-sky-100 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="list" class="w-3.5 h-3.5"></i> All Sales / Orders
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main POS 2-Column Grid -->
+            <form id="createSaleMasterForm" onsubmit="handleCreateOrderSubmit(event)" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- LEFT: Customer Details & Cart Item Picker (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <!-- 1. Customer Selection Card -->
+                    <div class="bg-white/90 border border-slate-200 p-6 rounded-2xl shadow-xs space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h3 class="text-[13px] font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                                <i data-lucide="user" class="w-4 h-4 text-emerald-600"></i> Step 1: Customer Information
+                            </h3>
+                            <button type="button" onclick="openAddCustomerPrompt()" class="bg-[#e0f2fe] hover:bg-[#bae6fd] text-[#0284c7] px-3 py-1 rounded-lg text-[11px] font-bold uppercase transition-colors flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> + Quick Add
+                            </button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-slate-600 block mb-1">Select Registered Customer or Walk-in</label>
+                                <select id="coCustomerSelect" onchange="handleCustomerSelectChange(this.value)" class="w-full border border-slate-300 p-2.5 rounded-xl text-[13px] font-medium focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-white text-slate-800">
+                                    <option value="Walk-in Customer|01700000000|Store Counter, Dhaka">🚶 Walk-in Customer (Store Counter)</option>
+                                    <option value="Shakib Al Hasan|01700112233|House 14, Road 5, Banani, Dhaka">Shakib Al Hasan (+8801700112233) — Banani, Dhaka</option>
+                                    <option value="Tanvir Hossain|01822334455|Sector 7, Uttara, Dhaka">Tanvir Hossain (+8801822334455) — Uttara, Dhaka</option>
+                                    <option value="Mahmudur Rahman|01711223344|GEC Circle, Chittagong">Mahmudur Rahman (+8801711223344) — Chittagong</option>
+                                    <option value="Sabrina Sultana|01999887766|Dhanmondi 27, Dhaka">Sabrina Sultana (+8801999887766) — Dhanmondi, Dhaka</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                                <div>
+                                    <label class="text-[11px] font-bold uppercase text-slate-500 block mb-1">Customer Phone Number</label>
+                                    <input type="text" id="coCustomerPhone" placeholder="017xxxxxxxx" value="01700000000" class="w-full border border-slate-300 px-3 py-2 rounded-xl text-[12px] font-mono font-medium focus:border-emerald-600 outline-none bg-slate-50 text-slate-800">
+                                </div>
+                                <div>
+                                    <label class="text-[11px] font-bold uppercase text-slate-500 block mb-1">Delivery / Counter Address</label>
+                                    <input type="text" id="coCustomerAddress" placeholder="Street, Area, City" value="Store Counter, Dhaka" class="w-full border border-slate-300 px-3 py-2 rounded-xl text-[12px] font-medium focus:border-emerald-600 outline-none bg-slate-50 text-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Product Catalog Selection & Cart Builder Card -->
+                    <div class="bg-white/90 border border-slate-200 p-6 rounded-2xl shadow-xs space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h3 class="text-[13px] font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                                <i data-lucide="package-plus" class="w-4 h-4 text-emerald-600"></i> Step 2: Add Products to Sale Cart
+                            </h3>
+                            <span class="text-[11px] font-bold text-slate-500 font-mono" id="posCartCountBadge">0 Items Added</span>
+                        </div>
+
+                        <!-- Product Selector Dropdown -->
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold uppercase text-slate-600 block">Choose Product From Database</label>
+                            <div class="flex items-center gap-2">
+                                <select id="coProductSelect" onchange="handleAddProductToCart()" class="flex-1 border border-slate-300 p-2.5 rounded-xl text-[13px] font-semibold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-white text-slate-800">
+                                    <option value="">+ Click to Select & Add Product...</option>
+                                    @if(isset($products) && count($products) > 0)
+                                        @foreach($products as $prod)
+                                            <option value="{{ $prod->name }}|{{ $prod->price }}|{{ $prod->id }}">
+                                                {{ $prod->name }} — ৳{{ number_format($prod->price) }} BDT (Stock: {{ $prod->stock_quantity ?? 50 }})
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        <option value="L'Ombre d'Ambre 100ml|3200|1">L'Ombre d'Ambre 100ml — ৳3,200 BDT</option>
+                                        <option value="Velours de Rose 100ml|2850|2">Velours de Rose 100ml — ৳2,850 BDT</option>
+                                        <option value="Cuir Noir Extrait 100ml|3800|3">Cuir Noir Extrait 100ml — ৳3,800 BDT</option>
+                                        <option value="Soleil d'Or Eau de Parfum|2950|4">Soleil d'Or Eau de Parfum — ৳2,950 BDT</option>
+                                    @endif
+                                </select>
+                                <button type="button" onclick="handleAddProductToCart()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-xs">
+                                    <i data-lucide="plus" class="w-4 h-4"></i> Add
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cart Items Container -->
+                        <div class="space-y-2 pt-2">
+                            <label class="text-[11px] font-bold uppercase text-slate-500 block">Sale Order Items</label>
+                            <div id="cartItemsList" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                                <!-- Empty state by default -->
+                                <div id="emptyCartPlaceholder" class="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 text-[12px] font-medium">
+                                    <i data-lucide="shopping-bag" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                                    No products added yet. Select a product above to add to this sale.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order Notes -->
+                        <div class="pt-2">
+                            <label class="text-[11px] font-bold uppercase text-slate-600 block mb-1">Customer / Special Dispatch Notes (Optional)</label>
+                            <input type="text" id="coOrderNotes" placeholder="e.g. Call before delivery, handle fragile perfume glass..." class="w-full border border-slate-300 px-3 py-2 rounded-xl text-[12px] font-medium focus:border-emerald-600 outline-none bg-white text-slate-800">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Payment, Logistics & Final Billing Receipt (5 cols) -->
+                <div class="lg:col-span-5 space-y-6">
+                    <!-- Payment & Courier Options -->
+                    <div class="bg-white/90 border border-slate-200 p-6 rounded-2xl shadow-xs space-y-4">
+                        <h3 class="text-[13px] font-bold text-[#0f172a] uppercase border-b border-slate-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600"></i> Step 3: Payment & Shipping
+                        </h3>
+
+                        <!-- Payment Method -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold uppercase text-slate-600 block">Payment Method</label>
+                            <select id="coPaymentMethod" class="w-full border border-slate-300 p-2.5 rounded-xl text-[12.5px] font-bold focus:border-emerald-600 outline-none bg-white text-slate-800">
+                                <option value="Cash on Delivery">💵 Cash on Delivery (COD)</option>
+                                <option value="SSLCommerz Gateway">💳 SSLCommerz (Cards/NetBanking/MFS)</option>
+                                <option value="bKash Merchant">📱 bKash Merchant Checkout</option>
+                                <option value="EPS Electronic Payment">🏦 EPS (Electronic Payment Service)</option>
+                                <option value="Cash at Store Counter">🏪 Cash at Store Counter / POS</option>
+                            </select>
+                        </div>
+
+                        <!-- Courier Partner -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold uppercase text-slate-600 block">Courier / Dispatch Partner</label>
+                            <select id="coCourierPartner" class="w-full border border-slate-300 p-2.5 rounded-xl text-[12.5px] font-bold focus:border-emerald-600 outline-none bg-white text-slate-800">
+                                <option value="Pathao Courier">🚚 Pathao Courier API</option>
+                                <option value="Steadfast Courier">📦 Steadfast Courier</option>
+                                <option value="RedX Logistics">🚛 RedX Logistics</option>
+                                <option value="Paperfly">📫 Paperfly Delivery</option>
+                                <option value="In-Store Pickup">🛍️ In-Store Walk-in Pickup</option>
+                            </select>
+                        </div>
+
+                        <!-- Delivery Location / Fee -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-slate-600 block mb-1">Delivery Region</label>
+                                <select id="coDeliveryChargeSelect" onchange="handleDeliveryChargeChange(this.value)" class="w-full border border-slate-300 p-2 rounded-xl text-[12px] font-semibold focus:border-emerald-600 outline-none bg-white text-slate-800">
+                                    <option value="60">Inside Dhaka (৳60)</option>
+                                    <option value="120">Outside Dhaka (৳120)</option>
+                                    <option value="0">Store Pickup / Free (৳0)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-slate-600 block mb-1">Special Discount (৳)</label>
+                                <input type="number" id="coDiscountInput" value="0" min="0" oninput="renderCartUI()" placeholder="0" class="w-full border border-slate-300 px-3 py-2 rounded-xl text-[12px] font-mono font-bold focus:border-emerald-600 outline-none bg-white text-slate-800">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Billing Calculation Summary Card -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-xl space-y-4 border border-slate-700">
+                        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                            <span class="text-[12px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                                <i data-lucide="receipt" class="w-4 h-4"></i> Sale Bill Summary
+                            </span>
+                            <span class="text-[11px] text-slate-400 font-mono" id="posBillTime">08 Aug 2026</span>
+                        </div>
+
+                        <div class="space-y-2.5 text-[13px]">
+                            <div class="flex justify-between text-slate-300">
+                                <span>Cart Subtotal:</span>
+                                <span class="font-mono font-bold text-white" id="coSubtotalDisplay">৳0 BDT</span>
+                            </div>
+                            <div class="flex justify-between text-slate-300">
+                                <span>Shipping / Delivery:</span>
+                                <span class="font-mono font-bold text-emerald-300" id="coShippingDisplay">+ ৳60 BDT</span>
+                            </div>
+                            <div class="flex justify-between text-slate-300">
+                                <span>Discount:</span>
+                                <span class="font-mono font-bold text-rose-300" id="coDiscountDisplay">- ৳0 BDT</span>
+                            </div>
+                            <div class="pt-3 border-t border-slate-700 flex justify-between items-baseline">
+                                <span class="text-[13px] font-bold uppercase tracking-wider text-slate-200">TOTAL PAYABLE:</span>
+                                <span class="text-[26px] font-serif font-bold text-emerald-400 font-mono" id="coTotalBillDisplay">৳60 BDT</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 space-y-2">
+                            <button type="submit" id="posSubmitSaleBtn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3.5 rounded-xl font-bold uppercase tracking-wider text-[13px] shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Complete Sale & Generate Order
+                            </button>
+                            <button type="button" onclick="printDraftInvoice()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-slate-700">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print POS Receipt Draft
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -548,11 +553,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Company Name</label>
-                                <input type="text" name="siteName" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="text" name="siteName" value="{{ $siteSettings['siteName'] ?? $siteSettings['site_name'] ?? 'REXXO BD' }}" placeholder="Company Name" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Tagline</label>
-                                <input type="text" name="tagline" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="text" name="tagline" value="{{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}" placeholder="Luxury Brand Tagline" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                         </div>
                     </div>
@@ -604,7 +609,7 @@
                                     </div>
                                     <div class="space-y-2 flex-1">
                                         <input type="file" name="logo_file" accept="image/png, image/svg+xml, image/jpeg, image/webp" onchange="previewSelectedFile(event, 'previewLogoImg', 'previewLogoPlaceholder')" class="w-full text-[12px] font-medium text-[#475569] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#e0f2fe] file:text-[#0284c7] hover:file:bg-[#bae6fd] cursor-pointer">
-                                        <input type="text" name="logo_url" placeholder="Or paste Logo Image URL (e.g. /uploads/...)" class="w-full border border-[#cbd5e1] px-2.5 py-1.5 rounded-lg text-[11px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]" oninput="previewUrlInput(this.value, 'previewLogoImg', 'previewLogoPlaceholder')">
+                                        <input type="text" name="logo_url" value="{{ $siteSettings['logo_url'] ?? $siteSettings['site_logo'] ?? '' }}" placeholder="Or paste Logo Image URL (e.g. /uploads/...)" class="w-full border border-[#cbd5e1] px-2.5 py-1.5 rounded-lg text-[11px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]" oninput="previewUrlInput(this.value, 'previewLogoImg', 'previewLogoPlaceholder')">
                                     </div>
                                 </div>
                             </div>
@@ -621,7 +626,7 @@
                                     </div>
                                     <div class="space-y-2 flex-1">
                                         <input type="file" name="favicon_file" accept="image/png, image/x-icon, image/svg+xml, image/jpeg, image/webp" onchange="previewSelectedFile(event, 'previewFaviconImg')" class="w-full text-[12px] font-medium text-[#475569] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#e0f2fe] file:text-[#0284c7] hover:file:bg-[#bae6fd] cursor-pointer">
-                                        <input type="text" name="favicon_url" placeholder="Or paste Favicon URL (e.g. /favicon.ico)" class="w-full border border-[#cbd5e1] px-2.5 py-1.5 rounded-lg text-[11px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]" oninput="previewUrlInput(this.value, 'previewFaviconImg')">
+                                        <input type="text" name="favicon_url" value="{{ $siteSettings['favicon_url'] ?? $siteSettings['site_favicon'] ?? '' }}" placeholder="Or paste Favicon URL (e.g. /favicon.ico)" class="w-full border border-[#cbd5e1] px-2.5 py-1.5 rounded-lg text-[11px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]" oninput="previewUrlInput(this.value, 'previewFaviconImg')">
                                     </div>
                                 </div>
                             </div>
@@ -635,33 +640,41 @@
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Primary Currency</label>
                                 <select name="currency" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
-                                    <option value="BDT (৳)">BDT (৳) - Bangladeshi Taka</option>
-                                    <option value="USD ($)">USD ($) - US Dollar</option>
-                                    <option value="EUR (€)">EUR (€) - Euro</option>
+                                    <option value="BDT (৳)" {{ ($siteSettings['currency'] ?? 'BDT (৳)') === 'BDT (৳)' ? 'selected' : '' }}>BDT (৳) - Bangladeshi Taka</option>
+                                    <option value="USD ($)" {{ ($siteSettings['currency'] ?? '') === 'USD ($)' ? 'selected' : '' }}>USD ($) - US Dollar</option>
+                                    <option value="EUR (€)" {{ ($siteSettings['currency'] ?? '') === 'EUR (€)' ? 'selected' : '' }}>EUR (€) - Euro</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Default Tax Rate (%)</label>
-                                <input type="number" name="tax_rate" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="number" name="tax_rate" value="{{ $siteSettings['tax_rate'] ?? '0' }}" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                         </div>
                     </div>
 
                     <!-- Social Media Links -->
                     <div class="space-y-4">
-                        <h3 class="text-[13px] font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-2">Social Media Links</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <h3 class="text-[13px] font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-2">Social Media Links (Footer & Storefront)</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook URL</label>
-                                <input type="url" name="facebook_url" placeholder="https://facebook.com/rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="url" name="facebook_url" value="{{ $siteSettings['facebook_url'] ?? '' }}" placeholder="https://facebook.com/rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Instagram URL</label>
-                                <input type="url" name="instagram_url" placeholder="https://instagram.com/rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="url" name="instagram_url" value="{{ $siteSettings['instagram_url'] ?? '' }}" placeholder="https://instagram.com/rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">TikTok URL</label>
-                                <input type="url" name="tiktok_url" placeholder="https://tiktok.com/@rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="url" name="tiktok_url" value="{{ $siteSettings['tiktok_url'] ?? '' }}" placeholder="https://tiktok.com/@rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">YouTube URL</label>
+                                <input type="url" name="youtube_url" value="{{ $siteSettings['youtube_url'] ?? '' }}" placeholder="https://youtube.com/@rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">X / Twitter URL</label>
+                                <input type="url" name="twitter_url" value="{{ $siteSettings['twitter_url'] ?? $siteSettings['x_url'] ?? '' }}" placeholder="https://twitter.com/rexxobd" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                         </div>
                     </div>
@@ -671,15 +684,15 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Phone Number</label>
-                                <input type="text" name="phone" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="text" name="phone" value="{{ $siteSettings['phone'] ?? '' }}" placeholder="+880 1700-000000" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">WhatsApp Number</label>
-                                <input type="text" name="whatsapp" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="text" name="whatsapp" value="{{ $siteSettings['whatsapp'] ?? '' }}" placeholder="8801700000000" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Support Email</label>
-                                <input type="email" name="email" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="email" name="email" value="{{ $siteSettings['email'] ?? '' }}" placeholder="support@rexxo.com" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                         </div>
                     </div>
@@ -778,11 +791,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Top Announcement Bar</label>
-                                <input type="text" name="announcement" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="text" name="announcement" value="{{ $siteSettings['announcement'] ?? '' }}" placeholder="COMPLIMENTARY EXPRESS DELIVERY & LUXURY SAMPLER WITH ALL ORDERS" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                             <div>
                                 <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Footer Text</label>
-                                <input type="text" name="footerText" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <input type="text" name="footerText" value="{{ $siteSettings['footerText'] ?? $siteSettings['footer_text'] ?? '' }}" placeholder="&copy; 2026 REXXO BD. ALL RIGHTS RESERVED." class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                             </div>
                         </div>
                     </div>
@@ -1206,141 +1219,901 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Tracking Pixels -->
-                    <div class="space-y-4">
-                        <h3 class="text-[13px] font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-2">Marketing & Tracking Pixels</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook / Meta Pixel ID</label>
-                                <input type="text" name="pixel_facebook" placeholder="e.g. 123456789012345" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Analytics ID (GA4)</label>
-                                <input type="text" name="pixel_google" placeholder="e.g. G-XXXXXXX" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">TikTok Pixel ID</label>
-                                <input type="text" name="pixel_tiktok" placeholder="e.g. CXXXXXXXXXXXX" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
-                            </div>
-                            <div>
-                                <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Tag Manager (GTM) ID</label>
-                                <input type="text" name="pixel_gtm" placeholder="e.g. GTM-XXXXXXX" class="w-full border border-[#cbd5e1] px-3 py-2.5 rounded-lg text-[13px] font-bold font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Save Button -->
-                    <div class="pt-4 border-t border-[#e2e8f0]">
-                        <button type="submit" class="bg-[#0f172a] hover:bg-[#B8712E] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                            <i data-lucide="save" class="w-4 h-4"></i> Save SEO Settings
-                        </button>
-                    </div>
                 </form>
             </div>
         </div>
 
-        <!-- ============================================================= -->
-        <!-- SECTION: SITEMAP & ROBOTS.TXT GENERATOR                       -->
-        <!-- ============================================================= -->
-        <div id="section-sitemap" class="section-content hidden space-y-6 animate-fade-in">
-
+        <!-- ================================================================= -->
+        <!-- 1. SECTION: PAYMENT GATEWAY (SSLCommerz, EPS, bKash, COD)        -->
+        <!-- ================================================================= -->
+        <div id="section-api_payment" class="section-content hidden space-y-6 animate-fade-in">
             <!-- Header -->
             <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
                 <div class="flex items-center justify-between flex-wrap gap-4">
                     <div>
                         <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
-                            <i data-lucide="map" class="w-5 h-5 text-[#0284c7]"></i> Sitemap & SEO Indexing Manager
+                            <i data-lucide="credit-card" class="w-5 h-5 text-[#0284c7]"></i> Payment Gateway Configuration
                         </h2>
-                        <p class="text-[12px] text-[#64748b] mt-1">Auto-generate sitemap.xml and robots.txt, then ping Google & Bing to instantly re-crawl your site.</p>
+                        <p class="text-[12px] text-[#64748b] mt-1">Configure Bangladesh payment gateways (SSLCommerz, Easy Payment System, bKash Direct Merchant) and Cash on Delivery.</p>
                     </div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <i data-lucide="globe" class="w-3.5 h-3.5"></i> Google-Friendly SEO
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 256-Bit TLS Secured
                     </span>
                 </div>
             </div>
 
-            <!-- Status Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="seo-status-grid">
-                <!-- Sitemap Status -->
-                <div class="bg-white/90 border rounded-2xl p-5 shadow-xs space-y-4">
-                    <div class="flex items-center justify-between">
+            <form action="{{ url('/admin/settings') }}" method="POST" class="space-y-6">
+                @csrf
+
+                <!-- SSLCommerz -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <div class="border-b pb-4 flex items-center justify-between flex-wrap gap-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center">
-                                <i data-lucide="file-code-2" class="w-5 h-5 text-sky-600"></i>
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center font-bold text-sky-700 text-[14px]">
+                                SSL
                             </div>
                             <div>
-                                <h3 class="text-[14px] font-bold text-[#0f172a]">sitemap.xml</h3>
-                                <a href="/sitemap.xml" target="_blank" class="text-[10px] text-[#0284c7] hover:underline font-mono">{{ url('/sitemap.xml') }}</a>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">SSLCommerz (Cards, MFS & Net Banking)</h3>
+                                <p class="text-[11px] text-[#64748b]">Accept Visa, MasterCard, bKash, Nagad, Rocket, Upay & all local bank cards.</p>
                             </div>
                         </div>
-                        <span id="sitemap-status-badge" class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Checking...</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="sslcommerz_enabled" value="1" class="sr-only peer" {{ ($siteSettings['sslcommerz_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0284c7]"></div>
+                            <span class="ml-2 text-[12px] font-bold text-[#0f172a]">Enable Gateway</span>
+                        </label>
                     </div>
-                    <div class="bg-[#f8fafc] rounded-xl border p-3 space-y-1">
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-[#64748b] font-bold uppercase">Last Generated</span>
-                            <span id="sitemap-last-updated" class="font-mono text-[#475569]">—</span>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Store ID <span class="text-rose-500">*</span></label>
+                            <input type="text" name="sslcommerz_store_id" value="{{ $siteSettings['sslcommerz_store_id'] ?? '' }}" placeholder="e.g. testbox_live" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                         </div>
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-[#64748b] font-bold uppercase">URL Entries</span>
-                            <span id="sitemap-entries" class="font-mono font-bold text-[#0284c7]">—</span>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Store Password / Key <span class="text-rose-500">*</span></label>
+                            <input type="password" name="sslcommerz_store_password" value="{{ $siteSettings['sslcommerz_store_password'] ?? '' }}" placeholder="••••••••••••••••" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                         </div>
                     </div>
-                    <button type="button" onclick="generateSitemap()" id="btn-gen-sitemap" class="w-full py-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save sitemap.xml
-                    </button>
-                    <div id="sitemap-result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Environment Mode</label>
+                            <select name="sslcommerz_sandbox" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <option value="0" {{ ($siteSettings['sslcommerz_sandbox'] ?? '0') === '0' ? 'selected' : '' }}>🟢 Live Production (Real Transactions)</option>
+                                <option value="1" {{ ($siteSettings['sslcommerz_sandbox'] ?? '0') === '1' ? 'selected' : '' }}>🟡 Sandbox / Test Mode</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Instant Payment Notification (IPN) URL</label>
+                            <input type="text" readonly value="{{ url('/api/payment/sslcommerz/ipn') }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[12px] font-mono bg-slate-50 text-[#64748b] cursor-pointer" onclick="this.select(); navigator.clipboard.writeText(this.value); showToastNotice('IPN URL copied to clipboard!');">
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Robots.txt Status -->
-                <div class="bg-white/90 border rounded-2xl p-5 shadow-xs space-y-4">
-                    <div class="flex items-center justify-between">
+                <!-- Easy Payment System (EPS) -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <div class="border-b pb-4 flex items-center justify-between flex-wrap gap-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
-                                <i data-lucide="bot" class="w-5 h-5 text-violet-600"></i>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center font-bold text-emerald-700 text-[14px]">
+                                EPS
                             </div>
                             <div>
-                                <h3 class="text-[14px] font-bold text-[#0f172a]">robots.txt</h3>
-                                <a href="/robots.txt" target="_blank" class="text-[10px] text-violet-600 hover:underline font-mono">{{ url('/robots.txt') }}</a>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">Easy Payment System (EPS)</h3>
+                                <p class="text-[11px] text-[#64748b]">Bangladesh Bank approved innovative multi-channel fintech payment gateway.</p>
                             </div>
                         </div>
-                        <span id="robots-status-badge" class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Checking...</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="eps_enabled" value="1" class="sr-only peer" {{ ($siteSettings['eps_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0284c7]"></div>
+                            <span class="ml-2 text-[12px] font-bold text-[#0f172a]">Enable Gateway</span>
+                        </label>
                     </div>
-                    <div class="bg-[#f8fafc] rounded-xl border p-3 space-y-1">
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-[#64748b] font-bold uppercase">Last Generated</span>
-                            <span id="robots-last-updated" class="font-mono text-[#475569]">—</span>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">EPS Merchant ID <span class="text-rose-500">*</span></label>
+                            <input type="text" name="eps_merchant_id" value="{{ $siteSettings['eps_merchant_id'] ?? '' }}" placeholder="e.g. EPS_M_10023" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                         </div>
-                        <div class="flex justify-between text-[11px]">
-                            <span class="text-[#64748b] font-bold uppercase">Sitemap Link</span>
-                            <span class="font-mono text-emerald-700">Included ✔</span>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">EPS Username <span class="text-rose-500">*</span></label>
+                            <input type="text" name="eps_username" value="{{ $siteSettings['eps_username'] ?? '' }}" placeholder="Merchant API User" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">EPS Password / Secret <span class="text-rose-500">*</span></label>
+                            <input type="password" name="eps_password" value="{{ $siteSettings['eps_password'] ?? '' }}" placeholder="••••••••••••••••" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
                         </div>
                     </div>
-                    <button type="button" onclick="generateRobots()" id="btn-gen-robots" class="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save robots.txt
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Environment Mode</label>
+                            <select name="eps_sandbox" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <option value="0" {{ ($siteSettings['eps_sandbox'] ?? '0') === '0' ? 'selected' : '' }}>🟢 Live Production</option>
+                                <option value="1" {{ ($siteSettings['eps_sandbox'] ?? '0') === '1' ? 'selected' : '' }}>🟡 Sandbox Test Mode</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Return / Callback URL</label>
+                            <input type="text" readonly value="{{ url('/api/payment/eps/callback') }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[12px] font-mono bg-slate-50 text-[#64748b] cursor-pointer" onclick="this.select(); navigator.clipboard.writeText(this.value); showToastNotice('Callback URL copied!');">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- bKash Direct Merchant -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <div class="border-b pb-4 flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-pink-50 border border-pink-200 flex items-center justify-center font-bold text-[#e2136e] text-[14px]">
+                                ৳
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">bKash Direct Merchant Checkout</h3>
+                                <p class="text-[11px] text-[#64748b]">Direct tokenized bKash Checkout (Create, Execute & Query Payment API).</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="bkash_enabled" value="1" class="sr-only peer" {{ ($siteSettings['bkash_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#e2136e]"></div>
+                            <span class="ml-2 text-[12px] font-bold text-[#0f172a]">Enable Gateway</span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">bKash App Key <span class="text-rose-500">*</span></label>
+                            <input type="text" name="bkash_app_key" value="{{ $siteSettings['bkash_app_key'] ?? '' }}" placeholder="e.g. 4f6xxxxxx" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">bKash App Secret <span class="text-rose-500">*</span></label>
+                            <input type="password" name="bkash_app_secret" value="{{ $siteSettings['bkash_app_secret'] ?? '' }}" placeholder="••••••••••••••••" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">bKash Merchant Username <span class="text-rose-500">*</span></label>
+                            <input type="text" name="bkash_username" value="{{ $siteSettings['bkash_username'] ?? '' }}" placeholder="e.g. 017xxxxxxxx" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">bKash Merchant Password <span class="text-rose-500">*</span></label>
+                            <input type="password" name="bkash_password" value="{{ $siteSettings['bkash_password'] ?? '' }}" placeholder="••••••••••••••••" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Environment Mode</label>
+                            <select name="bkash_sandbox" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <option value="0" {{ ($siteSettings['bkash_sandbox'] ?? '0') === '0' ? 'selected' : '' }}>🟢 Live Production</option>
+                                <option value="1" {{ ($siteSettings['bkash_sandbox'] ?? '0') === '1' ? 'selected' : '' }}>🟡 Sandbox Test Mode</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Callback URL</label>
+                            <input type="text" readonly value="{{ url('/api/payment/bkash/callback') }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[12px] font-mono bg-slate-50 text-[#64748b] cursor-pointer" onclick="this.select(); navigator.clipboard.writeText(this.value); showToastNotice('bKash Callback URL copied!');">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash on Delivery (COD) -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <div class="border-b pb-4 flex items-center justify-between flex-wrap gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center font-bold text-amber-700 text-[14px]">
+                                COD
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">Cash on Delivery (Concierge Hand-Over)</h3>
+                                <p class="text-[11px] text-[#64748b]">Allow customers to pay in cash upon physical package delivery and inspection.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="cod_enabled" value="1" class="sr-only peer" {{ ($siteSettings['cod_enabled'] ?? '1') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0284c7]"></div>
+                            <span class="ml-2 text-[12px] font-bold text-[#0f172a]">Enable COD</span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">COD Extra Handling Charge (BDT)</label>
+                            <input type="number" name="cod_charge" value="{{ $siteSettings['cod_charge'] ?? '0' }}" placeholder="0" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Customer Checkout Instruction Note</label>
+                            <input type="text" name="cod_instruction" value="{{ $siteSettings['cod_instruction'] ?? 'Pay in cash upon delivery after inspection.' }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Action -->
+                <div class="pt-4 border-t border-[#e2e8f0] flex items-center justify-between">
+                    <span class="text-[12px] text-[#64748b]">All gateway secrets are encrypted in the database.</span>
+                    <button type="submit" class="bg-[#0f172a] hover:bg-[#0284c7] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Payment Settings
                     </button>
-                    <div id="robots-result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 2. SECTION: SMS SETTING (BulkSMS BD, MiM SMS, Templates, Tester) -->
+        <!-- ================================================================= -->
+        <div id="section-api_sms" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-5 h-5 text-[#0284c7]"></i> SMS Gateway & Notification Settings
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Configure automated SMS alerts for new orders, courier dispatches, and delivery status updates.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold font-mono bg-sky-50 text-[#0284c7] border border-sky-200">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Live SMS Gateway
+                    </span>
                 </div>
             </div>
 
-            <!-- Google & Bing Ping -->
-            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-5">
-                <div class="border-b pb-4">
-                    <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
-                        <i data-lucide="satellite" class="w-4 h-4 text-[#0284c7]"></i> Ping Search Engines
+            <form action="{{ url('/admin/settings') }}" method="POST" class="space-y-6">
+                @csrf
+
+                <!-- Trigger Events -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-3">
+                        Trigger Events — When to Send Automated SMS
                     </h3>
-                    <p class="text-[12px] text-[#64748b] mt-1">Notify Google and Bing about your updated sitemap so they re-crawl your site faster.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-[#f8fafc] p-4 rounded-xl border">
+                        <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                            <input type="checkbox" name="sms_on_new_order" id="sms_on_new_order" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_new_order'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-[12px] font-bold text-[#0f172a] block">New Order Placed</span>
+                                <span class="text-[11px] text-[#64748b]">Send instant confirmation SMS when order is placed</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                            <input type="checkbox" name="sms_on_dispatch" id="sms_on_dispatch" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_dispatch'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-[12px] font-bold text-[#0f172a] block">Order Dispatched / Shipped</span>
+                                <span class="text-[11px] text-[#64748b]">Send SMS with courier tracking code & delivery link</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                            <input type="checkbox" name="sms_on_delivered" id="sms_on_delivered" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_delivered'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-[12px] font-bold text-[#0f172a] block">Order Delivered</span>
+                                <span class="text-[11px] text-[#64748b]">Send thank you SMS when delivery is completed</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 bg-white rounded-xl border cursor-pointer hover:border-[#0284c7] transition-all">
+                            <input type="checkbox" name="sms_on_cancelled" id="sms_on_cancelled" value="1" class="w-4 h-4 text-[#0284c7] accent-[#0284c7]" {{ ($siteSettings['sms_on_cancelled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-[12px] font-bold text-[#0f172a] block">Order Cancelled</span>
+                                <span class="text-[11px] text-[#64748b]">Send notification if an order is cancelled</span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
+                <!-- Provider 1: BulkSMS BD -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="radio" class="w-4 h-4 text-[#0284c7]"></i> BulkSMS BD Gateway (bulksmsbd.net)
+                        </h3>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="bulksms_enabled" value="1" class="sr-only peer" {{ ($siteSettings['bulksms_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0284c7]"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Key</label>
+                            <input type="password" name="bulksms_api_key" value="{{ $siteSettings['bulksms_api_key'] ?? '' }}" placeholder="Enter BulkSMS BD API Key" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Sender ID / Masking</label>
+                            <input type="text" name="bulksms_sender_id" value="{{ $siteSettings['bulksms_sender_id'] ?? '' }}" placeholder="e.g. 8809612xxxxxx or Brand Name" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Base URL</label>
+                            <input type="text" name="bulksms_url" value="{{ $siteSettings['bulksms_url'] ?? 'http://bulksmsbd.net/api/smsapi' }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Provider 2: MiM SMS -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="radio" class="w-4 h-4 text-emerald-600"></i> MiM SMS Gateway (mimsms.com)
+                        </h3>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="mimsms_enabled" value="1" class="sr-only peer" {{ ($siteSettings['mimsms_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Key</label>
+                            <input type="password" name="mimsms_api_key" value="{{ $siteSettings['mimsms_api_key'] ?? '' }}" placeholder="Enter MiM SMS API Key" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Sender ID</label>
+                            <input type="text" name="mimsms_sender_id" value="{{ $siteSettings['mimsms_sender_id'] ?? '' }}" placeholder="e.g. 8809601xxxxxx" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Message Type</label>
+                            <select name="mimsms_type" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                                <option value="text" {{ ($siteSettings['mimsms_type'] ?? 'text') === 'text' ? 'selected' : '' }}>English (Text / 160 chars)</option>
+                                <option value="unicode" {{ ($siteSettings['mimsms_type'] ?? 'text') === 'unicode' ? 'selected' : '' }}>Bangla (Unicode / 70 chars)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API URL</label>
+                            <input type="text" name="mimsms_url" value="{{ $siteSettings['mimsms_url'] ?? 'https://api.mimsms.com/api/sendsms' }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SMS Templates -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-3">
+                        SMS Message Templates
+                    </h3>
+                    <p class="text-[12px] text-[#64748b]">Dynamic variables: <code>{order_id}</code>, <code>{customer_name}</code>, <code>{amount}</code>, <code>{tracking_code}</code>, <code>{courier_name}</code>, <code>{site_name}</code></p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">New Order SMS Template</label>
+                            <textarea name="sms_template_new_order" rows="3" class="w-full border border-[#cbd5e1] p-3 rounded-lg text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">{{ $siteSettings['sms_template_new_order'] ?? "Dear {customer_name}, your order #{order_id} for {amount} BDT has been received. Thank you for choosing {site_name}!" }}</textarea>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Order Dispatched SMS Template</label>
+                            <textarea name="sms_template_dispatch" rows="3" class="w-full border border-[#cbd5e1] p-3 rounded-lg text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">{{ $siteSettings['sms_template_dispatch'] ?? "Dear {customer_name}, order #{order_id} has been dispatched via {courier_name}. Tracking: {tracking_code}." }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test SMS Tool -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-[#0284c7]"></i> Live Test SMS Dispatcher
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="text" id="test-sms-phone" placeholder="Recipient Phone (e.g. 01712345678)" class="border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        <input type="text" id="test-sms-message" placeholder="Test message body..." value="Test SMS from ReXxo Luxury Boutique" class="border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        <button type="button" onclick="sendTestSms()" class="bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2 rounded-lg text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
+                            <i data-lucide="send" class="w-4 h-4"></i> Send Test SMS
+                        </button>
+                    </div>
+                    <div id="test-sms-result" class="hidden text-[12px] font-mono p-3 rounded-lg"></div>
+                </div>
+
+                <!-- Save Action -->
+                <div class="pt-4 border-t border-[#e2e8f0] flex items-center justify-between">
+                    <span class="text-[12px] text-[#64748b]">SMS configurations take effect immediately upon saving.</span>
+                    <button type="submit" class="bg-[#0f172a] hover:bg-[#0284c7] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save SMS Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 3. SECTION: COURIER SETTING (Steadfast, Pathao, RedX & Dispatch) -->
+        <!-- ================================================================= -->
+        <div id="section-api_courier" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="truck" class="w-5 h-5 text-[#0284c7]"></i> Courier API Integration & Webhooks
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Connect Steadfast, Pathao, RedX, Sundarban, eCourier, and Paperfly for 1-click parcel booking and live tracking.</p>
+                    </div>
+                    <a href="{{ url('/admin/courier') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer">
+                        <i data-lucide="external-link" class="w-4 h-4"></i> Open Dispatch Hub ↗
+                    </a>
+                </div>
+            </div>
+
+            <form action="{{ url('/admin/settings') }}" method="POST" class="space-y-6">
+                @csrf
+
+                <!-- Steadfast Courier -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center font-bold text-orange-600 text-[13px]">
+                                SF
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">Steadfast Courier API</h3>
+                                <p class="text-[11px] text-[#64748b]">Fastest parcel creation with automated invoice tracking.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="courier_steadfast_enabled" value="1" class="sr-only peer" {{ ($siteSettings['courier_steadfast_enabled'] ?? '1') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">API Key</label>
+                            <input type="password" name="steadfast_api_key" value="{{ $siteSettings['steadfast_api_key'] ?? '' }}" placeholder="Enter Steadfast API Key" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Secret Key</label>
+                            <input type="password" name="steadfast_secret_key" value="{{ $siteSettings['steadfast_secret_key'] ?? '' }}" placeholder="Enter Steadfast Secret Key" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Base API URL</label>
+                            <input type="text" name="steadfast_base_url" value="{{ $siteSettings['steadfast_base_url'] ?? 'https://portal.steadfast.com.bd/api/v1' }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pathao Courier -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center font-bold text-red-600 text-[13px]">
+                                PT
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">Pathao Courier API</h3>
+                                <p class="text-[11px] text-[#64748b]">On-demand express urban dispatch & store pickup integration.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="courier_pathao_enabled" value="1" class="sr-only peer" {{ ($siteSettings['courier_pathao_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Client ID</label>
+                            <input type="text" name="pathao_client_id" value="{{ $siteSettings['pathao_client_id'] ?? '' }}" placeholder="Pathao Client ID" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Client Secret</label>
+                            <input type="password" name="pathao_client_secret" value="{{ $siteSettings['pathao_client_secret'] ?? '' }}" placeholder="••••••••" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Username / Email</label>
+                            <input type="text" name="pathao_username" value="{{ $siteSettings['pathao_username'] ?? '' }}" placeholder="account@domain.com" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Password</label>
+                            <input type="password" name="pathao_password" value="{{ $siteSettings['pathao_password'] ?? '' }}" placeholder="••••••••" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RedX Courier -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center font-bold text-rose-600 text-[13px]">
+                                RX
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">RedX Courier API</h3>
+                                <p class="text-[11px] text-[#64748b]">Nationwide logistics coverage with automated parcel API dispatch.</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="courier_redx_enabled" value="1" class="sr-only peer" {{ ($siteSettings['courier_redx_enabled'] ?? '0') === '1' ? 'checked' : '' }}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">RedX Access Token</label>
+                            <input type="password" name="redx_access_token" value="{{ $siteSettings['redx_access_token'] ?? '' }}" placeholder="Enter RedX Bearer Token" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Base API URL</label>
+                            <input type="text" name="redx_base_url" value="{{ $siteSettings['redx_base_url'] ?? 'https://openapi.redx.com.bd/v1.0.0-beta' }}" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Action -->
+                <div class="pt-4 border-t border-[#e2e8f0] flex items-center justify-between">
+                    <span class="text-[12px] text-[#64748b]">Courier credentials securely saved.</span>
+                    <button type="submit" class="bg-[#0f172a] hover:bg-[#0284c7] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Courier Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 4. SECTION: SEO META (Title, Description, Social Image & SERP)   -->
+        <!-- ================================================================= -->
+        <div id="section-seo_meta" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="search" class="w-5 h-5 text-[#0284c7]"></i> Search Engine Meta & Social Share
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Optimize your search engine snippet, meta titles, descriptions, and OpenGraph social preview images.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Google Search Optimized
+                    </span>
+                </div>
+            </div>
+
+            <!-- SERP Live Preview Simulation -->
+            <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-3">
+                <h3 class="text-[12px] font-bold uppercase text-[#64748b] tracking-wider">Google Search Result Preview</h3>
+                <div class="bg-white border rounded-xl p-5 max-w-2xl shadow-xs space-y-1">
+                    <div class="flex items-center gap-2 text-[12px] text-[#202124]">
+                        <div class="w-4 h-4 rounded-full bg-slate-100 border flex items-center justify-center text-[9px] font-bold text-[#0284c7]">R</div>
+                        <span class="text-[#202124] font-medium">{{ request()->getHost() }}</span>
+                        <span class="text-[#5f6368]">› store › artisanal</span>
+                    </div>
+                    <h4 id="serp-preview-title" class="text-[18px] font-medium text-[#1a0dab] hover:underline cursor-pointer leading-tight">
+                        {{ $siteSettings['seo_meta_title'] ?? ($siteSettings['site_name'] ?? 'ReXxo Bd') . ' | Haute Parfumerie & Artisanal Perfumes' }}
+                    </h4>
+                    <p id="serp-preview-desc" class="text-[13px] text-[#4d5156] leading-relaxed">
+                        {{ $siteSettings['seo_meta_description'] ?? 'Discover handcrafted luxury perfume extraits infused with pure artisanal oud and bespoke essences.' }}
+                    </p>
+                </div>
+            </div>
+
+            <form action="{{ url('/admin/settings') }}" method="POST" class="space-y-6">
+                @csrf
+
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-5">
+                    <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase border-l-4 border-[#0284c7] pl-3">
+                        Meta Content Tags
+                    </h3>
+
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">SEO Meta Title <span class="text-rose-500">*</span></label>
+                        <input type="text" name="seo_meta_title" id="input_seo_title" value="{{ $siteSettings['seo_meta_title'] ?? '' }}" placeholder="e.g. ReXxo Bd | Luxury Artisanal Perfumes & Extraits" class="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-lg text-[13px] font-bold focus:border-[#0284c7] outline-none bg-white text-[#0f172a]" oninput="document.getElementById('serp-preview-title').textContent = this.value || 'ReXxo Bd | Haute Parfumerie'">
+                        <p class="text-[11px] text-[#64748b] mt-1">Recommended length: 50–60 characters.</p>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">SEO Meta Description <span class="text-rose-500">*</span></label>
+                        <textarea name="seo_meta_description" id="input_seo_desc" rows="3" placeholder="Crafted in limited flacons using centuries-old French perfumery and Arabian oud..." class="w-full border border-[#cbd5e1] p-3 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]" oninput="document.getElementById('serp-preview-desc').textContent = this.value || 'Discover handcrafted luxury perfume extraits...' ">{{ $siteSettings['seo_meta_description'] ?? '' }}</textarea>
+                        <p class="text-[11px] text-[#64748b] mt-1">Recommended length: 140–160 characters for optimal SERP snippets.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Meta Keywords (Comma separated)</label>
+                            <input type="text" name="seo_meta_keywords" value="{{ $siteSettings['seo_meta_keywords'] ?? 'luxury perfume, artisanal extrait, oud fragrance, niche perfumery, bespoke flacon, bangladesh perfume' }}" placeholder="perfume, extrait, oud..." class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Canonical Base URL</label>
+                            <input type="text" name="seo_canonical_url" value="{{ $siteSettings['seo_canonical_url'] ?? url('/') }}" placeholder="https://yourdomain.com" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">OpenGraph Social Share Image URL (og:image)</label>
+                        <input type="text" name="seo_og_image" value="{{ $siteSettings['seo_og_image'] ?? '' }}" placeholder="https://yourdomain.com/og-banner.jpg" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        <p class="text-[11px] text-[#64748b] mt-1">Displayed when sharing your storefront link on Facebook, WhatsApp, Twitter/X, and LinkedIn (Recommended 1200×630 px).</p>
+                    </div>
+                </div>
+
+                <!-- Save Action -->
+                <div class="pt-4 border-t border-[#e2e8f0] flex items-center justify-between">
+                    <span class="text-[12px] text-[#64748b]">Meta changes update in page head tags instantly.</span>
+                    <button type="submit" class="bg-[#0f172a] hover:bg-[#0284c7] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Meta Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 5. SECTION: MARKETING & PIXELS (Meta, Google, TikTok, Clarity)   -->
+        <!-- ================================================================= -->
+        <div id="section-seo_marketing" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-[#0284c7]"></i> Marketing Pixels, Conversions API & Verification
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Integrate Meta / Facebook Pixel, CAPI Token, Google Analytics 4, GTM, TikTok Pixel, Pinterest Tag, and Search Console verification codes.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Conversion Tracking Active
+                    </span>
+                </div>
+            </div>
+
+            <form action="{{ url('/admin/settings') }}" method="POST" class="space-y-6">
+                @csrf
+
+                <!-- Meta / Facebook Suite -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-blue-600 text-[14px]">
+                                f
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">Meta / Facebook Pixel & Conversions API (CAPI)</h3>
+                                <p class="text-[11px] text-[#64748b]">Track PageView, ViewContent, AddToCart, InitiateCheckout & Purchase events.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook Pixel ID</label>
+                            <input type="text" name="pixel_facebook" value="{{ $siteSettings['pixel_facebook'] ?? '' }}" placeholder="e.g. 123456789012345" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Meta Conversions API (CAPI) Token</label>
+                            <input type="password" name="meta_capi_token" value="{{ $siteSettings['meta_capi_token'] ?? '' }}" placeholder="EAAG..." class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Meta Catalog ID</label>
+                            <input type="text" name="meta_catalog_id" value="{{ $siteSettings['meta_catalog_id'] ?? '' }}" placeholder="e.g. 9876543210" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Facebook Domain Verification Code</label>
+                            <input type="text" name="meta_domain_verification" value="{{ $siteSettings['meta_domain_verification'] ?? '' }}" placeholder="e.g. abcdef123456789" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Google Ecosystem -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center font-bold text-amber-600 text-[14px]">
+                                G
+                            </div>
+                            <div>
+                                <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase">Google Analytics, GTM & Webmaster Verification</h3>
+                                <p class="text-[11px] text-[#64748b]">Connect Google Analytics 4, Tag Manager Container, Search Console verification, and Ads.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Analytics 4 ID (GA4)</label>
+                            <input type="text" name="pixel_google" value="{{ $siteSettings['pixel_google'] ?? '' }}" placeholder="e.g. G-XXXXXXXXXX" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Tag Manager (GTM) ID</label>
+                            <input type="text" name="pixel_gtm" value="{{ $siteSettings['pixel_gtm'] ?? '' }}" placeholder="e.g. GTM-XXXXXXX" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Search Console Verification</label>
+                            <input type="text" name="google_site_verification" value="{{ $siteSettings['google_site_verification'] ?? '' }}" placeholder="e.g. xYzAbC123..." class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Google Ads Conversion ID</label>
+                            <input type="text" name="google_ads_conversion_id" value="{{ $siteSettings['google_ads_conversion_id'] ?? '' }}" placeholder="e.g. AW-123456789" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Bing Webmaster Verification</label>
+                            <input type="text" name="bing_site_verification" value="{{ $siteSettings['bing_site_verification'] ?? '' }}" placeholder="e.g. BING_AUTH_CODE" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Channel Pixels (TikTok, Pinterest, Microsoft Clarity) -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="share-2" class="w-4 h-4 text-[#0284c7]"></i> Additional Social & Heatmap Tracking
+                        </h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">TikTok Pixel ID</label>
+                            <input type="text" name="pixel_tiktok" value="{{ $siteSettings['pixel_tiktok'] ?? '' }}" placeholder="e.g. CXXXXXXXXXXXX" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Pinterest Tag ID</label>
+                            <input type="text" name="pixel_pinterest" value="{{ $siteSettings['pixel_pinterest'] ?? '' }}" placeholder="e.g. 2612345678901" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Microsoft Clarity Tracking ID</label>
+                            <input type="text" name="pixel_clarity" value="{{ $siteSettings['pixel_clarity'] ?? '' }}" placeholder="e.g. k7xxxxxxxx" class="w-full border border-[#cbd5e1] px-3 py-2 rounded-lg text-[13px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Script Injector (Head / Body) -->
+                <div class="bg-white/90 border p-6 rounded-2xl shadow-sm space-y-4">
+                    <div class="border-b pb-4 flex items-center justify-between">
+                        <h3 class="text-[15px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="code" class="w-4 h-4 text-[#0284c7]"></i> Custom HTML / JavaScript Code Injection
+                        </h3>
+                        <span class="text-[11px] text-[#64748b]">Advanced: Injected directly into storefront HTML</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Header Scripts (Injected into &lt;head&gt;)</label>
+                            <textarea name="custom_head_scripts" rows="4" placeholder="&lt;!-- Custom Header Scripts --&gt;" class="w-full border border-[#cbd5e1] p-3 rounded-lg text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">{{ $siteSettings['custom_head_scripts'] ?? '' }}</textarea>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold uppercase text-[#475569] block mb-1">Footer Scripts (Injected before &lt;/body&gt;)</label>
+                            <textarea name="custom_body_scripts" rows="4" placeholder="&lt;!-- Custom Footer Scripts / Live Chat / Pixels --&gt;" class="w-full border border-[#cbd5e1] p-3 rounded-lg text-[12px] font-mono focus:border-[#0284c7] outline-none bg-white text-[#0f172a]">{{ $siteSettings['custom_body_scripts'] ?? '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Action -->
+                <div class="pt-4 border-t border-[#e2e8f0] flex items-center justify-between">
+                    <span class="text-[12px] text-[#64748b]">All tracking pixels and scripts render dynamically across the storefront.</span>
+                    <button type="submit" class="bg-[#0f172a] hover:bg-[#0284c7] text-white px-8 py-3 rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Marketing & Pixel Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 6. SECTION: SITEMAP GENERATOR (sitemap.xml Builder)              -->
+        <!-- ================================================================= -->
+        <div id="section-sitemap" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="map" class="w-5 h-5 text-[#0284c7]"></i> Sitemap.xml Generator & Indexing
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Automatically scan all products, collections, and landing pages to generate a clean Google XML Sitemap.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <i data-lucide="globe" class="w-3.5 h-3.5"></i> Google & Bing Index Ready
+                    </span>
+                </div>
+            </div>
+
+            <!-- Sitemap Status Card -->
+            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-5">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center">
+                            <i data-lucide="file-code-2" class="w-6 h-6 text-[#0284c7]"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[16px] font-serif font-bold text-[#0f172a]">sitemap.xml</h3>
+                            <a href="{{ url('/sitemap.xml') }}" target="_blank" class="text-[12px] text-[#0284c7] hover:underline font-mono">{{ url('/sitemap.xml') }} ↗</a>
+                        </div>
+                    </div>
+                    <span id="sitemap-status-badge" class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-3 py-1 rounded-full text-[11px] font-bold uppercase">Checking...</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#f8fafc] rounded-xl border p-4">
+                    <div class="space-y-1">
+                        <span class="text-[11px] text-[#64748b] font-bold uppercase block">Last Generated Timestamp</span>
+                        <span id="sitemap-last-updated" class="font-mono text-[13px] font-bold text-[#0f172a]">—</span>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[11px] text-[#64748b] font-bold uppercase block">Indexed URLs Count</span>
+                        <span id="sitemap-entries" class="font-mono text-[14px] font-bold text-[#0284c7]">—</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="generateSitemap()" id="btn-gen-sitemap" class="w-full py-3.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-[13px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save sitemap.xml
+                </button>
+                <div id="sitemap-result" class="hidden text-[12px] font-mono p-4 rounded-xl"></div>
+            </div>
+
+            <!-- Server Cron Job Tip -->
+            <div class="bg-amber-50/70 border border-amber-200 p-5 rounded-2xl space-y-2">
+                <div class="flex items-center gap-2 text-amber-800 font-bold text-[13px]">
+                    <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i> Automated Daily Auto-Sync (Cron Job)
+                </div>
+                <p class="text-[12px] text-amber-700">
+                    To auto-update sitemap daily whenever new products are added, configure your server crontab to run:
+                </p>
+                <code class="block bg-amber-100/80 p-2.5 rounded-lg text-[11px] font-mono text-amber-900 border border-amber-300">
+                    * * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1
+                </code>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 7. SECTION: ROBOTS.TXT MANAGER                                   -->
+        <!-- ================================================================= -->
+        <div id="section-robots" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="bot" class="w-5 h-5 text-violet-600"></i> Robots.txt Web Crawler Directives
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Manage web crawler rules for Googlebot, Bingbot, and protect admin endpoints from unwanted crawling.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                        <i data-lucide="shield" class="w-3.5 h-3.5"></i> Crawler Protection Active
+                    </span>
+                </div>
+            </div>
+
+            <!-- Robots.txt Status Card -->
+            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-5">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+                            <i data-lucide="bot" class="w-6 h-6 text-violet-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[16px] font-serif font-bold text-[#0f172a]">robots.txt</h3>
+                            <a href="{{ url('/robots.txt') }}" target="_blank" class="text-[12px] text-violet-600 hover:underline font-mono">{{ url('/robots.txt') }} ↗</a>
+                        </div>
+                    </div>
+                    <span id="robots-status-badge" class="bg-slate-50 text-[#94a3b8] border border-slate-200 px-3 py-1 rounded-full text-[11px] font-bold uppercase">Checking...</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#f8fafc] rounded-xl border p-4">
+                    <div class="space-y-1">
+                        <span class="text-[11px] text-[#64748b] font-bold uppercase block">Last Generated Timestamp</span>
+                        <span id="robots-last-updated" class="font-mono text-[13px] font-bold text-[#0f172a]">—</span>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[11px] text-[#64748b] font-bold uppercase block">Sitemap Reference</span>
+                        <span class="font-mono text-[13px] font-bold text-emerald-700">Included ✔</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="generateRobots()" id="btn-gen-robots" class="w-full py-3.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-[13px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Generate & Save robots.txt
+                </button>
+                <div id="robots-result" class="hidden text-[12px] font-mono p-4 rounded-xl"></div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 8. SECTION: PING SEARCH ENGINES (Google / Bing)                   -->
+        <!-- ================================================================= -->
+        <div id="section-seo_ping" class="section-content hidden space-y-6 animate-fade-in">
+            <!-- Header -->
+            <div class="bg-white/90 border border-[#38bdf8]/30 p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-[18px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
+                            <i data-lucide="satellite" class="w-5 h-5 text-[#0284c7]"></i> Instant Search Engine Index Pinger
+                        </h2>
+                        <p class="text-[12px] text-[#64748b] mt-1">Notify Google Search Console and Bing Webmaster Tools immediately after updating products or content.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-sky-50 text-[#0284c7] border border-sky-200">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i> One-Click Index Notification
+                    </span>
+                </div>
+            </div>
+
+            <!-- Ping Action Panel -->
+            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Google -->
                     <div class="bg-[#f8fafc] border rounded-xl p-4 flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-white border shadow-xs flex items-center justify-center shrink-0">
                             <svg viewBox="0 0 48 48" class="w-7 h-7"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <p class="text-[13px] font-bold text-[#0f172a]">Google Search Console</p>
-                            <p class="text-[11px] text-[#64748b]">google.com/ping?sitemap=...</p>
+                            <p class="text-[11px] text-[#64748b] truncate">google.com/ping?sitemap={{ url('/sitemap.xml') }}</p>
                         </div>
                         <span id="ping-google-badge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-[#94a3b8] border border-slate-200 shrink-0">Idle</span>
                     </div>
@@ -1350,54 +2123,23 @@
                         <div class="w-12 h-12 rounded-xl bg-white border shadow-xs flex items-center justify-center shrink-0">
                             <svg viewBox="0 0 48 48" class="w-7 h-7"><path d="M10 4l8 23.5-4.5 2.7L26 39l12-7-7-4.4 2-11.6z" fill="#0078D4"/><path d="M10 4l8 23.5 5-3L10 4z" fill="#004C97"/></svg>
                         </div>
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <p class="text-[13px] font-bold text-[#0f172a]">Bing Webmaster Tools</p>
-                            <p class="text-[11px] text-[#64748b]">bing.com/ping?sitemap=...</p>
+                            <p class="text-[11px] text-[#64748b] truncate">bing.com/ping?sitemap={{ url('/sitemap.xml') }}</p>
                         </div>
                         <span id="ping-bing-badge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-[#94a3b8] border border-slate-200 shrink-0">Idle</span>
                     </div>
                 </div>
 
-                <button type="button" onclick="pingSeo()" id="btn-ping" class="w-full py-3.5 bg-gradient-to-r from-[#0284c7] to-emerald-600 hover:from-[#0369a1] hover:to-emerald-700 text-white rounded-xl text-[13px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm">
+                <button type="button" onclick="pingSeo()" id="btn-ping" class="w-full py-4 bg-gradient-to-r from-[#0284c7] to-emerald-600 hover:from-[#0369a1] hover:to-emerald-700 text-white rounded-xl text-[13px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md">
                     <i data-lucide="send" class="w-4 h-4"></i> 🚀 Ping Google & Bing Now
                 </button>
-                <div id="ping-result" class="hidden text-[12px] font-mono p-4 rounded-lg"></div>
-            </div>
 
-            <!-- SEO Health Checklist -->
-            <div class="bg-white/90 border rounded-2xl p-6 shadow-sm space-y-4">
-                <h3 class="text-[14px] font-serif font-bold text-[#0f172a] uppercase flex items-center gap-2">
-                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> SEO Health Checklist
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="seo-checklist">
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
-                        <div><p class="text-[12px] font-bold text-emerald-800">Meta Title & Description</p><p class="text-[10px] text-emerald-700">Configured in Site Settings</p></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
-                        <div><p class="text-[12px] font-bold text-emerald-800">Open Graph (OG) Tags</p><p class="text-[10px] text-emerald-700">og:title, og:description, og:image set</p></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>
-                        <div><p class="text-[12px] font-bold text-emerald-800">Canonical URLs</p><p class="text-[10px] text-emerald-700">Inertia SSR renders unique URLs per page</p></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl" id="sitemap-check-card">
-                        <i data-lucide="clock" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
-                        <div><p class="text-[12px] font-bold text-amber-800">sitemap.xml</p><p class="text-[10px] text-amber-700">Generate to enable Google indexing</p></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl" id="robots-check-card">
-                        <i data-lucide="clock" class="w-4 h-4 text-amber-500 mt-0.5 shrink-0"></i>
-                        <div><p class="text-[12px] font-bold text-amber-800">robots.txt</p><p class="text-[10px] text-amber-700">Generate to guide crawlers correctly</p></div>
-                    </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl {{ !empty($siteSettings['pixel_google']) ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200' }}">
-                        <i data-lucide="{{ !empty($siteSettings['pixel_google']) ? 'check-circle-2' : 'clock' }}" class="w-4 h-4 {{ !empty($siteSettings['pixel_google']) ? 'text-emerald-600' : 'text-amber-500' }} mt-0.5 shrink-0"></i>
-                        <div><p class="text-[12px] font-bold {{ !empty($siteSettings['pixel_google']) ? 'text-emerald-800' : 'text-amber-800' }}">Google Analytics 4</p><p class="text-[10px] {{ !empty($siteSettings['pixel_google']) ? 'text-emerald-700' : 'text-amber-700' }}">{{ !empty($siteSettings['pixel_google']) ? 'GA4 ID: ' . $siteSettings['pixel_google'] : 'Configure in API Settings → Google' }}</p></div>
-                    </div>
-                </div>
+                <div id="ping-result" class="hidden text-[12px] font-mono p-4 rounded-lg bg-[#f8fafc] border text-[#475569]"></div>
             </div>
         </div>
 
+        <!-- SECTION: MENU BUILDER -->
         <div id="section-menu" class="section-content hidden bg-white/90 border p-6 rounded-2xl space-y-6">
             <div class="flex justify-between items-center border-b pb-4">
                 <div>
@@ -2158,6 +2900,7 @@
         <!-- Classic Minimal Admin Footer -->
         @include('admin.partials.footer')
     </main>
+    </div>
 
     <script>
         let masterOrders = [
@@ -2171,7 +2914,26 @@
         let cart = [];
         let ordersSubTab = 'total';
 
-        const allSubmenus = ['orders', 'product', 'purchase', 'contact', 'courier'];
+        const allSubmenus = ['orders', 'product', 'purchase', 'contact', 'courier', 'api_gateway', 'seo_sub'];
+
+        const parentSubmenuMap = {
+            'create_order': 'orders',
+            'orders_list': 'orders',
+            'product_add': 'product',
+            'products': 'product',
+            'purchase_add': 'purchase',
+            'purchase_list': 'purchase',
+            'customers': 'contact',
+            'supplier': 'contact',
+            'api_payment': 'api_gateway',
+            'api_sms': 'api_gateway',
+            'api_courier': 'api_gateway',
+            'seo_meta': 'seo_sub',
+            'seo_marketing': 'seo_sub',
+            'sitemap': 'seo_sub',
+            'robots': 'seo_sub',
+            'seo_ping': 'seo_sub'
+        };
 
         function toggleSubmenu(menuId) {
             // Accordion: close all OTHER submenus, then toggle the clicked one
@@ -2215,7 +2977,9 @@
 
         function showToastNotice(msg) {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = msg;
+            if (!toast) return;
+            const toastMsg = document.getElementById('toastMsg');
+            if (toastMsg) toastMsg.innerText = msg;
             toast.classList.remove('hidden');
             setTimeout(() => { toast.classList.add('hidden'); }, 3500);
         }
@@ -2228,6 +2992,12 @@
         }
 
         function switchSection(secId) {
+            // Clean up pre-route anti-flicker style
+            const preRoute = document.getElementById('pre-route-hide');
+            if (preRoute) {
+                preRoute.remove();
+            }
+
             // Hide all sections
             document.querySelectorAll('.section-content').forEach(el => {
                 el.classList.add('hidden');
@@ -2241,7 +3011,29 @@
                 void targetSec.offsetWidth;
                 targetSec.classList.add('section-entering');
             }
-            lucide.createIcons();
+
+            // Scroll main content area and window to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const mainEl = document.querySelector('main');
+            if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Auto open parent submenu in sidebar accordion if applicable
+            const parentMenu = parentSubmenuMap[secId];
+            if (parentMenu) {
+                const subPanel = document.getElementById('sub-' + parentMenu);
+                const subChevron = document.querySelector('[data-chevron="' + parentMenu + '"]');
+                if (subPanel) subPanel.classList.add('submenu-open');
+                if (subChevron) subChevron.classList.add('chevron-open');
+            }
+
+            // Sync URL Hash without triggering full reload
+            if (window.location.hash !== '#' + secId) {
+                history.replaceState(null, '', '#' + secId);
+            }
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
 
             // Update sidebar active button highlight
             updateSidebarHighlight(secId);
@@ -2250,16 +3042,41 @@
         function updateSidebarHighlight(secId) {
             // Remove active style from all sidebar buttons
             document.querySelectorAll('[id^="sidebar-btn-"]').forEach(btn => {
-                btn.classList.remove('bg-[#0284c7]', 'text-white', 'shadow-md');
-                btn.classList.add('text-[#475569]', 'hover:bg-[#f1f5f9]', 'hover:text-[#0284c7]');
+                btn.classList.remove('bg-[#0284c7]', 'text-white', 'shadow-md', 'font-bold', 'text-[#0284c7]', 'bg-[#f0f9ff]');
+                btn.classList.add('text-[#475569]');
             });
             // Apply active style to matching button
             const activeBtn = document.getElementById('sidebar-btn-' + secId);
             if (activeBtn) {
-                activeBtn.classList.add('bg-[#0284c7]', 'text-white', 'shadow-md');
-                activeBtn.classList.remove('text-[#475569]', 'hover:bg-[#f1f5f9]', 'hover:text-[#0284c7]');
+                if (activeBtn.tagName.toLowerCase() === 'button' && activeBtn.classList.contains('w-full')) {
+                    // Submenu button or main button
+                    activeBtn.classList.add('text-[#0284c7]', 'bg-[#f0f9ff]', 'font-bold');
+                    activeBtn.classList.remove('text-[#475569]', 'text-[#64748b]');
+                } else {
+                    activeBtn.classList.add('bg-[#0284c7]', 'text-white', 'shadow-md');
+                    activeBtn.classList.remove('text-[#475569]');
+                }
             }
         }
+
+        // Initialize on page load and hash change
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById('section-' + hash)) {
+                switchSection(hash);
+            } else {
+                switchSection('dashboard');
+            }
+            loadSeoStatus();
+            renderCartUI();
+        });
+
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById('section-' + hash)) {
+                switchSection(hash);
+            }
+        });
 
         function toggleActionDropdown(id) {
             const cleanId = id.replace('#', '');
@@ -2276,35 +3093,30 @@
 
             if (streamBody) {
                 streamBody.innerHTML = masterOrders.slice(0, 5).map(ord => `
-                    <tr class="hover:bg-sky-50">
-                        <td class="p-3.5 font-bold font-mono text-[#0284c7]">${ord.id}</td>
-                        <td class="p-3.5 font-bold">${ord.client}</td>
-                        <td class="p-3.5 font-bold text-[#0284c7] font-mono text-right">৳${ord.amt.toLocaleString()} BDT</td>
+                    <tr class="hover:bg-sky-50/50 transition-colors">
+                        <td class="p-3 font-mono font-bold text-[#0284c7] text-[12px]">${ord.id}</td>
+                        <td class="p-3 font-bold text-[#0f172a] text-[12.5px]">${ord.client}</td>
+                        <td class="p-3 text-[#475569] text-[12px]">${ord.prod}</td>
+                        <td class="p-3 font-mono font-bold text-[#0f172a] text-[12.5px]">৳${ord.amt.toLocaleString()} BDT</td>
+                        <td class="p-3"><span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase rounded-md">${ord.status}</span></td>
                     </tr>
                 `).join('');
             }
 
             if (!tbody) return;
-
-            const filtered = masterOrders.filter(o => {
-                if (ordersSubTab === 'success' && o.status !== 'Delivered') return false;
-                if (ordersSubTab === 'return' && o.status !== 'Returned') return false;
-                return true;
-            });
-
-            tbody.innerHTML = filtered.map(ord => {
+            tbody.innerHTML = masterOrders.map(ord => {
                 const cleanId = ord.id.replace('#', '');
                 return `
-                    <tr class="hover:bg-sky-50">
-                        <td class="p-3.5 font-bold font-mono text-[#0284c7]">${ord.id}</td>
-                        <td class="p-3.5 font-bold">${ord.client}</td>
-                        <td class="p-3.5">${ord.prod}</td>
-                        <td class="p-3.5 font-bold text-[#0284c7] font-mono">৳${ord.amt.toLocaleString()} BDT</td>
-                        <td class="p-3.5 text-center"><span class="bg-sky-500/10 text-sky-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${ord.status}</span></td>
-                        <td class="p-3.5 text-right relative">
+                    <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">
+                        <td class="p-3 font-mono font-bold text-[#0284c7] text-[12px]">${ord.id}</td>
+                        <td class="p-3 font-bold text-[#0f172a] text-[12.5px]">${ord.client}</td>
+                        <td class="p-3 text-[#475569] text-[12px]">${ord.prod}</td>
+                        <td class="p-3 font-mono font-bold text-[#0f172a] text-[12.5px]">৳${ord.amt.toLocaleString()} BDT</td>
+                        <td class="p-3"><span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase rounded-md">${ord.status}</span></td>
+                        <td class="p-3 text-right">
                             <div class="relative inline-block text-left">
-                                <button type="button" onclick="toggleActionDropdown('${ord.id}')" class="px-4 py-1.5 bg-white border border-[#38bdf8] text-[#0284c7] hover:bg-sky-50 rounded-xl text-[12px] font-bold shadow-xs flex items-center gap-1.5 ml-auto cursor-pointer">
-                                    Actions ▼
+                                <button type="button" onclick="toggleActionDropdown('${ord.id}')" class="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors cursor-pointer">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
                                 </button>
                                 <div id="act-drop-${cleanId}" class="act-dropdown-menu hidden absolute right-0 mt-1.5 w-36 bg-white border border-[#cbd5e1] rounded-xl shadow-2xl py-1 z-50 text-left">
                                     <button onclick="viewOrder('${ord.id}')" class="w-full text-left px-3.5 py-2 text-[12px] font-bold text-[#0284c7] hover:bg-sky-50">👁️ View</button>
@@ -2319,96 +3131,186 @@
             }).join('');
         }
 
+        // ── POS / CREATE SALE TERMINAL LOGIC ──
+        function handleCustomerSelectChange(val) {
+            if (!val) return;
+            const parts = val.split('|');
+            const phone = parts[1] || '';
+            const addr = parts[2] || '';
+            const phoneEl = document.getElementById('coCustomerPhone');
+            const addrEl = document.getElementById('coCustomerAddress');
+            if (phoneEl) phoneEl.value = phone;
+            if (addrEl) addrEl.value = addr;
+        }
+
+        function handleDeliveryChargeChange(fee) {
+            renderCartUI();
+        }
+
         function handleAddProductToCart() {
-            const val = document.getElementById('coProductSelect').value;
+            const selectEl = document.getElementById('coProductSelect');
+            const val = selectEl ? selectEl.value : '';
             if (!val) return;
             const parts = val.split('|');
             const name = parts[0];
-            const price = Number(parts[1]);
+            const price = Number(parts[1]) || 0;
+            const prodId = parts[2] || '0';
 
             const existing = cart.find(i => i.name === name);
-            if (existing) { existing.qty += 1; } else { cart.push({ name, price, qty: 1 }); }
-            document.getElementById('coProductSelect').value = '';
+            if (existing) { 
+                existing.qty += 1; 
+            } else { 
+                cart.push({ name, price, id: prodId, qty: 1 }); 
+            }
+            if (selectEl) selectEl.value = '';
             renderCartUI();
         }
 
         function changeCartQty(index, delta) {
+            if (!cart[index]) return;
             cart[index].qty += delta;
-            if (cart[index].qty <= 0) cart.splice(index, 1);
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            }
+            renderCartUI();
+        }
+
+        function removeCartItem(index) {
+            if (!cart[index]) return;
+            cart.splice(index, 1);
             renderCartUI();
         }
 
         function renderCartUI() {
             const container = document.getElementById('cartItemsList');
+            const subtotalDisplay = document.getElementById('coSubtotalDisplay');
+            const shippingDisplay = document.getElementById('coShippingDisplay');
+            const discountDisplay = document.getElementById('coDiscountDisplay');
             const totalDisplay = document.getElementById('coTotalBillDisplay');
+            const countBadge = document.getElementById('posCartCountBadge');
+            const deliverySelect = document.getElementById('coDeliveryChargeSelect');
+            const discountInput = document.getElementById('coDiscountInput');
+
             if (!container) return;
 
-            let total = 0;
-            container.innerHTML = cart.map((item, idx) => {
-                const itemTotal = item.price * item.qty;
-                total += itemTotal;
-                return `
-                    <div class="bg-[#f8fafc] border p-3 rounded-xl flex items-center justify-between">
-                        <div>
-                            <div class="font-bold text-[13px]">${item.name}</div>
-                            <div class="text-[11px] text-[#0284c7] font-bold font-mono">৳${item.price.toLocaleString()} BDT x ${item.qty} = ৳${itemTotal.toLocaleString()} BDT</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="changeCartQty(${idx}, -1)" class="w-6 h-6 bg-gray-100 font-bold border rounded">-</button>
-                            <span class="font-bold font-mono text-[13px]">${item.qty}</span>
-                            <button type="button" onclick="changeCartQty(${idx}, 1)" class="w-6 h-6 bg-[#0284c7] text-white font-bold rounded">+</button>
-                        </div>
+            let subtotal = 0;
+            let totalQty = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div id="emptyCartPlaceholder" class="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 text-slate-400 text-[12px] font-medium">
+                        <i data-lucide="shopping-bag" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                        No products added yet. Select a product above to add to this sale.
                     </div>
                 `;
-            }).join('');
+            } else {
+                container.innerHTML = cart.map((item, idx) => {
+                    const itemTotal = item.price * item.qty;
+                    subtotal += itemTotal;
+                    totalQty += item.qty;
+                    return `
+                        <div class="bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-2xs hover:border-emerald-300 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 font-bold flex items-center justify-center text-xs shrink-0">
+                                    <i data-lucide="package" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-[12.5px] text-slate-800">${item.name}</div>
+                                    <div class="text-[11px] text-emerald-700 font-bold font-mono">৳${item.price.toLocaleString()} BDT x ${item.qty} = <span class="text-slate-900 font-extrabold">৳${itemTotal.toLocaleString()} BDT</span></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                                    <button type="button" onclick="changeCartQty(${idx}, -1)" class="w-7 h-7 bg-white hover:bg-slate-100 font-bold text-slate-700 flex items-center justify-center transition-colors cursor-pointer">-</button>
+                                    <span class="w-8 text-center font-bold font-mono text-[12px] text-slate-900">${item.qty}</span>
+                                    <button type="button" onclick="changeCartQty(${idx}, 1)" class="w-7 h-7 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center transition-colors cursor-pointer">+</button>
+                                </div>
+                                <button type="button" onclick="removeCartItem(${idx})" title="Remove item" class="w-7 h-7 text-rose-500 hover:bg-rose-50 rounded-lg flex items-center justify-center transition-colors cursor-pointer">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
 
-            totalDisplay.innerText = `৳${total.toLocaleString()} BDT`;
+            const shippingFee = deliverySelect ? (Number(deliverySelect.value) || 0) : 60;
+            const discount = discountInput ? (Math.max(0, Number(discountInput.value) || 0)) : 0;
+            const finalPayable = Math.max(0, (subtotal + shippingFee - discount));
+
+            if (subtotalDisplay) subtotalDisplay.innerText = `৳${subtotal.toLocaleString()} BDT`;
+            if (shippingDisplay) shippingDisplay.innerText = `+ ৳${shippingFee.toLocaleString()} BDT`;
+            if (discountDisplay) discountDisplay.innerText = `- ৳${discount.toLocaleString()} BDT`;
+            if (totalDisplay) totalDisplay.innerText = `৳${finalPayable.toLocaleString()} BDT`;
+            if (countBadge) countBadge.innerText = `${totalQty} Item${totalQty === 1 ? '' : 's'} (${cart.length} unique)`;
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
         }
 
-        function openAddCustomerPrompt() {
-            document.getElementById('addCustomerModal').classList.remove('hidden');
-            document.getElementById('modalCustomerName').value = '';
-            document.getElementById('modalCustomerPhone').value = '';
-            document.getElementById('modalCustomerAddress').value = '';
-            lucide.createIcons();
+        function resetSaleForm() {
+            cart = [];
+            const form = document.getElementById('createSaleMasterForm');
+            if (form) form.reset();
+            const phoneEl = document.getElementById('coCustomerPhone');
+            const addrEl = document.getElementById('coCustomerAddress');
+            if (phoneEl) phoneEl.value = '01700000000';
+            if (addrEl) addrEl.value = 'Store Counter, Dhaka';
+            renderCartUI();
+            showToastNotice('Sale form reset to default counter state.');
         }
 
-        function closeAddCustomerModal() {
-            document.getElementById('addCustomerModal').classList.add('hidden');
-        }
-
-        function submitAddCustomerModal() {
-            const name = document.getElementById('modalCustomerName').value.trim();
-            const phone = document.getElementById('modalCustomerPhone').value.trim();
-            if (!name || !phone) {
-                alert('Name and Phone are required!');
+        function printDraftInvoice() {
+            if (cart.length === 0) {
+                alert('Please add at least 1 product to the sale cart before printing an invoice draft.');
                 return;
             }
-            
-            const select = document.getElementById('coCustomerSelect');
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.innerText = `${name} (${phone})`;
-            opt.selected = true;
-            select.appendChild(opt);
-            
-            showToastNotice(`Added customer "${name}"!`);
-            closeAddCustomerModal();
+            window.print();
         }
 
         function handleCreateOrderSubmit(e) {
             e.preventDefault();
-            const client = document.getElementById('coCustomerSelect').value || 'Guest Customer';
-            if (cart.length === 0) { alert('Please select at least 1 product bottle.'); return; }
-            const id = `#RX-${Math.floor(8900 + Math.random() * 900)}`;
-            const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            const prod = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
+            if (cart.length === 0) { 
+                alert('Please select at least 1 product bottle to complete this sale.'); 
+                return; 
+            }
 
-            masterOrders.unshift({ id, client, prod, amt: total, status: 'Pending Dispatch' });
-            showToastNotice(`Order ${id} Created for ${client}! Total: ৳${total.toLocaleString()} BDT`);
-            cart = [];
-            renderCartUI();
-            switchSection('orders');
+            const customerSelect = document.getElementById('coCustomerSelect');
+            const customerName = customerSelect ? customerSelect.value.split('|')[0] : 'Walk-in Customer';
+            const phone = document.getElementById('coCustomerPhone')?.value || 'N/A';
+            const address = document.getElementById('coCustomerAddress')?.value || 'N/A';
+            const paymentMethod = document.getElementById('coPaymentMethod')?.value || 'Cash on Delivery';
+            const courier = document.getElementById('coCourierPartner')?.value || 'Pathao Courier';
+            const deliveryFee = Number(document.getElementById('coDeliveryChargeSelect')?.value || 60);
+            const discount = Number(document.getElementById('coDiscountInput')?.value || 0);
+
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const grandTotal = Math.max(0, subtotal + deliveryFee - discount);
+            const orderId = `#RX-${Math.floor(8900 + Math.random() * 900)}`;
+            const prodSummary = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
+
+            // Prepend new order to masterOrders array
+            masterOrders.unshift({ 
+                id: orderId, 
+                client: `${customerName} (${phone})`, 
+                prod: prodSummary, 
+                amt: grandTotal, 
+                status: 'Completed (POS Paid)' 
+            });
+
+            showToastNotice(`🎉 Sale ${orderId} Created for ${customerName}! Total: ৳${grandTotal.toLocaleString()} BDT [${paymentMethod}]`);
+            
+            // Re-render orders and dashboard live streams
+            renderOrdersTable();
+
+            // Reset sale form
+            resetSaleForm();
+
+            // Smooth switch to orders list
+            setTimeout(() => {
+                switchSection('orders');
+            }, 600);
         }
 
         function viewOrder(id) { const ord = masterOrders.find(o => o.id === id); alert(`Order ${ord.id}: ${ord.client} - ৳${ord.amt.toLocaleString()} BDT`); }

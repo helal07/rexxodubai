@@ -106,153 +106,18 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-[#e0f2fe] via-[#f0f9ff] to-[#bae6fd] text-[#0f172a] font-sans flex min-h-screen relative overflow-x-hidden selection:bg-[#0284c7] selection:text-white">
+<body class="bg-[#f8fafc] text-[#0f172a] font-sans flex flex-col min-h-screen relative overflow-x-hidden selection:bg-[#4338ca] selection:text-white">
 
-    <!-- 1. LEFT SIDEBAR MENU BAR -->
-    <aside class="w-64 lg:w-72 bg-white/90 backdrop-blur-xl border-r border-[#38bdf8]/30 min-h-screen p-6 flex flex-col justify-between shrink-0 relative z-20 shadow-sm">
-        <div class="space-y-8">
-            <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-6">
-                <div id="sidebarLogoContainer" class="flex items-center justify-center">
-                    @if(!empty($siteSettings['logo_url']) || !empty($siteSettings['site_logo']))
-                        <img id="sidebarLogoImg" src="{{ $siteSettings['logo_url'] ?? $siteSettings['site_logo'] }}" alt="Logo" class="max-h-10 max-w-[120px] object-contain rounded-lg shadow-sm" />
-                    @else
-                        <div class="w-10 h-10 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-md">
-                            <i data-lucide="shield-check" class="w-6 h-6"></i>
-                        </div>
-                    @endif
-                </div>
-                <div>
-                    <h1 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide leading-none" id="sidebarBrandName">
-                        {{ $siteSettings['siteName'] ?? 'REXXO BD' }}
-                    </h1>
-                    <span class="text-[10px] text-[#0284c7] font-bold uppercase tracking-wider block mt-1">
-                        EXECUTIVE CONTROL HUB
-                    </span>
-                </div>
-            </div>
+    <!-- 1. FULL WIDTH MASTER TOP APP BAR -->
+    @include('admin.partials.header')
 
-            <div class="space-y-1.5">
-                <span class="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8] px-3 block mb-2">
-                    MAIN MENU NAVIGATION
-                </span>
+    <!-- 2. APP WORKSPACE -->
+    <div class="flex flex-1 w-full min-h-0 relative overflow-hidden">
+        <!-- 1. LEFT SIDEBAR MENU BAR -->
+        @include('admin.partials.sidebar', ['activePage' => 'courier', 'siteSettings' => $siteSettings])
 
-                <!-- 1. DASHBOARD -->
-                <a href="{{ url('/admin/dashboard') }}" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-                </a>
-
-                <!-- 2. ORDERS -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('orders')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="shopping-bag" class="w-4 h-4"></i> Orders
-                        </div>
-                        <span data-chevron="orders" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-orders" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <a href="{{ url('/admin/orders') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Total Orders</a>
-                        <a href="{{ url('/admin/orders?status=completed') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-emerald-700 hover:bg-[#f8fafc] rounded-lg">• Success Orders</a>
-                        <a href="{{ url('/admin/orders?status=cancelled') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-rose-700 hover:bg-[#f8fafc] rounded-lg">• Return / Cancelled</a>
-                    </div>
-                </div>
-
-                <!-- 3. PRODUCT -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('product')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="package" class="w-4 h-4"></i> Product
-                        </div>
-                        <span data-chevron="product" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-product" class="submenu-panel ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <a href="{{ url('/admin/products') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• List Products</a>
-                        <a href="{{ url('/admin/categories') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg">• Category & Sub Category</a>
-                    </div>
-                </div>
-
-                <!-- 4. COURIER (ACTIVE) -->
-                <div>
-                    <button type="button" onclick="toggleSubmenu('courier')" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center justify-between rounded-xl transition-all cursor-pointer bg-[#0284c7] text-white shadow-md">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="truck" class="w-4 h-4"></i> Courier
-                        </div>
-                        <span data-chevron="courier" class="submenu-chevron chevron-open"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
-                    </button>
-                    <div id="sub-courier" class="submenu-panel submenu-open ml-4 pl-3 border-l-2 border-[#38bdf8]/40 space-y-1">
-                        <button type="button" onclick="switchCourierTab('partners')" id="subnav-partners" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#0284c7] bg-[#f0f9ff] rounded-lg font-mono">• Courier Set Up</button>
-                        <button type="button" onclick="switchCourierTab('dispatch')" id="subnav-dispatch" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg font-mono">• Send Courier ({{ $pendingDispatchCount }})</button>
-                        <button type="button" onclick="switchCourierTab('history')" id="subnav-history" class="w-full text-left px-3 py-1.5 text-[12px] font-bold uppercase text-[#64748b] hover:text-[#0284c7] hover:bg-[#f8fafc] rounded-lg font-mono">• Courier History</button>
-                    </div>
-                </div>
-
-                <!-- 5. SITE SETTINGS & MENUS -->
-                <a href="{{ url('/admin/menus') }}" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                    <i data-lucide="menu" class="w-4 h-4"></i> Menu Builder
-                </a>
-                <a href="{{ url('/admin/dashboard') }}" class="w-full px-4 py-3 text-[13px] font-bold uppercase tracking-wider flex items-center gap-3 rounded-xl transition-all cursor-pointer text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0284c7]">
-                    <i data-lucide="settings" class="w-4 h-4"></i> Site Setting
-                </a>
-            </div>
-        </div>
-
-        <div class="space-y-4 pt-6 border-t border-[#e2e8f0]">
-            <!-- Theme Toggle Bar -->
-            <div class="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-2 flex items-center justify-between">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-[#64748b] px-1">Theme</span>
-                <div class="flex items-center gap-1">
-                    <button type="button" onclick="setAdminTheme('default')" title="Sky Executive (Default)" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all bg-[#0284c7] text-white shadow-xs" id="theme-btn-default">Default</button>
-                    <button type="button" onclick="setAdminTheme('light')" title="Clean Light" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-light">Light</button>
-                    <button type="button" onclick="setAdminTheme('night')" title="Night / Dark Mode" class="px-2 py-1 rounded text-[10px] font-bold uppercase transition-all text-[#64748b] hover:bg-[#e2e8f0]" id="theme-btn-night">Night</button>
-                </div>
-            </div>
-
-            <a href="{{ url('/') }}" target="_blank" class="w-full px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] text-[#0284c7] text-[12px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs">
-                <i data-lucide="external-link" class="w-4 h-4"></i> View Storefront
-            </a>
-
-            <div class="flex items-center justify-between px-2 pt-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-[#0284c7]/10 text-[#0284c7] flex items-center justify-center font-bold text-sm">
-                        AD
-                    </div>
-                    <div>
-                        <span class="text-[12px] font-bold block leading-none">Super Admin</span>
-                        <span class="text-[10px] text-[#64748b] block mt-0.5">Active Session</span>
-                    </div>
-                </div>
-                <form action="{{ url('/logout') }}" method="POST">
-                    @csrf
-                    <button type="submit" title="Logout" class="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </aside>
-
-    <!-- 2. MAIN CONTENT AREA -->
-    <main class="flex-1 p-6 space-y-6 relative z-10 overflow-y-auto max-h-screen">
-        
-        <!-- Header Bar -->
-        <header class="bg-white/80 backdrop-blur-xl border border-[#38bdf8]/40 rounded-2xl shadow-sm px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-2 overflow-x-auto bg-[#f1f5f9]/80 p-1.5 rounded-xl border border-[#cbd5e1]/60">
-                <a href="{{ url('/admin/menus') }}" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
-                    <i data-lucide="sliders" class="w-4 h-4"></i> MENU BUILDER
-                </a>
-                <a href="{{ url('/admin/categories') }}" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
-                    <i data-lucide="folder-tree" class="w-4 h-4"></i> CATEGORIES & SUB
-                </a>
-                <a href="{{ url('/admin/orders') }}" class="px-4 py-2 text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 rounded-lg transition-all cursor-pointer text-[#475569] hover:bg-white hover:text-[#0284c7] whitespace-nowrap">
-                    <i data-lucide="shopping-bag" class="w-4 h-4"></i> ALL ORDERS
-                </a>
-            </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-                <a href="{{ url('/perfumes') }}" target="_blank" class="bg-white hover:bg-[#f1f5f9] text-[#0f172a] border border-[#cbd5e1] px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors">
-                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Storefront ↗
-                </a>
-            </div>
-        </header>
+        <!-- 2. MAIN CONTENT AREA -->
+        <main class="flex-1 p-6 space-y-6 relative z-10 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
 
         <!-- Feedback Alert Messages -->
         @if (session('success'))
@@ -702,20 +567,85 @@
         </div>
     </div>
 
+        <!-- Classic Minimal Admin Footer -->
+        @include('admin.partials.footer')
+    </main>
+    </div>
+
     <!-- JavaScript Interactive Logic -->
     <script>
         const couriersData = @json($couriers);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        // Sidebar Submenu Accordion
-        function toggleSubmenu(id) {
-            const panel = document.getElementById('sub-' + id);
-            const chevron = document.querySelector(`[data-chevron="${id}"]`);
-            if (panel) {
-                panel.classList.toggle('submenu-open');
-                if (chevron) chevron.classList.toggle('chevron-open');
+        // Toast Notice Helper
+        function showToastNotice(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            if (toast && toastMsg) {
+                toastMsg.textContent = msg;
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 3500);
             }
         }
+
+        // Global Clear Cache Handler
+        async function globalClearCache() {
+            const btn = document.getElementById('globalClearCacheBtn');
+            const ogHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Clearing...`;
+                if (window.lucide) lucide.createIcons();
+            }
+            try {
+                const res = await fetch('/api/clear-cache', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (res.ok) {
+                    showToastNotice('System Cache Cleared Successfully!');
+                } else {
+                    showToastNotice('Failed to clear cache.');
+                }
+            } catch (e) {
+                showToastNotice('Network error while clearing cache.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = ogHtml;
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
+        // Sidebar Submenu Accordion
+        const allSubmenus = ['orders', 'product', 'courier', 'purchase', 'contact', 'seo_sub'];
+        function toggleSubmenu(menuId) {
+            allSubmenus.forEach(id => {
+                if (id !== menuId) {
+                    const panel = document.getElementById('sub-' + id);
+                    const chevron = document.querySelector('[data-chevron="' + id + '"]');
+                    if (panel) panel.classList.remove('submenu-open');
+                    if (chevron) chevron.classList.remove('chevron-open');
+                }
+            });
+            const sub = document.getElementById('sub-' + menuId);
+            const chevron = document.querySelector('[data-chevron="' + menuId + '"]');
+            if (sub) sub.classList.toggle('submenu-open');
+            if (chevron) chevron.classList.toggle('chevron-open');
+        }
+
+        // URL Hash Navigation for Courier Tabs (#dispatch, #history, #partners)
+        function handleCourierHashNavigation() {
+            const rawHash = window.location.hash.replace('#', '').replace('-section', '');
+            if (rawHash === 'dispatch' || rawHash === 'history' || rawHash === 'partners') {
+                switchCourierTab(rawHash);
+            }
+        }
+        window.addEventListener('hashchange', handleCourierHashNavigation);
 
         // Tab Switching
         function switchCourierTab(tab) {
@@ -1134,6 +1064,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+            handleCourierHashNavigation();
         });
     </script>
 </body>

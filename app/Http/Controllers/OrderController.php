@@ -22,7 +22,7 @@ class OrderController extends Controller
             'shipping_address' => 'required|string',
             'city' => 'required|string|max:100',
             'postal_code' => 'nullable|string|max:20',
-            'payment_method' => 'required|string|in:cod,card,bkash',
+            'payment_method' => 'required|string|in:cod,card,bkash,sslcommerz,eps',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.size' => 'nullable|string',
