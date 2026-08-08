@@ -4,16 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title inertia>{{ $siteSettings['siteName'] ?? 'RaaxO BD' }} — {{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}</title>
-
-        {{-- ── Dynamic Favicon ── --}}
         @php
+            $siteSettings = $siteSettings ?? [];
             $liveFavicon = !empty($siteSettings['favicon_url']) ? $siteSettings['favicon_url'] : (!empty($siteSettings['site_favicon']) ? $siteSettings['site_favicon'] : '/uploads/settings/favicon_1785930191.ico');
             $siteUrl     = rtrim(config('app.url'), '/');
             $siteName    = $siteSettings['siteName'] ?? config('app.name', 'RaaxO BD');
             $siteDesc    = $siteSettings['seo_meta_description'] ?? $siteSettings['tagline'] ?? 'Luxury handcrafted fragrances and pure parfums.';
             $ogImage     = $siteSettings['logo_url'] ?? $siteSettings['site_logo'] ?? '';
         @endphp
+        <title inertia>{{ $siteName }} — {{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}</title>
         <link rel="icon" id="dynamic-favicon" href="{{ $liveFavicon }}">
 
         {{-- ── Core SEO Meta ── --}}
@@ -52,14 +51,14 @@
         {{-- ── Schema.org JSON-LD Structured Data ── --}}
         <script type="application/ld+json">
         {
-            "@context": "https://schema.org",
-            "@type": "Organization",
+            "@@context": "https://schema.org",
+            "@@type": "Organization",
             "name": "{{ $siteName }}",
             "url": "{{ $siteUrl }}",
             "description": "{{ $siteDesc }}"
             @if($ogImage)
             ,"logo": {
-                "@type": "ImageObject",
+                "@@type": "ImageObject",
                 "url": "{{ $ogImage }}"
             }
             @endif
