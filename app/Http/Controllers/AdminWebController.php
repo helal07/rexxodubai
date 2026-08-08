@@ -36,7 +36,37 @@ class AdminWebController extends Controller
         $users = User::orderBy('created_at', 'desc')->get();
         $currentUser = Auth::user();
 
-        return view('admin.dashboard', compact('menuCount', 'productCount', 'menuItems', 'products', 'categories', 'siteSettings', 'users', 'currentUser'));
+        // Dashboard Statistics
+        $totalOrders = \App\Models\Order::count();
+        $inWayOrders = \App\Models\Order::whereIn('status', ['processing', 'dispatched'])->count();
+        $successOrders = \App\Models\Order::where('status', 'completed')->count();
+        $returnOrders = \App\Models\Order::whereIn('status', ['returned', 'cancelled'])->count();
+        $totalCustomers = \App\Models\Order::distinct('customer_phone')->count('customer_phone');
+        
+        $monthlyRevenue = \App\Models\Order::where('status', 'completed')
+                            ->whereMonth('created_at', date('m'))
+                            ->whereYear('created_at', date('Y'))
+                            ->sum('total_amount');
+                            
+        $avgOrderValue = \App\Models\Order::where('status', 'completed')->avg('total_amount') ?? 0;
+
+        $recentOrders = \App\Models\Order::with('items')->orderBy('created_at', 'desc')->take(50)->get()->map(function($o) {
+            $prodSummary = $o->items->map(function($i) { return $i->product_name . ' (x' . $i->quantity . ')'; })->join(', ');
+            return [
+                'id' => $o->order_number,
+                'client' => $o->customer_name . ' (' . $o->customer_phone . ')',
+                'prod' => $prodSummary ?: 'No items',
+                'amt' => (float) $o->total_amount,
+                'status' => ucfirst(str_replace('_', ' ', $o->status))
+            ];
+        });
+
+        return view('admin.dashboard', compact(
+            'menuCount', 'productCount', 'menuItems', 'products', 'categories', 
+            'siteSettings', 'users', 'currentUser', 
+            'totalOrders', 'inWayOrders', 'successOrders', 'returnOrders', 'totalCustomers',
+            'monthlyRevenue', 'avgOrderValue', 'recentOrders'
+        ));
     }
 
     public function menus()

@@ -191,11 +191,11 @@
         <!-- SECTION 1: EXECUTIVE DASHBOARD (FULL POPULATED ANALYTICS & LIVE STREAM) -->
         <div id="section-dashboard" class="section-content space-y-6 animate-fade-in">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="bg-white/90 border border-[#38bdf8]/30 p-4 rounded-2xl shadow-sm"><span class="text-[11px] font-bold text-[#64748b] uppercase">TOTAL CUSTOMERS</span><div class="text-[22px] font-bold font-serif">1,482</div></div>
-                <div class="bg-white/90 border border-[#38bdf8]/30 p-4 rounded-2xl shadow-sm"><span class="text-[11px] font-bold text-[#64748b] uppercase">TOTAL ORDERS</span><div class="text-[22px] font-bold font-serif">384</div></div>
-                <div class="bg-white/90 border border-sky-400/40 p-4 rounded-2xl shadow-sm bg-gradient-to-br from-white to-sky-50"><span class="text-[11px] font-bold text-sky-700 uppercase">IN WAY ORDERS</span><div class="text-[22px] font-bold text-sky-900 font-serif">4 Orders</div></div>
-                <div class="bg-white/90 border border-emerald-400/40 p-4 rounded-2xl shadow-sm bg-gradient-to-br from-white to-emerald-50"><span class="text-[11px] font-bold text-emerald-700 uppercase">SUCCESS ORDERS</span><div class="text-[22px] font-bold text-emerald-900 font-serif">318 Orders</div></div>
-                <div class="bg-white/90 border border-rose-300/40 p-4 rounded-2xl shadow-sm bg-gradient-to-br from-white to-rose-50"><span class="text-[11px] font-bold text-rose-700 uppercase">RETURN ORDERS</span><div class="text-[22px] font-bold text-rose-900 font-serif">24 Orders</div></div>
+                <div class="bg-white/90 border border-[#38bdf8]/30 p-4 rounded-2xl shadow-sm"><span class="text-[11px] font-bold text-[#64748b] uppercase">TOTAL CUSTOMERS</span><div class="text-[22px] font-bold font-serif">{{ number_format($totalCustomers ?? 0) }}</div></div>
+                <div class="bg-white/90 border border-[#38bdf8]/30 p-4 rounded-2xl shadow-sm"><span class="text-[11px] font-bold text-[#64748b] uppercase">TOTAL ORDERS</span><div class="text-[22px] font-bold font-serif">{{ number_format($totalOrders ?? 0) }}</div></div>
+                <div class="bg-white/90 border border-sky-400/40 p-4 rounded-2xl shadow-sm bg-gradient-to-br from-white to-sky-50"><span class="text-[11px] font-bold text-sky-700 uppercase">IN WAY ORDERS</span><div class="text-[22px] font-bold text-sky-900 font-serif">{{ number_format($inWayOrders ?? 0) }} Orders</div></div>
+                <div class="bg-white/90 border border-emerald-400/40 p-4 rounded-2xl shadow-sm bg-gradient-to-br from-white to-emerald-50"><span class="text-[11px] font-bold text-emerald-700 uppercase">SUCCESS ORDERS</span><div class="text-[22px] font-bold text-emerald-900 font-serif">{{ number_format($successOrders ?? 0) }} Orders</div></div>
+                <div class="bg-white/90 border border-rose-300/40 p-4 rounded-2xl shadow-sm bg-gradient-to-br from-white to-rose-50"><span class="text-[11px] font-bold text-rose-700 uppercase">RETURN ORDERS</span><div class="text-[22px] font-bold text-rose-900 font-serif">{{ number_format($returnOrders ?? 0) }} Orders</div></div>
             </div>
 
             <!-- Analytics Bar Chart & Monthly Trend -->
@@ -248,15 +248,15 @@
                     </div>
                     <div class="space-y-4">
                         <div>
-                            <span class="text-[11px] text-[#64748b] font-bold uppercase block">TOTAL AUGUST REVENUE</span>
-                            <span class="text-[28px] font-serif font-bold text-[#0284c7]">৳482,900 BDT</span>
+                            <span class="text-[11px] text-[#64748b] font-bold uppercase block">TOTAL {{ strtoupper(date('F')) }} REVENUE</span>
+                            <span class="text-[28px] font-serif font-bold text-[#0284c7]">৳{{ number_format($monthlyRevenue ?? 0) }} BDT</span>
                         </div>
                         <div class="w-full bg-[#f1f5f9] h-2.5 rounded-full overflow-hidden border">
                             <div class="bg-gradient-to-r from-[#0284c7] to-emerald-500 h-full w-[82%]"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-3 pt-2 text-[12px]">
-                            <div class="bg-[#f8fafc] p-3 rounded-xl border"><span class="text-[#64748b] block font-bold">Avg Order Value</span><span class="font-bold font-mono">৳3,150 BDT</span></div>
-                            <div class="bg-[#f8fafc] p-3 rounded-xl border"><span class="text-[#64748b] block font-bold">Conversion Rate</span><span class="font-bold text-emerald-700 font-mono">4.82%</span></div>
+                            <div class="bg-[#f8fafc] p-3 rounded-xl border"><span class="text-[#64748b] block font-bold">Avg Order Value</span><span class="font-bold font-mono">৳{{ number_format($avgOrderValue ?? 0) }} BDT</span></div>
+                            <div class="bg-[#f8fafc] p-3 rounded-xl border"><span class="text-[#64748b] block font-bold">Conversion Rate</span><span class="font-bold text-emerald-700 font-mono">N/A</span></div>
                         </div>
                     </div>
                 </div>
@@ -3308,13 +3308,7 @@
     </div>
 
     <script>
-        let masterOrders = [
-            { id: '#RX-8925', client: 'Shakib Al Hasan', prod: "L'Ombre d'Ambre 100ml (x1)", amt: 3200, status: 'Pending Dispatch' },
-            { id: '#RX-8924', client: 'Sabrina Sultana', prod: 'Velours de Rose 100ml (x1)', amt: 2850, status: 'Pending Dispatch' },
-            { id: '#RX-8921', client: 'Mahmudur Rahman', prod: "L'Ombre d'Ambre 100ml (x1)", amt: 3200, status: 'In Transit' },
-            { id: '#RX-8919', client: 'Tanvir Hossain', prod: 'Velours de Rose 100ml (x1)', amt: 2850, status: 'Delivered' },
-            { id: '#RX-8910', client: 'Sumiya Akhtar', prod: 'Cuir Noir Extrait 100ml (x1)', amt: 3800, status: 'Returned' }
-        ];
+        let masterOrders = @json($recentOrders ?? []);
 
         let cart = [];
         let ordersSubTab = 'total';
