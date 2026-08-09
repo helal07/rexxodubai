@@ -2,64 +2,39 @@
     $user = $user ?? ($currentUser ?? Auth::user());
 @endphp
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#f8fafc]">
+<html lang="en" class="h-full bg-[#f8fafc]" data-theme="{{ $siteSettings['admin_theme'] ?? 'default' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile & User Management - {{ $siteSettings['siteName'] ?? 'REXXO BD' }} Admin</title>
-    <link rel="icon" type="image/x-icon" href="{{ $siteSettings['favicon_url'] ?? '/uploads/settings/favicon_1785930191.ico' }}">
-    <script>
-        (function() {
-            const origWarn = console.warn;
-            console.warn = function(...args) {
-                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
-                origWarn.apply(console, args);
-            };
-        })();
-    </script>
+    <title>{{ $siteSettings['siteName'] ?? 'RaaxO BD' }} � Admin Panel</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @php
+        $adminFavicon = !empty($siteSettings['favicon_url']) ? $siteSettings['favicon_url'] : (!empty($siteSettings['site_favicon']) ? $siteSettings['site_favicon'] : '/uploads/settings/favicon_1785930191.ico');
+    @endphp
+    <link rel="icon" id="admin-favicon" href="{{ $adminFavicon }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+        .submenu-panel { overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin-top 0.35s ease; margin-top: 0; }
+        .submenu-panel.submenu-open { max-height: 280px; opacity: 1; margin-top: 0.35rem; }
+        .submenu-chevron { display: inline-flex; align-items: center; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .submenu-chevron.chevron-open { transform: rotate(180deg); }
     </style>
 </head>
-<body class="h-full flex flex-col bg-[#f8fafc] text-slate-800 antialiased">
-
-    <!-- Master Header -->
+<body class="bg-[#f8fafc] text-[#0f172a] font-sans flex flex-col min-h-screen relative overflow-x-hidden selection:bg-[#4338ca] selection:text-white">
     @include('admin.partials.header')
-
-    <div class="flex flex-1 min-h-0 overflow-hidden">
-        <!-- Master Sidebar -->
-        @include('admin.partials.sidebar', ['activePage' => 'profile'])
-
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-            
-            <!-- Breadcrumb & Title Bar -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                <div>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-[#4338ca] mb-1 uppercase tracking-wider">
-                        <span>Account Center</span>
-                        <span>•</span>
-                        <span class="text-slate-500 font-medium">Administrator Settings</span>
-                    </div>
-                    <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-                        <i data-lucide="user-check" class="w-6 h-6 text-[#4338ca]"></i>
-                        <span>Profile & User Management</span>
-                    </h1>
-                </div>
-
-                <!-- Action Button -->
-                <div class="flex items-center gap-3">
-                    <a href="{{ url('/admin/dashboard') }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        <span>Back to Dashboard</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Flash Success / Error Notices -->
+    <div class="flex flex-1 w-full min-h-0 relative overflow-hidden">
+        @include('admin.partials.sidebar', ['activePage' => 'profile', 'siteSettings' => $siteSettings])
+        <main class="flex-1 p-6 lg:p-8 w-full space-y-6 relative z-10 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
             @if(session('success'))
                 <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
                     <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600 shrink-0"></i>
@@ -80,7 +55,6 @@
                     </ul>
                 </div>
             @endif
-
             <!-- Profile & Account Management Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -237,324 +211,11 @@
                         </form>
                     </div>
 
-                    <!-- Card 2: Security & Password Update -->
-                    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs" id="passwordSection">
-                        <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
-                            <div>
-                                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                                    <i data-lucide="key" class="w-5 h-5 text-amber-500"></i>
-                                    <span>Change Password & Security</span>
-                                </h3>
-                                <p class="text-xs text-slate-500 mt-0.5">Ensure your account is protected with a unique, secure password.</p>
-                            </div>
-                        </div>
-
-                        <form action="{{ url('/admin/profile/password') }}" method="POST" class="space-y-4">
-                            @csrf
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Current Password <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <input type="password" name="current_password" id="current_password" required class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca] focus:ring-2 focus:ring-indigo-100 transition-all">
-                                    <button type="button" onclick="togglePasswordVisibility('current_password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
-                                        <i data-lucide="eye" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">New Password <span class="text-rose-500">*</span></label>
-                                    <div class="relative">
-                                        <input type="password" name="password" id="new_password" required class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca] focus:ring-2 focus:ring-indigo-100 transition-all">
-                                        <button type="button" onclick="togglePasswordVisibility('new_password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
-                                            <i data-lucide="eye" class="w-4 h-4"></i>
-                                        </button>
-                                    </div>
-                                    <p class="text-[10.5px] text-slate-400 mt-1">Minimum 6 characters with mixed characters.</p>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Confirm New Password <span class="text-rose-500">*</span></label>
-                                    <div class="relative">
-                                        <input type="password" name="password_confirmation" id="password_confirmation" required class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca] focus:ring-2 focus:ring-indigo-100 transition-all">
-                                        <button type="button" onclick="togglePasswordVisibility('password_confirmation')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
-                                            <i data-lucide="eye" class="w-4 h-4"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-3 flex justify-end">
-                                <button type="submit" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-200 transition-all flex items-center gap-2 cursor-pointer">
-                                    <i data-lucide="lock" class="w-4 h-4"></i>
-                                    <span>Update Password</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Card 3: Full-Fledged User & Staff Management Table -->
-                    <div class="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs" id="usersSection">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 mb-5 border-b border-slate-100">
-                            <div>
-                                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                                    <i data-lucide="users" class="w-5 h-5 text-emerald-600"></i>
-                                    <span>System Users & Staff Management</span>
-                                </h3>
-                                <p class="text-xs text-slate-500 mt-0.5">Manage administrator credentials, roles, and administrative staff accounts.</p>
-                            </div>
-                            <button type="button" onclick="openAddUserModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs">
-                                <i data-lucide="user-plus" class="w-4 h-4"></i>
-                                <span>+ Add New User</span>
-                            </button>
-                        </div>
-
-                        <!-- Users Table -->
-                        <div class="overflow-x-auto rounded-xl border border-slate-200">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[11px]">
-                                    <tr>
-                                        <th class="px-4 py-3">User</th>
-                                        <th class="px-4 py-3">Role</th>
-                                        <th class="px-4 py-3">Phone</th>
-                                        <th class="px-4 py-3">Joined</th>
-                                        <th class="px-4 py-3 text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                                    @foreach($users as $u)
-                                        <tr class="hover:bg-slate-50/80 transition-colors {{ $u->id === $user->id ? 'bg-indigo-50/30' : '' }}">
-                                            <td class="px-4 py-3">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0 flex items-center justify-center font-bold text-[11px] text-slate-700">
-                                                        <img src="{{ $u->avatar_url ?? $u->avatar }}" alt="{{ $u->name }}" class="w-full h-full object-cover" />
-                                                    </div>
-                                                    <div>
-                                                        <p class="font-bold text-slate-900 flex items-center gap-1.5">
-                                                            <span>{{ $u->name }}</span>
-                                                            @if($u->id === $user->id)
-                                                                <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-100 text-[#4338ca]">YOU</span>
-                                                            @endif
-                                                        </p>
-                                                        <p class="text-[11px] text-slate-500 font-mono">{{ $u->email }}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3">
-                                                <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold {{ $u->role === 'Super Administrator' || $u->is_admin ? 'bg-indigo-50 text-[#4338ca] border border-indigo-100' : 'bg-slate-100 text-slate-700' }}">
-                                                    {{ $u->role ?? ($u->is_admin ? 'Super Administrator' : 'Staff') }}
-                                                </span>
-                                            </td>
-                                            <td class="px-4 py-3 font-mono text-slate-600">
-                                                {{ $u->phone ?? '—' }}
-                                            </td>
-                                            <td class="px-4 py-3 text-slate-500">
-                                                {{ $u->created_at ? $u->created_at->format('d M, Y') : '—' }}
-                                            </td>
-                                            <td class="px-4 py-3 text-right">
-                                                <div class="flex items-center justify-end gap-2">
-                                                    <button type="button" onclick="openEditUserModal({{ json_encode($u) }})" class="p-1.5 rounded-lg text-slate-500 hover:text-[#4338ca] hover:bg-indigo-50 transition-colors" title="Edit User">
-                                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                                    </button>
-                                                    @if($u->id !== $user->id)
-                                                        <form action="{{ url('/admin/users/' . $u->id) }}" method="POST" onsubmit="return confirm('Delete user {{ $u->name }} from system?');" class="inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors" title="Delete User">
-                                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
-
-    <!-- Modal: Add New System User -->
-    <div id="addUserModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-in">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="user-plus" class="w-5 h-5 text-emerald-600"></i>
-                    <span>Add New Staff / Administrator</span>
-                </h3>
-                <button type="button" onclick="closeAddUserModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <form action="{{ url('/admin/users') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                @csrf
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" required placeholder="User Full Name" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email <span class="text-rose-500">*</span></label>
-                        <input type="email" name="email" required placeholder="staff@rexxobd.com" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca] font-mono">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Temporary Password <span class="text-rose-500">*</span></label>
-                        <input type="password" name="password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">System Role <span class="text-rose-500">*</span></label>
-                        <select name="role" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                            <option value="Super Administrator">Super Administrator</option>
-                            <option value="Store Manager">Store Manager</option>
-                            <option value="Order & Dispatch Staff">Order & Dispatch Staff</option>
-                            <option value="Support Representative">Support Representative</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phone Number</label>
-                        <input type="text" name="phone" placeholder="+880 1700-000000" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Address</label>
-                        <input type="text" name="address" placeholder="City / Address" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                </div>
-
-                <div class="pt-3 flex items-center justify-end gap-3">
-                    <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all">Create Account</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal: Edit System User -->
-    <div id="editUserModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-in">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="edit" class="w-5 h-5 text-[#4338ca]"></i>
-                    <span>Edit Staff Account</span>
-                </h3>
-                <button type="button" onclick="closeEditUserModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <form id="editUserForm" action="" method="POST" class="space-y-4">
-                @csrf
-                @method('PUT')
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name <span class="text-rose-500">*</span></label>
-                        <input type="text" name="name" id="edit_user_name" required class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email <span class="text-rose-500">*</span></label>
-                        <input type="email" name="email" id="edit_user_email" required class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca] font-mono">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Reset Password (Optional)</label>
-                        <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">System Role <span class="text-rose-500">*</span></label>
-                        <select name="role" id="edit_user_role" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                            <option value="Super Administrator">Super Administrator</option>
-                            <option value="Store Manager">Store Manager</option>
-                            <option value="Order & Dispatch Staff">Order & Dispatch Staff</option>
-                            <option value="Support Representative">Support Representative</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phone Number</label>
-                        <input type="text" name="phone" id="edit_user_phone" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Address</label>
-                        <input type="text" name="address" id="edit_user_address" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-[#4338ca]">
-                    </div>
-                </div>
-
-                <div class="pt-3 flex items-center justify-end gap-3">
-                    <button type="button" onclick="closeEditUserModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 bg-[#4338ca] hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md transition-all">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        lucide.createIcons();
-
-        function previewAvatar(event) {
-            const input = event.target;
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview1 = document.getElementById('profileCardAvatarPreview');
-                    const preview2 = document.getElementById('formAvatarPreview');
-                    if (preview1) preview1.src = e.target.result;
-                    if (preview2) preview2.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function togglePasswordVisibility(fieldId) {
-            const input = document.getElementById(fieldId);
-            if (input) {
-                input.type = input.type === 'password' ? 'text' : 'password';
-            }
-        }
-
-        function openAddUserModal() {
-            const modal = document.getElementById('addUserModal');
-            if (modal) modal.classList.remove('hidden');
-        }
-
-        function closeAddUserModal() {
-            const modal = document.getElementById('addUserModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function openEditUserModal(userData) {
-            const modal = document.getElementById('editUserModal');
-            const form = document.getElementById('editUserForm');
-            if (modal && form) {
-                form.action = '/admin/users/' + userData.id;
-                document.getElementById('edit_user_name').value = userData.name || '';
-                document.getElementById('edit_user_email').value = userData.email || '';
-                document.getElementById('edit_user_role').value = userData.role || 'Super Administrator';
-                document.getElementById('edit_user_phone').value = userData.phone || '';
-                document.getElementById('edit_user_address').value = userData.address || '';
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function closeEditUserModal() {
-            const modal = document.getElementById('editUserModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
+        if (window.lucide) { lucide.createIcons(); }
+        let cart = [];
         const allSubmenus = ['orders', 'product', 'purchase', 'contact', 'courier', 'api_gateway', 'seo_sub', 'user_mgmt'];
         function toggleSubmenu(menuId) {
             allSubmenus.forEach(id => {
@@ -569,6 +230,42 @@
             const chevron = document.querySelector('[data-chevron="' + menuId + '"]');
             if (sub) sub.classList.toggle('submenu-open');
             if (chevron) chevron.classList.toggle('chevron-open');
+        }
+        
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatar-preview').src = e.target.result;
+                    document.getElementById('save-avatar-btn').classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+        function openEditUserModal(user) {
+            document.getElementById('editUserForm').action = "/admin/users/" + user.id;
+            document.getElementById('edit_name').value = user.name;
+            document.getElementById('edit_email').value = user.email;
+            document.getElementById('edit_phone').value = user.phone || '';
+            document.getElementById('edit_address').value = user.address || '';
+            document.getElementById('editUserModal').classList.remove('hidden');
+            document.getElementById('editUserModal').classList.add('flex');
+        }
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').classList.add('hidden');
+            document.getElementById('editUserModal').classList.remove('flex');
         }
     </script>
 </body>
