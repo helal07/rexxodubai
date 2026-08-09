@@ -7,13 +7,13 @@ export default function AboutPage() {
       {/* Brand Hero */}
       <section className="text-center max-w-3xl mx-auto space-y-6">
         <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#B8712E] block">
-          THE HOUSE OF REXXO BD
+          THE HOUSE OF RaxxO
         </span>
         <h1 className="font-serif text-[42px] md:text-[56px] text-[#0A0A0A] font-light leading-tight">
           Quiet Confidence in Scent & Form
         </h1>
         <p className="text-[15px] text-[#6E6B66] font-light leading-relaxed">
-          ReXxo Bd was founded on a simple thesis: fine fragrance is sculpture for the skin. We do not design for transient fashion cycles, but for sensory longevity.
+          Raxxo was founded on a simple thesis: fine fragrance is sculpture for the skin. We do not design for transient fashion cycles, but for sensory longevity.
         </p>
       </section>
 

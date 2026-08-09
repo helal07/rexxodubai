@@ -239,13 +239,6 @@ export default function Footer() {
         </div>
 
         <div className="flex items-center gap-5 sm:gap-6 flex-wrap">
-          <a
-            href="tel:+8801682000977"
-            className="hover:text-[#0A0A0A] transition-colors font-mono font-medium tracking-wide flex items-center gap-1.5"
-          >
-            <span className="text-[#8E8B85]">Contact:</span>
-            <span>+8801682000977</span>
-          </a>
 
           <a
             href="https://api.whatsapp.com/send/?phone=1682000977"

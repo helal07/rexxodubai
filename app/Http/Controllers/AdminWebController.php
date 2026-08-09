@@ -9,10 +9,14 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Customer;
+use App\Models\Supplier;
+use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class AdminWebController extends Controller
 {
@@ -43,17 +47,17 @@ class AdminWebController extends Controller
         $returnOrders = \App\Models\Order::whereIn('status', ['returned', 'cancelled'])->count();
         $totalCustomers = \App\Models\Order::distinct('customer_phone')->count('customer_phone');
         
-        $monthlyRevenue = \App\Models\Order::where('status', 'completed')
+        $monthlyRevenue = (float) (\App\Models\Order::where('status', 'completed')
                             ->whereMonth('created_at', date('m'))
                             ->whereYear('created_at', date('Y'))
-                            ->sum('total_amount');
+                            ->sum('total_amount'));
                             
-        $avgOrderValue = \App\Models\Order::where('status', 'completed')->avg('total_amount') ?? 0;
+        $avgOrderValue = (float) (\App\Models\Order::where('status', 'completed')->avg('total_amount') ?? 0);
 
         $recentOrders = \App\Models\Order::with('items')->orderBy('created_at', 'desc')->take(50)->get()->map(function($o) {
             $prodSummary = $o->items->map(function($i) { return $i->product_name . ' (x' . $i->quantity . ')'; })->join(', ');
             return [
-                'id' => $o->order_number,
+                'id' => (string) $o->order_number,
                 'client' => $o->customer_name . ' (' . $o->customer_phone . ')',
                 'prod' => $prodSummary ?: 'No items',
                 'amt' => (float) $o->total_amount,
@@ -61,20 +65,27 @@ class AdminWebController extends Controller
             ];
         });
 
-        return view('admin.dashboard', compact(
-            'menuCount', 'productCount', 'menuItems', 'products', 'categories', 
-            'siteSettings', 'users', 'currentUser', 
-            'totalOrders', 'inWayOrders', 'successOrders', 'returnOrders', 'totalCustomers',
-            'monthlyRevenue', 'avgOrderValue', 'recentOrders'
-        ));
+        return Inertia::render('Admin/Dashboard', [
+            'totalOrders' => $totalOrders,
+            'inWayOrders' => $inWayOrders,
+            'successOrders' => $successOrders,
+            'returnOrders' => $returnOrders,
+            'totalCustomers' => $totalCustomers,
+            'monthlyRevenue' => $monthlyRevenue,
+            'avgOrderValue' => $avgOrderValue,
+            'recentOrders' => $recentOrders,
+            'productCount' => $productCount,
+        ]);
     }
 
     public function menus()
     {
         $items = MenuItem::with(['children', 'parent'])->orderBy('sort_order', 'asc')->get();
         $parentItems = MenuItem::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.menus', compact('items', 'parentItems', 'siteSettings'));
+        return Inertia::render('Admin/Menus', [
+            'items' => $items,
+            'parentItems' => $parentItems
+        ]);
     }
 
     public function storeMenu(Request $request)
@@ -112,6 +123,119 @@ class AdminWebController extends Controller
         return redirect()->back()->with('success', 'Menu item updated in database successfully.');
     }
 
+    public function purchaseList()
+    {
+        $purchases = Purchase::with('supplier')->orderBy('created_at', 'desc')->get();
+        return Inertia::render('Admin/Purchases/Index', [
+            'purchases' => $purchases,
+        ]);
+    }
+
+    public function purchaseAdd()
+    {
+        $suppliers = Supplier::orderBy('company_name')->get();
+        $products = Product::with(['category', 'images'])->orderBy('created_at', 'desc')->get();
+        return Inertia::render('Admin/Purchases/Create', [
+            'suppliers' => $suppliers,
+            'products' => $products,
+        ]);
+    }
+
+    public function productList(Request $request)
+    {
+        $query = Product::with(['category', 'images'])->orderBy('created_at', 'desc');
+        
+        if ($request->has('search')) {
+            $search = $request->get('search');
+            $query->where('name', 'like', "%{$search}%");
+        }
+        
+        if ($request->has('category') && $request->get('category') != 'All') {
+            $cat = Category::where('name', $request->get('category'))->first();
+            if ($cat) {
+                $query->where('category_id', $cat->id);
+            }
+        }
+        
+        $products = $query->get();
+        $categories = Category::all();
+
+        return Inertia::render('Admin/Products/Index', [
+            'products' => $products,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function productAdd()
+    {
+        $product = new Product();
+        $categories = Category::all();
+        return Inertia::render('Admin/Products/Edit', [
+            'product' => $product,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function customers()
+    {
+        $customers = Customer::orderBy('created_at', 'desc')->get();
+        return Inertia::render('Admin/Customers', [
+            'customers' => $customers,
+        ]);
+    }
+
+    public function suppliers()
+    {
+        $suppliers = Supplier::orderBy('created_at', 'desc')->get();
+        return Inertia::render('Admin/Suppliers', [
+            'suppliers' => $suppliers,
+        ]);
+    }
+
+    public function settings()
+    {
+        return Inertia::render('Admin/Settings/Index');
+    }
+
+    public function apiPayment()
+    {
+        return Inertia::render('Admin/Settings/ApiPayment');
+    }
+
+    public function apiSms()
+    {
+        $siteSettings = \App\Models\Setting::pluck('value', 'key')->all();
+        return Inertia::render('Admin/Settings/ApiSms', [
+            'siteSettings' => $siteSettings
+        ]);
+    }
+
+    public function apiCourier()
+    {
+        return Inertia::render('Admin/Courier');
+    }
+
+    public function seoMeta()
+    {
+        $siteSettings = Setting::pluck('value', 'key')->all();
+        return Inertia::render('Admin/Seo/Meta', [
+            'siteSettings' => $siteSettings
+        ]);
+    }
+
+    public function seoMarketing()
+    {
+        $siteSettings = Setting::pluck('value', 'key')->all();
+        return Inertia::render('Admin/Seo/Marketing', [
+            'siteSettings' => $siteSettings
+        ]);
+    }
+
+    public function seoPing()
+    {
+        return Inertia::render('Admin/Seo/Ping');
+    }
+
     public function destroyMenu($id)
     {
         $item = MenuItem::findOrFail($id);
@@ -124,9 +248,9 @@ class AdminWebController extends Controller
     public function categories()
     {
         $categories = Category::with(['children', 'parent', 'products'])->orderBy('sort_order', 'asc')->get();
-        $parentCategories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.categories', compact('categories', 'parentCategories', 'siteSettings'));
+        return Inertia::render('Admin/Categories', [
+            'categories' => $categories,
+        ]);
     }
 
     public function storeCategory(Request $request)
@@ -186,14 +310,6 @@ class AdminWebController extends Controller
         return redirect()->back()->with('success', 'Category deleted from database.');
     }
 
-
-    public function products()
-    {
-        $products = Product::with(['category', 'images'])->orderBy('created_at', 'desc')->get();
-        $categories = Category::all();
-        $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.products', compact('products', 'categories', 'siteSettings'));
-    }
 
     public function editProduct($id)
     {
@@ -278,7 +394,7 @@ class AdminWebController extends Controller
             return response()->json($product, 201);
         }
 
-        return redirect('/admin/products/' . $product->id . '/edit')->with('success', 'Product created successfully in database!');
+        return redirect('/admin/products')->with('success', 'Product created successfully in database!');
     }
 
     public function updateProduct(Request $request, $id)
@@ -304,6 +420,8 @@ class AdminWebController extends Controller
             'notes_base' => 'nullable|string|max:255',
             'short_description' => 'nullable|string',
             'description' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'is_new_arrival' => 'nullable|boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:500',
@@ -357,7 +475,7 @@ class AdminWebController extends Controller
         $product->update($validated);
         Cache::flush();
 
-        return redirect()->back()->with('success', 'Product updated successfully in database!');
+        return redirect('/admin/products')->with('success', 'Product updated successfully in database!');
     }
 
     public function destroyProduct($id)
@@ -369,6 +487,17 @@ class AdminWebController extends Controller
         return redirect('/admin/products')->with('success', 'Product removed from database.');
     }
 
+    public function createOrder()
+    {
+        $customers = Customer::orderBy('name')->get();
+        $products = Product::with(['category', 'images'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return Inertia::render('Admin/Orders/Create', [
+            'products' => $products,
+            'customers' => $customers,
+        ]);
+    }
     public function orders(Request $request)
     {
         $query = Order::with('items')->orderBy('created_at', 'desc');
@@ -403,15 +532,9 @@ class AdminWebController extends Controller
         $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
         $siteSettings = Setting::pluck('value', 'key')->all();
 
-        return view('admin.orders', compact(
-            'orders',
-            'totalOrdersCount',
-            'pendingOrdersCount',
-            'processingOrdersCount',
-            'completedOrdersCount',
-            'totalRevenue',
-            'siteSettings'
-        ));
+        return Inertia::render('Admin/Orders/Index', [
+            'orders' => $orders->items(),
+        ]);
     }
 
     public function updateOrderStatus(Request $request, $id)
@@ -438,11 +561,22 @@ class AdminWebController extends Controller
 
     public function destroyOrder($id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::with('items.product')->findOrFail($id);
         $orderNumber = $order->order_number;
+        
+        // Restore stock
+        foreach ($order->items as $item) {
+            if ($item->product) {
+                $item->product->stock += $item->quantity;
+                $item->product->save();
+            }
+        }
+        
         $order->delete();
 
-        return redirect()->back()->with('success', "Order #{$orderNumber} has been removed.");
+        return redirect()->back()->with('success', "Order #{$orderNumber} has been removed and stock restored.");
     }
 }
+
+
 

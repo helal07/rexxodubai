@@ -1,5 +1,5 @@
 <!-- Admin Panel Classic Minimal Footer -->
-<footer class="mt-12 pt-6 pb-8 border-t border-[#e2e8f0] text-[#64748b] text-[11px] flex flex-col sm:flex-row items-center justify-between gap-4">
+<footer class="mt-auto pt-6 pb-8 border-t border-[#e2e8f0] text-[#64748b] text-[11px] flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-2">
         <span class="font-medium uppercase tracking-wider text-[#475569]">Developed By:</span>
         <a href="https://www.itsolution.bd" target="_blank" rel="noreferrer" class="font-bold text-[#0f172a] hover:text-[#0284c7] transition-colors uppercase tracking-wider border-b border-[#cbd5e1] hover:border-[#0284c7] pb-0.5">
@@ -8,10 +8,7 @@
     </div>
 
     <div class="flex items-center gap-5 flex-wrap justify-center">
-        <a href="tel:+8801682000977" class="hover:text-[#0f172a] transition-colors font-mono font-medium flex items-center gap-1.5">
-            <span class="text-[#94a3b8]">Contact:</span>
-            <span>+8801682000977</span>
-        </a>
+        
 
         <a href="https://api.whatsapp.com/send/?phone=1682000977" target="_blank" rel="noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 transition-all font-bold text-[10.5px] uppercase tracking-wider shadow-2xs">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -21,3 +18,12 @@
         </a>
     </div>
 </footer>
+
+<style>
+    /* Forces the main container to be a flex column so the mt-auto footer stays at the bottom */
+    main.flex-1 {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+

@@ -54,7 +54,7 @@ export default function ContactPage() {
                 <span className="text-[16px] font-medium text-[#0A0A0A] group-hover:font-semibold block">
                   Send Message via Gmail
                 </span>
-                <span className="text-[12px] text-[#6E6B66]">client.service.bd@rexxobd.com</span>
+                <span className="text-[12px] text-[#6E6B66]">info@raaxodubai.com</span>
               </div>
               <Mail size={22} className="text-[#0A0A0A]" />
             </a>
@@ -95,7 +95,7 @@ export default function ContactPage() {
               <Phone size={20} className="text-[#B8712E] shrink-0 mt-0.5" />
               <div>
                 <strong className="block font-semibold uppercase text-[12px] tracking-wider text-[#6E6B66]">TELEPHONE INQUIRIES</strong>
-                <span>+880 1700 000 000</span>
+                <span>+971 54 702 6849</span>
               </div>
             </div>
 
@@ -103,7 +103,7 @@ export default function ContactPage() {
               <MapPin size={20} className="text-[#B8712E] shrink-0 mt-0.5" />
               <div>
                 <strong className="block font-semibold uppercase text-[12px] tracking-wider text-[#6E6B66]">FLAGSHIP BOUTIQUE</strong>
-                <span>ReXxo Bd Perfume House, Gulshan Avenue, Dhaka, Bangladesh</span>
+                <span>Raaxo Dubai Perfume House, Doreen Vinciat Shopping Complex, Rupnagar R/A, Mirpur-5, Dhaka-1216, Bangladesh</span>
               </div>
             </div>
           </div>

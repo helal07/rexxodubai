@@ -107,17 +107,9 @@ class AdminCourierController extends Controller
 
         $siteSettings = Setting::pluck('value', 'key')->all();
 
-        return view('admin.courier', compact(
-            'couriers',
-            'pendingOrders',
-            'historyOrders',
-            'totalCouriers',
-            'activeCouriers',
-            'pendingDispatchCount',
-            'dispatchedTodayCount',
-            'totalDispatchedCount',
-            'siteSettings'
-        ));
+        return \Inertia\Inertia::render('Admin/Courier', [
+            'courierSettings' => $siteSettings,
+        ]);
     }
 
     /**

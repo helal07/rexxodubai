@@ -87,7 +87,7 @@ export default function PLPPage({ products = [], filters: params = {}, isFallbac
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#DEDBD4] pb-6 gap-4">
         <div>
           <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#B8712E] font-mono block mb-1">
-            REXXO BD · COLLECTION TAXONOMY
+            Raaxo Dubai · COLLECTION TAXONOMY
           </span>
           <h1 className="font-serif text-[30px] md:text-[42px] text-[#0A0A0A] uppercase font-bold tracking-tight">
             {pageTitle}
@@ -110,11 +110,10 @@ export default function PLPPage({ products = [], filters: params = {}, isFallbac
             <Link
               key={tab.label}
               href={tab.url}
-              className={`px-4 py-2 text-[11px] uppercase font-bold tracking-wider rounded-none border transition-all whitespace-nowrap ${
-                isActive
+              className={`px-4 py-2 text-[11px] uppercase font-bold tracking-wider rounded-none border transition-all whitespace-nowrap ${isActive
                   ? 'bg-[#0A0A0A] text-white border-[#0A0A0A]'
                   : 'bg-[#F5F3EF] text-[#0A0A0A] border-[#DEDBD4] hover:bg-white hover:border-[#0A0A0A]'
-              }`}
+                }`}
             >
               {tab.label}
             </Link>

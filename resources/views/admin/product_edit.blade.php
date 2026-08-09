@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit {{ $product->name }} — {{ $siteSettings['siteName'] ?? 'RaaxO BD' }} Admin</title>
+    <title>{{ $product->exists ? 'Edit ' . $product->name : 'Add New Product' }} — {{ $siteSettings['siteName'] ?? 'RaaxO BD' }} Admin</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Dynamic Favicon -->
@@ -59,7 +59,7 @@
             margin-top: 0;
         }
         .submenu-panel.submenu-open {
-            max-height: 220px;
+            max-height: 280px;
             opacity: 1;
             margin-top: 0.35rem;
         }
@@ -128,36 +128,7 @@
         <!-- 2. MAIN CONTENT WRAPPER -->
         <main class="flex-1 p-6 lg:p-8 w-full space-y-6 relative z-10 overflow-y-auto max-h-[calc(100vh-3.5rem)]">
 
-        <!-- Page Sub-Header -->
-        <header class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm animate-fade-in">
-            <div class="flex items-center gap-4">
-                <a href="{{ url('/admin/products') }}" class="p-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569] hover:text-[#0284c7] rounded-xl transition-all shadow-xs">
-                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
-                </a>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-bold uppercase tracking-widest text-[#0284c7]">
-                            PRODUCT MANAGEMENT
-                        </span>
-                        <span class="text-[11px] font-mono text-[#64748b] bg-[#f1f5f9] px-2.5 py-0.5 rounded-full border border-[#e2e8f0]">
-                            ID: #{{ $product->id }}
-                        </span>
-                    </div>
-                    <h1 class="text-[22px] font-serif font-bold text-[#0f172a] uppercase tracking-tight truncate max-w-xl">
-                        Edit: {{ $product->name }}
-                    </h1>
-                </div>
-            </div>
-
-            <div class="flex items-center flex-wrap gap-3">
-                <a href="{{ url('/product/' . $product->slug) }}" target="_blank" class="inline-flex items-center gap-2 bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569] hover:text-[#0284c7] px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-xs">
-                    <i data-lucide="external-link" class="w-4 h-4"></i> View Live
-                </a>
-                <a href="{{ url('/admin/products') }}" class="inline-flex items-center gap-2 bg-[#0284c7] hover:bg-[#0369a1] text-white px-4 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider transition-all shadow-md shadow-[#0284c7]/20">
-                    <i data-lucide="list" class="w-4 h-4"></i> Product List
-                </a>
-            </div>
-        </header>
+      
 
         <!-- Success & Error Banners -->
         @if (session('success'))
@@ -182,10 +153,12 @@
             </div>
         @endif
 
-        <!-- Main Product Edit Form -->
-        <form action="{{ url('/admin/products/' . $product->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8 animate-fade-in">
+        <!-- Main Product Edit/Create Form -->
+        <form action="{{ $product->exists ? url('/admin/products/' . $product->id) : url('/admin/products') }}" method="POST" enctype="multipart/form-data" class="space-y-8 animate-fade-in">
             @csrf
-            @method('PUT')
+            @if($product->exists)
+                @method('PUT')
+            @endif
 
             <!-- SECTION 1: Product Essential Identity -->
             <div class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 sm:p-8 rounded-2xl space-y-6 shadow-sm">
@@ -282,7 +255,7 @@
                 </div>
             </div>
 
-            <!-- SECTION 2: Pricing, Stock & Sizes -->
+            <!-- SECTION 2: Pricing, Stock & Sizes/Variants -->
             <div class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 sm:p-8 rounded-2xl space-y-6 shadow-sm">
                 <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-4">
                     <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
@@ -290,9 +263,9 @@
                     </div>
                     <div>
                         <h2 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide">
-                            Pricing, Inventory & Bottle Sizes
+                            Pricing, Inventory & Variants
                         </h2>
-                        <p class="text-[11px] text-[#64748b]">Manage base price, stock inventory level, concentration, and volume formats.</p>
+                        <p class="text-[11px] text-[#64748b]">Manage base price, stock inventory level, specifications, and variant sizes.</p>
                     </div>
                 </div>
 
@@ -328,33 +301,33 @@
 
                     <div>
                         <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                            Concentration
+                            Type / Concentration
                         </label>
                         <input 
                             type="text" 
                             name="concentration" 
-                            value="{{ old('concentration', $product->concentration ?? 'Eau de Parfum') }}" 
-                            placeholder="e.g. Extrait de Parfum"
+                            value="{{ old('concentration', $product->concentration) }}" 
+                            placeholder="e.g. Eau de Parfum, Leather, Standard"
                             class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
                         >
                     </div>
 
                     <div>
                         <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                            Sizes (Comma Separated)
+                            Available Sizes / Options (Comma Separated)
                         </label>
                         <input 
                             type="text" 
                             name="sizes" 
                             value="{{ old('sizes', is_array($product->sizes) ? implode(', ', $product->sizes) : $product->sizes) }}" 
-                            placeholder="50ml, 100ml"
+                            placeholder="e.g. 50ml, 100ml / S, M, L / 40, 42"
                             class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
                         >
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 3: Olfactory Architecture (Fragrance Notes) -->
+            <!-- SECTION 3: Product Specifications & Category Attributes (Optional) -->
             <div class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 sm:p-8 rounded-2xl space-y-6 shadow-sm">
                 <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-4">
                     <div class="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
@@ -362,68 +335,68 @@
                     </div>
                     <div>
                         <h2 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide">
-                            Olfactory Pyramid & Scent Architecture
+                            Product Specifications & Category Attributes (Optional)
                         </h2>
-                        <p class="text-[11px] text-[#64748b]">Detail the scent family classification and top, heart, and base notes.</p>
+                        <p class="text-[11px] text-[#64748b]">Specify optional details (e.g. Scent Family/Notes for Fragrances, Material/Specs for Bags & Shoes).</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                            Scent Family / Character
+                            Specification / Scent Family / Material
                         </label>
                         <input 
                             type="text" 
                             name="scent_family" 
                             value="{{ old('scent_family', $product->scent_family) }}" 
-                            placeholder="e.g. Amber Woody / Oriental Rose"
+                            placeholder="e.g. Amber Woody, Genuine Leather, Cotton"
                             class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
                         >
                     </div>
 
                     <div>
                         <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                            Top Notes (Initial Impact)
+                            Top Notes / Primary Feature
                         </label>
                         <input 
                             type="text" 
                             name="notes_top" 
                             value="{{ old('notes_top', $product->notes_top) }}" 
-                            placeholder="e.g. Calabrian Bergamot, Pink Pepper"
+                            placeholder="e.g. Calabrian Bergamot, Water-resistant, Breathable"
                             class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
                         >
                     </div>
 
                     <div>
                         <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                            Heart Notes (The Core Body)
+                            Heart Notes / Secondary Feature
                         </label>
                         <input 
                             type="text" 
                             name="notes_heart" 
                             value="{{ old('notes_heart', $product->notes_heart) }}" 
-                            placeholder="e.g. Damascena Rose, Rare Iris, Saffron"
+                            placeholder="e.g. Damascena Rose, Cushioned Sole, Dual Compartment"
                             class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
                         >
                     </div>
 
                     <div>
                         <label class="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                            Base Notes (Lingering Trail)
+                            Base Notes / Additional Specs
                         </label>
                         <input 
                             type="text" 
                             name="notes_base" 
                             value="{{ old('notes_base', $product->notes_base) }}" 
-                            placeholder="e.g. Precious Amber, Cambodian Oud, Vanilla Bean"
+                            placeholder="e.g. Amber & Oud, Anti-slip Rubber Sole, Zipper Closure"
                             class="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] transition-all shadow-xs"
                         >
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 4: Visuals & Bottle Photography -->
+            <!-- SECTION 4: Media & Photography -->
             <div class="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 sm:p-8 rounded-2xl space-y-6 shadow-sm">
                 <div class="flex items-center gap-3 border-b border-[#e2e8f0] pb-4">
                     <div class="p-2.5 bg-[#e0f2fe] text-[#0284c7] rounded-xl">
@@ -431,9 +404,9 @@
                     </div>
                     <div>
                         <h2 class="text-[16px] font-serif font-bold text-[#0f172a] uppercase tracking-wide">
-                            Bottle Photography & Media
+                            Product Media & Photography
                         </h2>
-                        <p class="text-[11px] text-[#64748b]">Upload high-resolution bottle imagery or specify direct image URLs.</p>
+                        <p class="text-[11px] text-[#64748b]">Upload high-resolution product imagery or specify direct image URLs.</p>
                     </div>
                 </div>
 
@@ -637,20 +610,20 @@
                                 @endif
                             </div>
                             <span class="text-[12px] text-[#202124] font-medium">{{ $siteSettings['siteName'] ?? 'RaaxO BD' }}</span>
-                            <span class="text-[12px] text-[#5f6368]">› product › <span id="serp-slug-preview">{{ $product->slug }}</span></span>
+                            <span class="text-[12px] text-[#5f6368]">› product › <span id="serp-slug-preview">{{ $product->slug ?? 'new-product-slug' }}</span></span>
                         </div>
                         <h4 id="serp-title-preview" class="text-[18px] text-[#1a0dab] hover:underline cursor-pointer font-normal leading-snug">
-                            {{ $product->meta_title ?: ($product->name . ' — ' . ($product->scent_family ?: 'Luxury Fragrance') . ' | ' . ($siteSettings['siteName'] ?? 'RaaxO BD')) }}
+                            {{ $product->meta_title ?: (($product->name ?? 'New Product') . ' — ' . ($product->scent_family ?: 'Specification') . ' | ' . ($siteSettings['siteName'] ?? 'RaaxO BD')) }}
                         </h4>
                         <p id="serp-desc-preview" class="text-[13px] text-[#4d5156] leading-relaxed line-clamp-2">
-                            {{ $product->meta_description ?: ($product->short_description ?: 'Discover ' . $product->name . '. Luxury handcrafted perfume extrait with high concentration longevity, available exclusively at ' . ($siteSettings['siteName'] ?? 'RaaxO BD') . '.') }}
+                            {{ $product->meta_description ?: ($product->short_description ?: 'Discover ' . ($product->name ?? 'new product') . '. High quality product available exclusively at ' . ($siteSettings['siteName'] ?? 'RaaxO BD') . '.') }}
                         </p>
                         <div class="flex items-center gap-3 pt-1 text-[11px] text-[#0f766e] font-medium">
-                            <span>৳ {{ number_format($product->price, 2) }}</span>
+                            <span>৳ {{ number_format($product->price ?? 0, 2) }}</span>
                             <span>•</span>
                             <span class="text-emerald-700 font-bold">✔ In stock</span>
                             <span>•</span>
-                            <span>{{ $product->concentration ?: 'Extrait de Parfum' }}</span>
+                            <span>{{ $product->concentration ?: 'Standard' }}</span>
                         </div>
                     </div>
                 </div>
@@ -754,7 +727,7 @@
                     <div class="text-[12px] text-emerald-900 space-y-1">
                         <strong class="font-bold block">Automatic Schema.org Product Rich Snippet Enabled</strong>
                         <p class="text-emerald-800 text-[11px]">
-                            Google search crawlers will automatically receive structured JSON-LD data including product name, price (৳{{ number_format($product->price, 2) }} BDT), stock availability ({{ $product->stock > 0 ? 'InStock' : 'OutOfStock' }}), brand ({{ $siteSettings['siteName'] ?? 'RaaxO BD' }}), and scent family.
+                            Google search crawlers will automatically receive structured JSON-LD data including product name, price (৳{{ number_format($product->price ?? 0, 2) }} BDT), stock availability ({{ ($product->stock ?? 0) > 0 ? 'InStock' : 'OutOfStock' }}), brand ({{ $siteSettings['siteName'] ?? 'RaaxO BD' }}), and specifications.
                         </p>
                     </div>
                 </div>
@@ -763,8 +736,8 @@
             <!-- Sticky Bottom Form Actions Bar -->
             <div class="sticky bottom-6 bg-white/95 backdrop-blur-xl border border-[#38bdf8]/40 p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 z-30">
                 <div class="flex items-center gap-2 text-[12px] text-[#64748b]">
-                    <i data-lucide="clock" class="w-4 h-4 text-[#94a3b8]"></i>
-                    <span>Last updated: {{ $product->updated_at ? $product->updated_at->diffForHumans() : 'Recently' }}</span>
+                    <i data-lucide="{{ $product->exists ? 'clock' : 'sparkles' }}" class="w-4 h-4 text-[#94a3b8]"></i>
+                    <span>{{ $product->exists ? ('Last updated: ' . ($product->updated_at ? $product->updated_at->diffForHumans() : 'Recently')) : 'Status: New Product Entry (Draft)' }}</span>
                 </div>
 
                 <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
@@ -779,12 +752,13 @@
                         type="submit" 
                         class="px-8 py-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-[12px] font-bold uppercase tracking-wider cursor-pointer transition-all shadow-md shadow-[#0284c7]/25 flex items-center gap-2"
                     >
-                        <i data-lucide="check" class="w-4 h-4"></i> Save Changes to MySQL
+                        <i data-lucide="{{ $product->exists ? 'check' : 'plus' }}" class="w-4 h-4"></i> {{ $product->exists ? 'Save Changes' : 'Save Product' }}
                     </button>
                 </div>
             </div>
         </form>
 
+        @if($product->exists)
         <!-- Danger Zone: Delete Product -->
         <div class="bg-rose-50 border border-rose-200 p-6 sm:p-8 rounded-2xl space-y-4 shadow-xs">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -793,7 +767,7 @@
                         <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i> Delete Product from Catalog
                     </h3>
                     <p class="text-[12px] text-rose-600 mt-1">
-                        Permanently remove this perfume bottle from your database and storefront catalog.
+                        Permanently remove this product from your database and storefront catalog.
                     </p>
                 </div>
 
@@ -813,6 +787,7 @@
                 </form>
             </div>
         </div>
+        @endif
 
         <!-- Classic Minimal Admin Footer -->
         @include('admin.partials.footer')
@@ -915,8 +890,8 @@
 
         // ── PER-PRODUCT SEO PREVIEW & AUTO-GENERATION ──
         const defaultSiteName = @json($siteSettings['siteName'] ?? 'RaaxO BD');
-        const prodBaseName = @json($product->name);
-        const prodScentFamily = @json($product->scent_family ?? 'Luxury Fragrance');
+        const prodBaseName = @json($product->name ?? 'New Product');
+        const prodScentFamily = @json($product->scent_family ?? 'Specification');
         const prodShortDesc = @json($product->short_description ?? '');
 
         function updateSeoPreview() {

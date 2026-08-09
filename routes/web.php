@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminCourierController;
 use App\Http\Controllers\AdminWebController;
+use App\Http\Controllers\CourierChargeController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SmsController;
 use Illuminate\Support\Facades\Route;
@@ -13,9 +14,14 @@ use Illuminate\Http\Request;
 
 // Public Frontend Routes (Inertia)
 Route::get('/', function () {
+    $categories = \App\Models\Category::with(['products' => function($query) {
+        $query->with('images')->take(8);
+    }])->whereHas('products')->take(4)->get();
+
     return Inertia::render('Home', [
-        'featuredProducts' => Product::with('images')->where('is_featured', true)->get(),
-        'newArrivals' => Product::with('images')->where('is_new_arrival', true)->get(),
+        'featuredProducts' => Product::with('images')->where('is_featured', true)->take(8)->get(),
+        'newArrivals' => Product::with('images')->where('is_new_arrival', true)->take(8)->get(),
+        'categoriesWithProducts' => $categories,
     ]);
 });
 Route::get('/about', function () {
@@ -108,7 +114,7 @@ Route::get('/login', function () {
     return redirect('/admin');
 });
 
-// ── Public SEO routes (must be before auth middleware) ──
+// Ã¢â€â‚¬Ã¢â€â‚¬ Public SEO routes (must be before auth middleware) Ã¢â€â‚¬Ã¢â€â‚¬
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
 Route::get('/robots.txt',  [SeoController::class, 'robots']);
 
@@ -125,11 +131,31 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [AdminWebController::class, 'dashboard']);
     Route::get('/admin/menus', [AdminWebController::class, 'menus']);
     Route::get('/admin/categories', [AdminWebController::class, 'categories']);
-    Route::get('/admin/products', [AdminWebController::class, 'products']);
+    Route::get('/admin/products/list', [AdminWebController::class, 'productList']);
+    Route::get('/admin/products/add', [AdminWebController::class, 'productAdd']);
+    Route::get('/admin/create-order', [AdminWebController::class, 'createOrder']);
     Route::get('/admin/orders', [AdminWebController::class, 'orders']);
     Route::post('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
     Route::put('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
     Route::delete('/admin/orders/{id}', [AdminWebController::class, 'destroyOrder']);
+
+    // Newly Extracted Dashboard Sections
+    Route::get('/admin/purchases', [AdminWebController::class, 'purchaseList']);
+    Route::get('/admin/purchases/list', [AdminWebController::class, 'purchaseList']);
+    Route::get('/admin/purchases/add', [AdminWebController::class, 'purchaseAdd']);
+    Route::get('/admin/customers', [AdminWebController::class, 'customers']);
+    Route::get('/admin/suppliers', [AdminWebController::class, 'suppliers']);
+    Route::get('/admin/settings', [AdminWebController::class, 'settings']);
+    
+    // Split API Settings
+    Route::get('/admin/api-settings/payment', [AdminWebController::class, 'apiPayment']);
+    Route::get('/admin/api-settings/sms', [AdminWebController::class, 'apiSms']);
+    Route::get('/admin/api-settings/courier', [AdminWebController::class, 'apiCourier']);
+    
+    // Split SEO Settings
+    Route::get('/admin/seo/meta', [AdminWebController::class, 'seoMeta']);
+    Route::get('/admin/seo/marketing', [AdminWebController::class, 'seoMarketing']);
+    Route::get('/admin/seo/ping', [AdminWebController::class, 'seoPing']);
 
     // Courier Hub & Live API Routes
     Route::get('/admin/courier', [AdminCourierController::class, 'index']);
@@ -140,6 +166,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/courier/track/{id}', [AdminCourierController::class, 'trackOrder']);
     Route::get('/admin/run-migrations', [AdminCourierController::class, 'runMigrations']);
     Route::get('/admin/courier/run-migrations', [AdminCourierController::class, 'runMigrations']);
+
+    // Courier Charge Settings Routes
+    Route::get('/admin/courier-charges', [CourierChargeController::class, 'index']);
+    Route::post('/admin/courier-charges', [CourierChargeController::class, 'store']);
+    Route::put('/admin/courier-charges/{id}', [CourierChargeController::class, 'update']);
+    Route::delete('/admin/courier-charges/{id}', [CourierChargeController::class, 'destroy']);
+    Route::post('/admin/courier-charges/bulk-update', [CourierChargeController::class, 'bulkUpdate']);
 
     // Menu Builder CRUD Routes
     Route::post('/admin/menus', [AdminWebController::class, 'storeMenu']);
@@ -152,6 +185,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/categories/{id}', [AdminWebController::class, 'destroyCategory']);
 
     // Product Catalog CRUD Routes
+    Route::get('/admin/products', [AdminWebController::class, 'productList']);
     Route::get('/admin/products/{id}/edit', [AdminWebController::class, 'editProduct']);
     Route::post('/admin/products', [AdminWebController::class, 'storeProduct']);
     Route::put('/admin/products/{id}', [AdminWebController::class, 'updateProduct']);
@@ -169,7 +203,7 @@ Route::middleware('auth')->group(function () {
     // SMS Gateway Routes
     Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');
 
-    // SEO — Sitemap & Robots Generator Routes
+    // SEO Ã¢â‚¬â€ Sitemap & Robots Generator Routes
     Route::get('/admin/seo/status',              [SeoController::class, 'status'])->name('admin.seo.status');
     Route::post('/admin/seo/generate-sitemap',   [SeoController::class, 'generateSitemap'])->name('admin.seo.sitemap');
     Route::post('/admin/seo/generate-robots',    [SeoController::class, 'generateRobots'])->name('admin.seo.robots');
@@ -177,12 +211,41 @@ Route::middleware('auth')->group(function () {
 
     // User Profile & Staff Management Routes
     Route::get('/admin/profile', [\App\Http\Controllers\AdminProfileController::class, 'index']);
+    Route::get('/admin/profile/password', [\App\Http\Controllers\AdminProfileController::class, 'password']);
+    Route::get('/admin/users', [\App\Http\Controllers\AdminProfileController::class, 'users']);
     Route::post('/admin/profile/update', [\App\Http\Controllers\AdminProfileController::class, 'updateProfile']);
     Route::post('/admin/profile/remove-avatar', [\App\Http\Controllers\AdminProfileController::class, 'removeAvatar']);
     Route::post('/admin/profile/password', [\App\Http\Controllers\AdminProfileController::class, 'updatePassword']);
     Route::post('/admin/users', [\App\Http\Controllers\AdminProfileController::class, 'storeUser']);
     Route::put('/admin/users/{id}', [\App\Http\Controllers\AdminProfileController::class, 'updateUser']);
     Route::delete('/admin/users/{id}', [\App\Http\Controllers\AdminProfileController::class, 'deleteUser']);
+
+    // Customer API Routes
+    Route::post('/admin/api/customers', [\App\Http\Controllers\Admin\CustomerController::class, 'store']);
+    Route::put('/admin/api/customers/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'update']);
+    Route::delete('/admin/api/customers/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'destroy']);
+
+    // Supplier API Routes
+    Route::post('/admin/api/suppliers', [\App\Http\Controllers\Admin\SupplierController::class, 'store']);
+    Route::put('/admin/api/suppliers/{id}', [\App\Http\Controllers\Admin\SupplierController::class, 'update']);
+    Route::delete('/admin/api/suppliers/{id}', [\App\Http\Controllers\Admin\SupplierController::class, 'destroy']);
+
+    // Purchase API Routes
+    Route::post('/admin/api/purchases', [\App\Http\Controllers\Admin\PurchaseController::class, 'store']);
+    Route::delete('/admin/api/purchases/{id}', [\App\Http\Controllers\Admin\PurchaseController::class, 'destroy']);
+
+    // Sale API Routes
+    Route::post('/admin/api/sales', [\App\Http\Controllers\Admin\SaleController::class, 'store']);
+    Route::delete('/admin/api/sales/{id}', [\App\Http\Controllers\Admin\SaleController::class, 'destroy']);
+
+    // Role & Permission Routes
+    Route::get('/admin/roles', [\App\Http\Controllers\Admin\RoleController::class, 'index']);
+    Route::post('/admin/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store']);
+    Route::post('/admin/roles/{id}/sync-permissions', [\App\Http\Controllers\Admin\RoleController::class, 'syncPermission']);
+    Route::post('/admin/api/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store']);
+    Route::put('/admin/api/roles/{id}', [\App\Http\Controllers\Admin\RoleController::class, 'update']);
+    Route::delete('/admin/api/roles/{id}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy']);
+    Route::post('/admin/api/roles/assign', [\App\Http\Controllers\Admin\RoleController::class, 'assignRole']);
 });
 
 
@@ -217,4 +280,5 @@ Route::withoutMiddleware([
                '</div>';
     }
 });
+
 

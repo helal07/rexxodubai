@@ -11,7 +11,9 @@ createInertiaApp({
         const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true });
         const tsxPages = import.meta.glob('./Pages/**/*.tsx', { eager: true });
         let page = pages[`./Pages/${name}.jsx`] || tsxPages[`./Pages/${name}.tsx`];
-        page.default.layout = page.default.layout || (page => <AppLayout children={page} />);
+        if (!name.startsWith('Admin/')) {
+            page.default.layout = page.default.layout || (pageContent => <AppLayout children={pageContent} />);
+        }
         return page;
     },
     setup({ el, App, props }) {

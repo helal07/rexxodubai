@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CourierChargeController;
 use App\Http\Controllers\MenuItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -29,6 +30,10 @@ Route::post('/settings', [SettingController::class, 'store']);
 
 // Checkout & order creation
 Route::post('/orders', [OrderController::class, 'store']);
+
+// Courier Charge Public API (used by checkout dropdown)
+Route::get('/courier-charge', [CourierChargeController::class, 'getCharge']);
+Route::get('/courier-districts', [CourierChargeController::class, 'allDistricts']);
 
 // Payment Gateways (SSLCommerz, EPS, bKash Merchant, COD)
 Route::get('/payment-gateways/active', [\App\Http\Controllers\PaymentGatewayController::class, 'getActiveGateways']);

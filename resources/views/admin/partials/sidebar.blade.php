@@ -17,34 +17,23 @@
             
             <!-- 1. HOME / DASHBOARD -->
             <div class="menu-search-item">
-                @if($isDashboard)
-                    <button type="button" onclick="switchSection('dashboard')" id="sidebar-btn-dashboard" class="w-full px-3.5 py-2.5 text-[12.5px] font-bold flex items-center gap-3 rounded-xl transition-all cursor-pointer bg-[#ede9fe] text-[#4338ca] shadow-2xs">
-                        <i data-lucide="home" class="w-4 h-4 text-[#4338ca]"></i>
-                        <span class="menu-text">Home / Dashboard</span>
-                    </button>
-                @else
-                    <a href="{{ url('/admin/dashboard') }}" id="sidebar-btn-dashboard" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center gap-3 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
+                    <a href="{{ url('/admin') }}" id="sidebar-btn-dashboard" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center gap-3 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
                         <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
                         <span class="menu-text">Home / Dashboard</span>
                     </a>
-                @endif
             </div>
 
             <!-- 2. SALES & ORDERS -->
             <div class="menu-search-item">
-                <button type="button" onclick="toggleSubmenu('orders')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ $activePage === 'orders' ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
+                <button type="button" onclick="toggleSubmenu('orders')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['orders', 'create_order']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="shopping-bag" class="w-4 h-4 {{ $activePage === 'orders' ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
+                        <i data-lucide="shopping-bag" class="w-4 h-4 {{ in_array($activePage, ['orders', 'create_order']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
                         <span class="menu-text">Sales & Orders</span>
                     </div>
-                    <span data-chevron="orders" class="submenu-chevron {{ $activePage === 'orders' ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    <span data-chevron="orders" class="submenu-chevron {{ in_array($activePage, ['orders', 'create_order']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
-                <div id="sub-orders" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ $activePage === 'orders' ? 'submenu-open' : '' }}">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-create_order" onclick="switchSection('create_order')" class="w-full text-left px-3 py-1.5 text-[12px] font-bold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg">• Create Sale / POS 🛍️</button>
-                    @else
-                        <a href="{{ url('/admin/dashboard#create_order') }}" id="sidebar-btn-create_order" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg">• Create Sale / POS 🛍️</a>
-                    @endif
+                <div id="sub-orders" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['orders', 'create_order']) ? 'submenu-open' : '' }}">
+                    <a href="{{ url('/admin/create-order') }}" id="sidebar-btn-create_order" class="block w-full text-left px-3 py-1.5 text-[12px] font-bold {{ $activePage === 'create_order' ? 'text-[#4338ca] bg-indigo-50/60' : 'text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50' }} rounded-lg">• Create Sale / POS 🛍️</a>
                     <a href="{{ url('/admin/orders') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'orders' && (!request('status') || request('status') === 'all') ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Total Orders / All Sales</a>
                     <a href="{{ url('/admin/orders?status=completed') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'orders' && request('status') === 'completed' ? 'text-emerald-700 bg-emerald-50 font-bold' : 'text-slate-600 hover:text-emerald-700 hover:bg-slate-50' }} rounded-lg">• Success Orders</a>
                     <a href="{{ url('/admin/orders?status=cancelled') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'orders' && request('status') === 'cancelled' ? 'text-rose-700 bg-rose-50 font-bold' : 'text-slate-600 hover:text-rose-700 hover:bg-slate-50' }} rounded-lg">• Return / Cancelled</a>
@@ -61,54 +50,39 @@
                     <span data-chevron="product" class="submenu-chevron {{ in_array($activePage, ['products', 'categories', 'product_edit']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
                 <div id="sub-product" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['products', 'categories', 'product_edit']) ? 'submenu-open' : '' }}">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-products" onclick="switchSection('products')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• List Products</button>
-                        <button type="button" id="sidebar-btn-product_add" onclick="switchSection('product_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</button>
-                    @else
-                        <a href="{{ url('/admin/products') }}" id="sidebar-btn-products" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'products' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• List Products</a>
-                        <a href="{{ url('/admin/products#addProductForm') }}" id="sidebar-btn-product_add" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</a>
-                    @endif
+                        <a href="{{ url('/admin/products/list') }}" id="sidebar-btn-products" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'products' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• List Products</a>
+                        <a href="{{ url('/admin/products/add') }}" id="sidebar-btn-product_add" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Product</a>
                     <a href="{{ url('/admin/categories') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'categories' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Category & Sub Category</a>
                 </div>
             </div>
 
             <!-- 4. PURCHASE -->
             <div class="menu-search-item">
-                <button type="button" onclick="toggleSubmenu('purchase')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
+                <button type="button" onclick="toggleSubmenu('purchase')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['purchase_list', 'purchase_add']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-500"></i>
+                        <i data-lucide="shopping-cart" class="w-4 h-4 {{ in_array($activePage, ['purchase_list', 'purchase_add']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
                         <span class="menu-text">Purchase</span>
                     </div>
-                    <span data-chevron="purchase" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    <span data-chevron="purchase" class="submenu-chevron {{ in_array($activePage, ['purchase_list', 'purchase_add']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
-                <div id="sub-purchase" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-purchase_list" onclick="switchSection('purchase_list')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Purchase List</button>
-                        <button type="button" id="sidebar-btn-purchase_add" onclick="switchSection('purchase_add')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Purchase</button>
-                    @else
-                        <a href="{{ url('/admin/dashboard#purchase_list') }}" id="sidebar-btn-purchase_list" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Purchase List</a>
-                        <a href="{{ url('/admin/dashboard#purchase_add') }}" id="sidebar-btn-purchase_add" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Add Purchase</a>
-                    @endif
+                <div id="sub-purchase" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['purchase_list', 'purchase_add']) ? 'submenu-open' : '' }}">
+                        <a href="{{ url('/admin/purchases/list') }}" id="sidebar-btn-purchase_list" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'purchase_list' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Purchase List</a>
+                        <a href="{{ url('/admin/purchases/add') }}" id="sidebar-btn-purchase_add" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'purchase_add' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Add Purchase</a>
                 </div>
             </div>
 
             <!-- 5. CONTACTS -->
             <div class="menu-search-item">
-                <button type="button" onclick="toggleSubmenu('contact')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
+                <button type="button" onclick="toggleSubmenu('contact')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['customers', 'supplier']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+                        <i data-lucide="users" class="w-4 h-4 {{ in_array($activePage, ['customers', 'supplier']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
                         <span class="menu-text">Contacts</span>
                     </div>
-                    <span data-chevron="contact" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    <span data-chevron="contact" class="submenu-chevron {{ in_array($activePage, ['customers', 'supplier']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
-                <div id="sub-contact" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-customers" onclick="switchSection('customers')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Customers</button>
-                        <button type="button" id="sidebar-btn-supplier" onclick="switchSection('supplier')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Suppliers</button>
-                    @else
-                        <a href="{{ url('/admin/dashboard#customers') }}" id="sidebar-btn-customers" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Customers</a>
-                        <a href="{{ url('/admin/dashboard#supplier') }}" id="sidebar-btn-supplier" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Suppliers</a>
-                    @endif
+                <div id="sub-contact" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['customers', 'supplier']) ? 'submenu-open' : '' }}">
+                        <a href="{{ url('/admin/customers') }}" id="sidebar-btn-customers" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'customers' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Customers</a>
+                        <a href="{{ url('/admin/suppliers') }}" id="sidebar-btn-supplier" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'supplier' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Suppliers</a>
                 </div>
             </div>
 
@@ -122,49 +96,36 @@
 
             <!-- 7. API & GATEWAY -->
             <div class="menu-search-item">
-                <button type="button" onclick="toggleSubmenu('api_gateway')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['courier', 'api_gateway']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
+                <button type="button" onclick="toggleSubmenu('api_gateway')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['courier', 'api_gateway', 'courier_charges']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="plug-zap" class="w-4 h-4 {{ in_array($activePage, ['courier', 'api_gateway']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
+                        <i data-lucide="plug-zap" class="w-4 h-4 {{ in_array($activePage, ['courier', 'api_gateway', 'courier_charges']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
                         <span class="menu-text">API & Gateway</span>
                     </div>
-                    <span data-chevron="api_gateway" class="submenu-chevron {{ in_array($activePage, ['courier', 'api_gateway']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    <span data-chevron="api_gateway" class="submenu-chevron {{ in_array($activePage, ['courier', 'api_gateway', 'courier_charges']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
-                <div id="sub-api_gateway" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['courier', 'api_gateway']) ? 'submenu-open' : '' }}">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-api_payment" onclick="switchSection('api_payment')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Payment Gateway 💳</button>
-                        <button type="button" id="sidebar-btn-api_sms" onclick="switchSection('api_sms')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• SMS Setting 💬</button>
-                        <button type="button" id="sidebar-btn-api_courier" onclick="switchSection('api_courier')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Courier Setting 🚚</button>
-                    @else
-                        <a href="{{ url('/admin/dashboard#api_payment') }}" id="sidebar-btn-api_payment" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Payment Gateway 💳</a>
-                        <a href="{{ url('/admin/dashboard#api_sms') }}" id="sidebar-btn-api_sms" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• SMS Setting 💬</a>
-                        <a href="{{ url('/admin/dashboard#api_courier') }}" id="sidebar-btn-api_courier" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'courier' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Courier Setting 🚚</a>
-                    @endif
+                <div id="sub-api_gateway" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['courier', 'api_gateway', 'courier_charges']) ? 'submenu-open' : '' }}">
+                        <a href="{{ url('/admin/api-settings/payment') }}" id="sidebar-btn-api_payment" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Payment Gateway 💳</a>
+                        <a href="{{ url('/admin/api-settings/sms') }}" id="sidebar-btn-api_sms" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• SMS Setting 💬</a>
+                        <a href="{{ url('/admin/api-settings/courier') }}" id="sidebar-btn-api_courier" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'courier' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Courier Setting 🚚</a>
+                        <a href="{{ url('/admin/courier-charges') }}" id="sidebar-btn-courier_charges" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'courier_charges' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Courier Charge 📦</a>
                 </div>
             </div>
 
             <!-- 8. SEO & SITEMAP -->
             <div class="menu-search-item">
-                <button type="button" onclick="toggleSubmenu('seo_sub')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
+                <button type="button" onclick="toggleSubmenu('seo_sub')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ $activePage === 'seo_sub' ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="search" class="w-4 h-4 text-slate-500"></i>
+                        <i data-lucide="search" class="w-4 h-4 {{ $activePage === 'seo_sub' ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
                         <span class="menu-text">SEO & Sitemap</span>
                     </div>
-                    <span data-chevron="seo_sub" class="submenu-chevron"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    <span data-chevron="seo_sub" class="submenu-chevron {{ $activePage === 'seo_sub' ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
-                <div id="sub-seo_sub" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-seo_meta" onclick="switchSection('seo_meta')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• SEO Meta Settings</button>
-                        <button type="button" id="sidebar-btn-seo_marketing" onclick="switchSection('seo_marketing')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Marketing & Pixels</button>
-                        <button type="button" id="sidebar-btn-sitemap" onclick="switchSection('sitemap')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Sitemap Generator</button>
-                        <button type="button" id="sidebar-btn-robots" onclick="switchSection('robots')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Robots.txt Manager</button>
-                        <button type="button" id="sidebar-btn-seo_ping" onclick="switchSection('seo_ping')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Ping Google / Bing</button>
-                    @else
-                        <a href="{{ url('/admin/dashboard#seo_meta') }}" id="sidebar-btn-seo_meta" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• SEO Meta Settings</a>
-                        <a href="{{ url('/admin/dashboard#seo_marketing') }}" id="sidebar-btn-seo_marketing" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Marketing & Pixels</a>
-                        <a href="{{ url('/admin/dashboard#sitemap') }}" id="sidebar-btn-sitemap" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Sitemap Generator</a>
-                        <a href="{{ url('/admin/dashboard#robots') }}" id="sidebar-btn-robots" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Robots.txt Manager</a>
-                        <a href="{{ url('/admin/dashboard#seo_ping') }}" id="sidebar-btn-seo_ping" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Ping Google / Bing</a>
-                    @endif
+                <div id="sub-seo_sub" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ $activePage === 'seo_sub' ? 'submenu-open' : '' }}">
+                        <a href="{{ url('/admin/seo-settings/meta') }}" id="sidebar-btn-seo_meta" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• SEO Meta Settings</a>
+                        <a href="{{ url('/admin/seo-settings/marketing') }}" id="sidebar-btn-seo_marketing" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Marketing & Pixels</a>
+                        <a href="{{ url('/admin/seo-settings/sitemap') }}" id="sidebar-btn-sitemap" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Sitemap Generator</a>
+                        <a href="{{ url('/admin/seo-settings/robots') }}" id="sidebar-btn-robots" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Robots.txt Manager</a>
+                        <a href="{{ url('/admin/seo-settings/ping') }}" id="sidebar-btn-seo_ping" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Ping Google / Bing</a>
                 </div>
             </div>
 
@@ -175,39 +136,27 @@
 
             <!-- 9. USER & STAFF MANAGEMENT -->
             <div class="menu-search-item">
-                <button type="button" onclick="toggleSubmenu('user_mgmt')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['profile', 'users']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
+                <button type="button" onclick="toggleSubmenu('user_mgmt')" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center justify-between rounded-xl transition-all cursor-pointer {{ in_array($activePage, ['profile', 'users', 'roles']) ? 'bg-[#ede9fe] text-[#4338ca] font-bold' : 'text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]' }}">
                     <div class="flex items-center gap-3">
-                        <i data-lucide="user-check" class="w-4 h-4 {{ in_array($activePage, ['profile', 'users']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
+                        <i data-lucide="user-check" class="w-4 h-4 {{ in_array($activePage, ['profile', 'users', 'roles']) ? 'text-[#4338ca]' : 'text-slate-500' }}"></i>
                         <span class="menu-text">User & Profile</span>
                     </div>
-                    <span data-chevron="user_mgmt" class="submenu-chevron {{ in_array($activePage, ['profile', 'users']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
+                    <span data-chevron="user_mgmt" class="submenu-chevron {{ in_array($activePage, ['profile', 'users', 'roles']) ? 'chevron-open' : '' }}"><i data-lucide="chevron-down" class="w-4 h-4"></i></span>
                 </button>
-                <div id="sub-user_mgmt" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['profile', 'users']) ? 'submenu-open' : '' }}">
-                    @if($isDashboard)
-                        <button type="button" id="sidebar-btn-profile" onclick="switchSection('profile')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• My Profile & Photo</button>
-                        <button type="button" id="sidebar-btn-profile_password" onclick="switchSection('profile_password')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Change Password</button>
-                        <button type="button" id="sidebar-btn-users_management" onclick="switchSection('users_management')" class="w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Admin Users & Staff</button>
-                    @else
+                <div id="sub-user_mgmt" class="submenu-panel ml-4 pl-3 border-l-2 border-indigo-100 space-y-1 mt-1 {{ in_array($activePage, ['profile', 'users', 'roles']) ? 'submenu-open' : '' }}">
                         <a href="{{ url('/admin/profile') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'profile' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• My Profile & Photo</a>
-                        <a href="{{ url('/admin/profile#passwordSection') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Change Password</a>
-                        <a href="{{ url('/admin/profile#usersSection') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Admin Users & Staff</a>
-                    @endif
+                        <a href="{{ url('/admin/profile/password') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-[#4338ca] hover:bg-slate-50 rounded-lg">• Change Password</a>
+                        <a href="{{ url('/admin/profile/users') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'users' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Admin Users & Staff</a>
+                        <a href="{{ url('/admin/roles') }}" class="block w-full text-left px-3 py-1.5 text-[12px] font-medium {{ $activePage === 'roles' ? 'text-[#4338ca] font-bold bg-indigo-50/60' : 'text-slate-600 hover:text-[#4338ca] hover:bg-slate-50' }} rounded-lg">• Roles & Permissions</a>
                 </div>
             </div>
 
             <!-- 10. SITE SETTING -->
             <div class="menu-search-item">
-                @if($isDashboard)
-                    <button type="button" onclick="switchSection('settings')" id="sidebar-btn-settings" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center gap-3 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
-                        <i data-lucide="settings" class="w-4 h-4 text-slate-500"></i>
-                        <span class="menu-text">Business Settings</span>
-                    </button>
-                @else
-                    <a href="{{ url('/admin/dashboard#settings') }}" id="sidebar-btn-settings" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center gap-3 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
+                    <a href="{{ url('/admin/settings') }}" id="sidebar-btn-settings" class="w-full px-3.5 py-2.5 text-[12.5px] font-medium flex items-center gap-3 rounded-xl transition-all cursor-pointer text-slate-700 hover:bg-slate-50 hover:text-[#4338ca]">
                         <i data-lucide="settings" class="w-4 h-4 text-slate-500"></i>
                         <span class="menu-text">Business Settings</span>
                     </a>
-                @endif
             </div>
         </div>
     </div>
@@ -228,7 +177,6 @@
             const text = item.innerText.toLowerCase();
             if (!query || text.includes(query)) {
                 item.style.display = '';
-                // If matched inside a submenu, open the submenu
                 if (query) {
                     const panel = item.querySelector('.submenu-panel');
                     if (panel) panel.classList.add('submenu-open');
@@ -238,4 +186,160 @@
             }
         });
     }
+
+    async function loadSeoStatus() {
+        try {
+            const r = await fetch('/admin/seo/status', { headers: { 'Accept': 'application/json' } });
+            const d = await r.json();
+
+            const sBadge = document.getElementById('sitemap-status-badge');
+            const sUpdated = document.getElementById('sitemap-last-updated');
+            const sEntries = document.getElementById('sitemap-entries');
+            const sCheck = document.getElementById('sitemap-check-card');
+            if (d.sitemap?.exists) {
+                if (sBadge) { sBadge.className = 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase'; sBadge.textContent = '✔ Exists'; }
+                if (sUpdated) sUpdated.textContent = d.sitemap.last_updated ?? '-';
+                if (sEntries) sEntries.textContent = (d.sitemap.entries ?? 0) + ' URLs';
+                if (sCheck) { sCheck.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200'; sCheck.querySelector('i').setAttribute('data-lucide','check-circle-2'); sCheck.querySelector('i').className='w-4 h-4 text-emerald-600 mt-0.5 shrink-0'; sCheck.querySelector('p:first-child').className='text-[12px] font-bold text-emerald-800'; sCheck.querySelectorAll('p')[1].className='text-[10px] text-emerald-700'; sCheck.querySelectorAll('p')[1].textContent='Sitemap exists - '+d.sitemap.entries+' URLs indexed'; if(window.lucide) lucide.createIcons(); }
+            } else {
+                if (sBadge) { sBadge.className = 'bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase'; sBadge.textContent = '⚠ Not Found'; }
+                if (sUpdated) sUpdated.textContent = 'Never';
+                if (sEntries) sEntries.textContent = '0';
+                if (sCheck) { sCheck.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200'; sCheck.querySelector('i').setAttribute('data-lucide','alert-triangle'); sCheck.querySelector('i').className='w-4 h-4 text-amber-600 mt-0.5 shrink-0'; sCheck.querySelector('p:first-child').className='text-[12px] font-bold text-amber-800'; sCheck.querySelectorAll('p')[1].className='text-[10px] text-amber-700'; sCheck.querySelectorAll('p')[1].textContent='Sitemap missing - indexing issue'; if(window.lucide) lucide.createIcons(); }
+            }
+
+            const rBadge = document.getElementById('robots-status-badge');
+            const rUpdated = document.getElementById('robots-last-updated');
+            const rCheck = document.getElementById('robots-check-card');
+            if (d.robots?.exists) {
+                if (rBadge) { rBadge.className = 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase'; rBadge.textContent = '✔ Configured'; }
+                if (rUpdated) rUpdated.textContent = d.robots.last_updated ?? '-';
+                if (rCheck) { rCheck.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200'; rCheck.querySelector('i').setAttribute('data-lucide','check-circle-2'); rCheck.querySelector('i').className='w-4 h-4 text-emerald-600 mt-0.5 shrink-0'; rCheck.querySelector('p:first-child').className='text-[12px] font-bold text-emerald-800'; rCheck.querySelectorAll('p')[1].className='text-[10px] text-emerald-700'; rCheck.querySelectorAll('p')[1].textContent='robots.txt configured securely'; if(window.lucide) lucide.createIcons(); }
+            } else {
+                if (rBadge) { rBadge.className = 'bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase'; rBadge.textContent = '⚠ Missing'; }
+                if (rUpdated) rUpdated.textContent = 'Never';
+                if (rCheck) { rCheck.className = 'flex items-start gap-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200'; rCheck.querySelector('i').setAttribute('data-lucide','x-circle'); rCheck.querySelector('i').className='w-4 h-4 text-rose-600 mt-0.5 shrink-0'; rCheck.querySelector('p:first-child').className='text-[12px] font-bold text-rose-800'; rCheck.querySelectorAll('p')[1].className='text-[10px] text-rose-700'; rCheck.querySelectorAll('p')[1].textContent='robots.txt missing - critical SEO issue'; if(window.lucide) lucide.createIcons(); }
+            }
+        } catch(e) {}
+    }
+
+    async function generateSitemap() {
+        const btn = document.getElementById('btn-gen-sitemap');
+        const res = document.getElementById('sitemap-result');
+        if (!btn || !res) return;
+        btn.disabled = true;
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = 'Generating...';
+        res.className = 'text-[12px] font-mono p-3 rounded-lg bg-[#f8fafc] border text-[#475569]';
+        res.classList.remove('hidden');
+        res.innerHTML = 'Building sitemap from products and pages...';
+        try {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            const r = await fetch('/admin/seo/generate-sitemap', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            });
+            const d = await r.json();
+            if (r.ok && d.success) {
+                res.className = 'text-[12px] font-mono p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800';
+                res.innerHTML = d.message + '<br>' + d.entries + ' URLs Generated: ' + d.generated_at;
+                if(typeof loadSeoStatus === 'function') loadSeoStatus();
+            } else {
+                res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                res.innerHTML = d.message;
+            }
+        } catch(e) {
+            res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+            res.innerHTML = 'Server connection failed.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+
+    async function generateRobots() {
+        const btn = document.getElementById('btn-gen-robots');
+        const res = document.getElementById('robots-result');
+        if (!btn || !res) return;
+        btn.disabled = true;
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = 'Updating...';
+        res.className = 'text-[12px] font-mono p-3 rounded-lg bg-[#f8fafc] border text-[#475569]';
+        res.classList.remove('hidden');
+        res.innerHTML = 'Building robots.txt with sitemap reference...';
+        try {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            const r = await fetch('/admin/seo/generate-robots', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            });
+            const d = await r.json();
+            if (r.ok && d.success) {
+                res.className = 'text-[12px] font-mono p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800';
+                res.innerHTML = d.message + '<br>Generated: ' + d.generated_at;
+                if(typeof loadSeoStatus === 'function') loadSeoStatus();
+            } else {
+                res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                res.innerHTML = d.message;
+            }
+        } catch(e) {
+            res.className = 'text-[12px] font-mono p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+            res.innerHTML = 'Server connection failed.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+
+    async function pingSeo() {
+        const btn = document.getElementById('btn-ping');
+        const res = document.getElementById('ping-result');
+        const gBadge = document.getElementById('ping-google-badge');
+        const bBadge = document.getElementById('ping-bing-badge');
+        if (!btn || !res) return;
+        btn.disabled = true;
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = 'Pinging...';
+        if(gBadge) { gBadge.className='text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0 animate-pulse'; gBadge.textContent='Pinging...'; }
+        if(bBadge) { bBadge.className='text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0 animate-pulse'; bBadge.textContent='Pinging...'; }
+        res.className = 'text-[12px] font-mono p-4 rounded-lg bg-[#f8fafc] border text-[#475569]';
+        res.classList.remove('hidden');
+        res.innerHTML = 'Sending ping to Google & Bing...';
+        try {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            const r = await fetch('/admin/seo/ping-search-engines', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+            });
+            const d = await r.json();
+            if(gBadge) {
+                const gOk = d.results?.Google?.success;
+                gBadge.className = gOk ? 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0' : 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0';
+                gBadge.textContent = gOk ? '✔ Accepted' : '⚠ Failed';
+            }
+            if(bBadge) {
+                const bOk = d.results?.Bing?.success;
+                bBadge.className = bOk ? 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0' : 'text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0';
+                bBadge.textContent = bOk ? '✔ Accepted' : '⚠ Failed';
+            }
+            if (r.ok && d.success) {
+                res.className = 'text-[12px] font-mono p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1';
+                res.innerHTML = d.message;
+            } else {
+                res.className = 'text-[12px] font-mono p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+                res.innerHTML = d.message;
+            }
+        } catch(e) {
+            res.className = 'text-[12px] font-mono p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800';
+            res.innerHTML = 'Server connection failed.';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadSeoStatus);
 </script>

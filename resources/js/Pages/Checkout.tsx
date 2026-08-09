@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '@/Contexts/CartContext';
 import { Link } from '@inertiajs/react';
 import { 
@@ -17,8 +17,79 @@ import {
   Printer, 
   MessageCircle, 
   AlertCircle,
-  Clock
+  Clock,
+  MapPin
 } from 'lucide-react';
+
+// All 64 Bangladesh districts (pre-populated for instant render, updated from API)
+const BD_DISTRICTS_DEFAULT = [
+  // Inside Dhaka
+  { name: 'Dhaka', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Gazipur', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Narayanganj', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Manikganj', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Munshiganj', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Narsingdi', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Tangail', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Kishoreganj', zone: 'inside_dhaka', charge: 60 },
+  { name: 'Faridpur', zone: 'inside_dhaka', charge: 60 },
+  // Outside Dhaka
+  { name: 'Chittagong', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Sylhet', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Rajshahi', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Khulna', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Barisal', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Rangpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Mymensingh', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Comilla', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Noakhali', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Feni', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Lakshmipur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Chandpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Brahmanbaria', zone: 'outside_dhaka', charge: 120 },
+  { name: "Cox's Bazar", zone: 'outside_dhaka', charge: 120 },
+  { name: 'Rangamati', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Khagrachhari', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Bandarban', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Jessore', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Satkhira', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Bagerhat', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Kushtia', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Chuadanga', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Meherpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Narail', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Magura', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Jhenaidah', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Bogura', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Chapai Nawabganj', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Naogaon', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Joypurhat', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Natore', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Pabna', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Sirajganj', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Rajbari', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Gopalganj', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Madaripur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Shariatpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Habiganj', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Moulvibazar', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Sunamganj', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Dinajpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Thakurgaon', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Panchagarh', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Nilphamari', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Lalmonirhat', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Kurigram', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Gaibandha', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Jamalpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Sherpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Netrokona', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Patuakhali', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Bhola', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Barguna', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Pirojpur', zone: 'outside_dhaka', charge: 120 },
+  { name: 'Jhalokati', zone: 'outside_dhaka', charge: 120 },
+];
 
 interface PlacedOrder {
   id: number;
@@ -51,6 +122,12 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [completedOrder, setCompletedOrder] = useState<PlacedOrder | null>(null);
 
+  // Courier charge state
+  const [courierCharge, setCourierCharge] = useState<number>(60);
+  const [courierZone, setCourierZone] = useState<string>('inside_dhaka');
+  const [districts, setDistricts] = useState(BD_DISTRICTS_DEFAULT);
+  const [isLoadingCharge, setIsLoadingCharge] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -65,10 +142,37 @@ export default function CheckoutPage() {
     orderNotes: '',
   });
 
-  const freeShippingThreshold = 200;
-  const isFreeShipping = subtotal >= freeShippingThreshold;
-  const shippingCost = isFreeShipping ? 0 : 0; // Complimentary across campaign
-  const grandTotal = subtotal + shippingCost;
+  // Load districts from API on mount (to get admin-configured charges)
+  useEffect(() => {
+    fetch('/api/courier-districts')
+      .then(r => r.json())
+      .then((data: Array<{district_name: string; charge: number; zone_type: string}>) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDistricts(data.map(d => ({ name: d.district_name, zone: d.zone_type, charge: d.charge })));
+        }
+      })
+      .catch(() => {/* use defaults */});
+  }, []);
+
+  // Fetch charge whenever city changes
+  useEffect(() => {
+    if (!formData.city) return;
+    setIsLoadingCharge(true);
+    fetch(`/api/courier-charge?city=${encodeURIComponent(formData.city)}`)
+      .then(r => r.json())
+      .then((data: {charge: number; zone_type: string}) => {
+        setCourierCharge(data.charge ?? 120);
+        setCourierZone(data.zone_type ?? 'outside_dhaka');
+      })
+      .catch(() => {
+        // Fallback: check in local list
+        const found = districts.find(d => d.name.toLowerCase() === formData.city.toLowerCase());
+        if (found) { setCourierCharge(found.charge); setCourierZone(found.zone); }
+      })
+      .finally(() => setIsLoadingCharge(false));
+  }, [formData.city]);
+
+  const grandTotal = subtotal + courierCharge;
   const progressPercent = step === 1 ? 33 : step === 2 ? 66 : 100;
 
   const handleStep1Submit = (e: React.FormEvent) => {
@@ -109,6 +213,7 @@ export default function CheckoutPage() {
       city: formData.city,
       postal_code: formData.postalCode || null,
       payment_method: formData.paymentMethod,
+      shipping_cost: courierCharge,
       items: items.map(item => ({
         product_id: item.id,
         size: item.size || '100ml',
@@ -252,12 +357,12 @@ export default function CheckoutPage() {
               {/* Total Row */}
               <div className="border-t-2 border-[#0A0A0A] pt-4 space-y-1.5 text-[13px]">
                 <div className="flex justify-between text-[#6E6B66]">
-                  <span>Shipping & Handling</span>
-                  <span className="text-[#B8712E] font-semibold">COMPLIMENTARY</span>
+                  <span>Courier Delivery Charge</span>
+                  <span className="font-mono font-semibold text-[#0A0A0A]">৳{Number((completedOrder as any).shipping_cost ?? 0).toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#0A0A0A]">
                   <span>TOTAL AMOUNT</span>
-                  <span className="text-[#B8712E] font-mono">${Number(completedOrder.total_amount).toFixed(2)} USD</span>
+                  <span className="text-[#B8712E] font-mono">৳{Number(completedOrder.total_amount).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -552,14 +657,42 @@ export default function CheckoutPage() {
                       <label className="text-[11px] uppercase font-bold tracking-wider text-[#0A0A0A] block mb-1.5">
                         CITY / DISTRICT <span className="text-[#B8712E]">*</span>
                       </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.city}
-                        onChange={e => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full border border-[#DEDBD4] p-3 text-[13px] bg-white focus:outline-none focus:border-[#0A0A0A]"
-                        placeholder="e.g. Dhaka"
-                      />
+                      <div className="relative">
+                        <select
+                          required
+                          value={formData.city}
+                          onChange={e => setFormData({ ...formData, city: e.target.value })}
+                          className="w-full border border-[#DEDBD4] p-3 text-[13px] bg-white focus:outline-none focus:border-[#0A0A0A] appearance-none pr-8 cursor-pointer"
+                        >
+                          <option value="" disabled>— Select District —</option>
+                          <optgroup label="Inside Dhaka (৳60)">
+                            {districts.filter(d => d.zone === 'inside_dhaka').map(d => (
+                              <option key={d.name} value={d.name}>{d.name} — ৳{d.charge}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Outside Dhaka (৳120)">
+                            {districts.filter(d => d.zone === 'outside_dhaka').map(d => (
+                              <option key={d.name} value={d.name}>{d.name} — ৳{d.charge}</option>
+                            ))}
+                          </optgroup>
+                          {districts.filter(d => d.zone === 'custom').length > 0 && (
+                            <optgroup label="Custom Zone">
+                              {districts.filter(d => d.zone === 'custom').map(d => (
+                                <option key={d.name} value={d.name}>{d.name} — ৳{d.charge}</option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </select>
+                        <MapPin size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B8712E] pointer-events-none" />
+                      </div>
+                      {isLoadingCharge && (
+                        <span className="text-[10px] text-[#B8712E] mt-1 block animate-pulse">Fetching delivery charge...</span>
+                      )}
+                      {!isLoadingCharge && formData.city && (
+                        <span className="text-[10px] text-emerald-700 mt-1 block font-semibold">
+                          ✓ Courier charge: ৳{courierCharge} ({courierZone === 'inside_dhaka' ? 'Inside Dhaka' : courierZone === 'outside_dhaka' ? 'Outside Dhaka' : 'Custom Zone'})
+                        </span>
+                      )}
                     </div>
                     <div>
                       <label className="text-[11px] uppercase font-bold tracking-wider text-[#0A0A0A] block mb-1.5">
@@ -743,7 +876,7 @@ export default function CheckoutPage() {
                       ) : (
                         <>
                           <Sparkles size={16} className="text-[#B8712E]" />
-                          <span>CONFIRM & PLACE ORDER — ${grandTotal.toFixed(2)} USD</span>
+                          <span>CONFIRM & PLACE ORDER — ৳{grandTotal.toFixed(2)}</span>
                         </>
                       )}
                     </button>
@@ -796,11 +929,23 @@ export default function CheckoutPage() {
               <div className="border-t border-[#DEDBD4] pt-4 space-y-2 text-[13px]">
                 <div className="flex justify-between text-[#6E6B66]">
                   <span>Subtotal</span>
-                  <span className="font-mono text-[#0A0A0A]">${subtotal.toFixed(2)} USD</span>
+                  <span className="font-mono text-[#0A0A0A]">৳{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-[#6E6B66]">
-                  <span>Express White-Glove Shipping</span>
-                  <span className="text-[#B8712E] font-bold">COMPLIMENTARY</span>
+                  <span className="flex items-center gap-1">
+                    <Truck size={12} className="text-[#B8712E]" />
+                    Courier Charge
+                    {formData.city && (
+                      <span className="text-[10px] font-mono bg-[#F5F0EA] text-[#B8712E] px-1.5 py-0.5 rounded">
+                        {formData.city}
+                      </span>
+                    )}
+                  </span>
+                  {isLoadingCharge ? (
+                    <span className="text-[#8E8B85] font-mono animate-pulse">...</span>
+                  ) : (
+                    <span className="font-mono font-bold text-[#0A0A0A]">৳{courierCharge.toFixed(0)}</span>
+                  )}
                 </div>
                 <div className="flex justify-between text-[#6E6B66]">
                   <span>Signature Gift Packaging</span>
@@ -808,7 +953,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#0A0A0A] pt-3 border-t-2 border-[#0A0A0A]">
                   <span>TOTAL DUE</span>
-                  <span className="text-[#B8712E] font-mono">${grandTotal.toFixed(2)} USD</span>
+                  <span className="text-[#B8712E] font-mono">৳{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 

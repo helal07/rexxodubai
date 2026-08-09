@@ -88,6 +88,28 @@ class HandleInertiaRequests extends Middleware
                     return [];
                 }
             },
+            'auth' => function () use ($request) {
+                $user = $request->user();
+                if (!$user) {
+                    return ['user' => null];
+                }
+                return [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'is_admin' => $user->is_admin ?? false,
+                        'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
+                        'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
+                    ],
+                ];
+            },
+            'flash' => function () use ($request) {
+                return [
+                    'success' => $request->session()->get('success'),
+                    'error' => $request->session()->get('error'),
+                ];
+            },
             'siteSettings' => function () {
                 try {
                     if (!Schema::hasTable('settings')) {

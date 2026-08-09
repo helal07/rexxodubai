@@ -6,6 +6,7 @@ use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,6 +36,10 @@ class AppServiceProvider extends ServiceProvider
                 $settings = [];
             }
             $view->with('siteSettings', $settings);
+        });
+
+        Gate::before(function ($user, $ability) {
+            return $user->hasRole('Super Admin') ? true : null;
         });
     }
 }

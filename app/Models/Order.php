@@ -18,6 +18,7 @@ class Order extends Model
         'city',
         'postal_code',
         'total_amount',
+        'shipping_cost',
         'status',
         'payment_status',
         'payment_method',
@@ -30,9 +31,10 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
+        'total_amount'     => 'decimal:2',
+        'shipping_cost'    => 'decimal:2',
         'courier_response' => 'array',
-        'dispatched_at' => 'datetime',
+        'dispatched_at'    => 'datetime',
     ];
 
     public function items()
