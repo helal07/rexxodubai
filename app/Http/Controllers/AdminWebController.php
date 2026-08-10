@@ -78,15 +78,7 @@ class AdminWebController extends Controller
         ]);
     }
 
-    public function menus()
-    {
-        $items = MenuItem::with(['children', 'parent'])->orderBy('sort_order', 'asc')->get();
-        $parentItems = MenuItem::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        return Inertia::render('Admin/Menus', [
-            'items' => $items,
-            'parentItems' => $parentItems
-        ]);
-    }
+
 
     public function storeMenu(Request $request)
     {
@@ -316,7 +308,11 @@ class AdminWebController extends Controller
         $product = Product::with(['category', 'images'])->findOrFail($id);
         $categories = Category::all();
         $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.product_edit', compact('product', 'categories', 'siteSettings'));
+        return \Inertia\Inertia::render('Admin/Products/Edit', [
+            'product' => $product,
+            'categories' => $categories,
+            'siteSettings' => $siteSettings
+        ]);
     }
 
     public function storeProduct(Request $request)

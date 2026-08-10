@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use App\Models\Product;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\CampaignController;
 
 // Public Frontend Routes (Inertia)
 Route::get('/', function () {
@@ -22,6 +23,9 @@ Route::get('/', function () {
         'featuredProducts' => Product::with('images')->where('is_featured', true)->take(8)->get(),
         'newArrivals' => Product::with('images')->where('is_new_arrival', true)->take(8)->get(),
         'categoriesWithProducts' => $categories,
+        'activeCampaigns' => \App\Models\Campaign::with(['products' => function($query) {
+            $query->with('images')->take(4);
+        }])->where('is_active', true)->orderBy('created_at', 'desc')->get(),
     ]);
 });
 Route::get('/about', function () {
@@ -33,6 +37,8 @@ Route::get('/contact', function () {
 Route::get('/checkout', function () {
     return Inertia::render('Checkout');
 });
+Route::get('/pages/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->name('page.show');
+
 Route::get('/perfumes', function (Request $request) {
     $query = Product::with(['images', 'category.parent']);
     $isFallback = false;
@@ -121,7 +127,7 @@ Route::get('/robots.txt',  [SeoController::class, 'robots']);
 // Admin Root Route: Shows Login if guest, or Dashboard if authenticated admin
 Route::get('/admin', function () {
     if (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()->is_admin) {
-        return view('admin.login');
+        return \Inertia\Inertia::render('Auth/AdminLogin');
     }
     return app(\App\Http\Controllers\AdminWebController::class)->dashboard();
 });
@@ -129,7 +135,6 @@ Route::get('/admin', function () {
 // All Backend Admin Panel Web Routes (Protected)
 Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [AdminWebController::class, 'dashboard']);
-    Route::get('/admin/menus', [AdminWebController::class, 'menus']);
     Route::get('/admin/categories', [AdminWebController::class, 'categories']);
     Route::get('/admin/products/list', [AdminWebController::class, 'productList']);
     Route::get('/admin/products/add', [AdminWebController::class, 'productAdd']);
@@ -145,7 +150,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/purchases/add', [AdminWebController::class, 'purchaseAdd']);
     Route::get('/admin/customers', [AdminWebController::class, 'customers']);
     Route::get('/admin/suppliers', [AdminWebController::class, 'suppliers']);
+    // Settings & CMS Routes
     Route::get('/admin/settings', [AdminWebController::class, 'settings']);
+    Route::get('/admin/cms', [\App\Http\Controllers\FrontendCmsController::class, 'index']);
+    Route::post('/admin/cms', [\App\Http\Controllers\FrontendCmsController::class, 'update']);
     
     // Split API Settings
     Route::get('/admin/api-settings/payment', [AdminWebController::class, 'apiPayment']);
@@ -183,6 +191,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/categories', [AdminWebController::class, 'storeCategory']);
     Route::put('/admin/categories/{id}', [AdminWebController::class, 'updateCategory']);
     Route::delete('/admin/categories/{id}', [AdminWebController::class, 'destroyCategory']);
+    
+    // Custom Pages CRUD Routes
+    Route::post('/admin/pages', [\App\Http\Controllers\PageController::class, 'store']);
+    Route::put('/admin/pages/{id}', [\App\Http\Controllers\PageController::class, 'update']);
+    Route::delete('/admin/pages/{id}', [\App\Http\Controllers\PageController::class, 'destroy']);
 
     // Product Catalog CRUD Routes
     Route::get('/admin/products', [AdminWebController::class, 'productList']);
@@ -200,10 +213,14 @@ Route::middleware('auth')->group(function () {
     // Settings Route
     Route::post('/admin/settings', [\App\Http\Controllers\SettingController::class, 'store'])->name('admin.settings.store');
 
+    // Campaigns
+    Route::post('/admin/campaigns/{campaign}/toggle', [CampaignController::class, 'toggle'])->name('campaigns.toggle');
+    Route::resource('admin/campaigns', CampaignController::class);
+
     // SMS Gateway Routes
     Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');
 
-    // SEO Ã¢â‚¬â€ Sitemap & Robots Generator Routes
+    // SEO — Sitemap & Robots Generator Routes
     Route::get('/admin/seo/status',              [SeoController::class, 'status'])->name('admin.seo.status');
     Route::post('/admin/seo/generate-sitemap',   [SeoController::class, 'generateSitemap'])->name('admin.seo.sitemap');
     Route::post('/admin/seo/generate-robots',    [SeoController::class, 'generateRobots'])->name('admin.seo.robots');
@@ -211,7 +228,7 @@ Route::middleware('auth')->group(function () {
 
     // User Profile & Staff Management Routes
     Route::get('/admin/profile', [\App\Http\Controllers\AdminProfileController::class, 'index']);
-    Route::get('/admin/profile/password', [\App\Http\Controllers\AdminProfileController::class, 'password']);
+
     Route::get('/admin/users', [\App\Http\Controllers\AdminProfileController::class, 'users']);
     Route::post('/admin/profile/update', [\App\Http\Controllers\AdminProfileController::class, 'updateProfile']);
     Route::post('/admin/profile/remove-avatar', [\App\Http\Controllers\AdminProfileController::class, 'removeAvatar']);

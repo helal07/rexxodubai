@@ -19,15 +19,12 @@ class AdminProfileController extends Controller
     {
         $user = Auth::user();
         $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.profile', compact('user', 'siteSettings'));
+        return \Inertia\Inertia::render('Admin/Profile', [
+            'user' => $user,
+            'siteSettings' => $siteSettings
+        ]);
     }
 
-    public function password()
-    {
-        $user = Auth::user();
-        $siteSettings = Setting::pluck('value', 'key')->all();
-        return view('admin.profile_password', compact('user', 'siteSettings'));
-    }
 
     public function users()
     {

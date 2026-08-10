@@ -9,14 +9,41 @@ interface HomePageProps {
   featuredProducts?: any[];
   newArrivals?: any[];
   categoriesWithProducts?: any[];
+  activeCampaigns?: any[];
 }
 
-export default function HomePage({ featuredProducts = [], newArrivals = [], categoriesWithProducts = [] }: HomePageProps) {
-  const { siteSettings, apiSettings }: any = usePage().props;
+export default function HomePage({ featuredProducts = [], newArrivals = [], categoriesWithProducts = [], activeCampaigns = [] }: HomePageProps) {
+  const { siteSettings, apiSettings, cmsData }: any = usePage().props;
   const settings = siteSettings || apiSettings || {};
-  const brandName = settings.siteName || 'RaaxO BD';
-  const tagline = settings.tagline || 'Fine Fragrance & Luxury Extraits';
-  const metaDesc = settings.seo_meta_description || 'Explore handcrafted luxury perfumes, pure extrait de parfums, and bespoke fragrances online in Bangladesh.';
+  
+  const global = cmsData?.global || {};
+  const brandName = global?.site_name || settings.siteName || 'RaaxO BD';
+  const tagline = global?.tagline || settings.tagline || 'Fine Fragrance & Luxury Extraits';
+  const metaDesc = global?.seo_meta_description || settings.seo_meta_description || 'Explore handcrafted luxury perfumes, pure extrait de parfums, and bespoke fragrances online in Bangladesh.';
+
+
+
+  const stories = cmsData?.maison_stories || {};
+  const maisonStoriesData = [
+    {
+      category: stories.story1_category || "CAMPAIGN",
+      title: stories.story1_title || "Artisan Perfumery Collection",
+      image: stories.story1_image || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85",
+      url: stories.story1_url || "/perfumes",
+    },
+    {
+      category: stories.story2_category || "SHOWCASE",
+      title: stories.story2_title || "Discover Exquisite Notes",
+      image: stories.story2_image || "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=85",
+      url: stories.story2_url || "/perfumes",
+    },
+    {
+      category: stories.story3_category || "BEHIND THE SCENES",
+      title: stories.story3_title || "The Making of Luxury",
+      image: stories.story3_image || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=85",
+      url: stories.story3_url || "/about",
+    },
+  ];
 
   return (
     <div className="bg-white text-[#0A0A0A]">
@@ -58,32 +85,49 @@ export default function HomePage({ featuredProducts = [], newArrivals = [], cate
         </section>
       )}
 
-      {/* ── 3. FULL-WIDTH EDITORIAL CAMPAIGN BANNER 1 ── */}
-      <section className="relative w-full aspect-[4/5] sm:aspect-[16/10] lg:aspect-[21/9] bg-[#0A0A0A] overflow-hidden flex flex-col justify-end pb-12 sm:pb-16 text-center text-white">
-        <img
-          src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=2400&q=90"
-          alt="Campaign"
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-85"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      {/* ── 3. DYNAMIC CAMPAIGNS ── */}
+      {activeCampaigns && activeCampaigns.length > 0 && activeCampaigns.map((camp: any) => (
+        <div key={camp.id} className="mb-16">
+          <section className="relative w-full aspect-[4/5] sm:aspect-[16/10] lg:aspect-[21/9] bg-[#0A0A0A] overflow-hidden flex flex-col justify-end pb-12 sm:pb-16 text-center text-white">
+            <img
+              src={camp.banner_image_url || 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=2400&q=90'}
+              alt={camp.title || camp.name}
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-85"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-        <div className="relative z-10 max-w-2xl mx-auto px-6 space-y-3">
-          <h2 className="text-[28px] sm:text-[38px] md:text-[46px] font-sans font-bold tracking-tight text-white leading-tight">
-            The Signature Collection
-          </h2>
-          <p className="text-[12px] sm:text-[13px] uppercase tracking-[0.14em] text-white/90 font-medium">
-            Silhouettes redefined with intricate artisan craftsmanship.
-          </p>
-          <div className="pt-2">
-            <Link
-              href="/perfumes"
-              className="inline-block text-[13px] uppercase font-bold tracking-[0.14em] text-white hover:text-white/80 border-b-2 border-white pb-0.5 transition-colors"
-            >
-              DISCOVER
-            </Link>
-          </div>
+            <div className="relative z-10 max-w-2xl mx-auto px-6 space-y-3">
+              <h2 className="text-[28px] sm:text-[38px] md:text-[46px] font-sans font-bold tracking-tight text-white leading-tight">
+                {camp.title || camp.name}
+              </h2>
+              {camp.subtitle && (
+                <p className="text-[12px] sm:text-[13px] uppercase tracking-[0.14em] text-white/90 font-medium">
+                  {camp.subtitle}
+                </p>
+              )}
+              <div className="pt-2">
+                <Link
+                  href={camp.button_link || '/perfumes'}
+                  className="inline-block text-[13px] uppercase font-bold tracking-[0.14em] text-white hover:text-white/80 border-b-2 border-white pb-0.5 transition-colors"
+                >
+                  {camp.button_text || 'DISCOVER'}
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* Campaign Featured Products */}
+          {camp.products && camp.products.length > 0 && (
+            <section className="py-12 max-w-[1440px] mx-auto px-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {camp.products.map((product: any) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
-      </section>
+      ))}
 
       {/* ── 4. DYNAMIC CATEGORIES ── */}
       {categoriesWithProducts && categoriesWithProducts.length > 0 && (
@@ -159,26 +203,7 @@ export default function HomePage({ featuredProducts = [], newArrivals = [], cate
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                category: "CAMPAIGN",
-                title: "Artisan Perfumery Collection",
-                image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85",
-                url: "/perfumes",
-              },
-              {
-                category: "SHOWCASE",
-                title: "Discover Exquisite Notes",
-                image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1200&q=85",
-                url: "/perfumes",
-              },
-              {
-                category: "BEHIND THE SCENES",
-                title: "The Making of Luxury",
-                image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=85",
-                url: "/about",
-              },
-            ].map((story, idx) => (
+            {maisonStoriesData.map((story, idx) => (
               <Link
                 key={idx}
                 href={story.url}

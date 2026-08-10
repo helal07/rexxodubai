@@ -13,7 +13,7 @@ export default function AdminLogin() {
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/portal/secure-login');
+        post('/admin/login');
     };
 
     const fillDemoCredentials = () => {

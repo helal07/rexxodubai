@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
-import { useSiteSettings } from '@/Contexts/SiteSettingsContext';
+import { Link, usePage } from '@inertiajs/react';
 
 export default function HeroVideo() {
-  const { settings } = useSiteSettings();
+  const { siteSettings, apiSettings, cmsData }: any = usePage().props;
+  const oldSettings = siteSettings || apiSettings || {};
+  const settings = { ...oldSettings, ...(cmsData?.home_hero || {}) };
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);

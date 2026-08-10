@@ -68,7 +68,7 @@ export default function Dashboard({
                 </>
             }
         >
-            <Head title="Executive Dashboard — Admin" />
+            <Head title="Admin Dashboard" />
 
             {/* METRICS GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -203,13 +203,12 @@ export default function Dashboard({
                                         </td>
                                         <td className="p-3.5">
                                             <span
-                                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                                    order.status === 'Completed'
+                                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Completed'
                                                         ? 'bg-emerald-100 text-emerald-800'
                                                         : order.status === 'Processing' || order.status === 'Dispatched'
-                                                        ? 'bg-amber-100 text-amber-800'
-                                                        : 'bg-slate-100 text-slate-700'
-                                                }`}
+                                                            ? 'bg-amber-100 text-amber-800'
+                                                            : 'bg-slate-100 text-slate-700'
+                                                    }`}
                                             >
                                                 {order.status}
                                             </span>

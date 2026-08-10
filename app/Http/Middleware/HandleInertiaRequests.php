@@ -88,6 +88,22 @@ class HandleInertiaRequests extends Middleware
                     return [];
                 }
             },
+            'cmsData' => function () {
+                try {
+                    if (!Schema::hasTable('frontend_contents')) {
+                        return [];
+                    }
+                    // Load global cms data and group by section
+                    $contents = \App\Models\FrontendContent::all()->groupBy('section')->map(function ($items) {
+                        return $items->keyBy('key')->map(function ($item) {
+                            return $item->parsed_value;
+                        });
+                    });
+                    return $contents->toArray();
+                } catch (\Throwable $e) {
+                    return [];
+                }
+            },
             'auth' => function () use ($request) {
                 $user = $request->user();
                 if (!$user) {

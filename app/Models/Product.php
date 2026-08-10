@@ -51,4 +51,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order', 'asc');
     }
+
+    public function campaigns()
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_product');
+    }
 }

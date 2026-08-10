@@ -17,7 +17,7 @@ class AdminLoginController extends Controller
             return redirect('/admin/dashboard');
         }
 
-        return view('admin.login');
+        return \Inertia\Inertia::render('Auth/AdminLogin');
     }
 
     /**

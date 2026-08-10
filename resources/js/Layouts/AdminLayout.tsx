@@ -30,7 +30,9 @@ import {
     Search,
     SlidersHorizontal,
     Briefcase,
-    Zap
+    Zap,
+    Flag,
+    LayoutTemplate
 } from 'lucide-react';
 
 interface SharedProps {
@@ -66,7 +68,7 @@ export default function AdminLayout({
     pageSubtitle,
     headerActions,
 }: AdminLayoutProps) {
-    const { auth, flash, siteSettings = {} } = usePage<SharedProps>().props;
+    const { auth, flash, siteSettings = {}, cmsData = {} } = usePage<SharedProps>().props;
     const currentUser = auth?.user;
 
     const [openSubmenu, setOpenSubmenu] = useState<string | null>(() => {
@@ -141,8 +143,8 @@ export default function AdminLayout({
         router.post('/logout');
     };
 
-    const siteName = siteSettings.siteName || 'RaaxO BD';
-    const logoUrl = siteSettings.logo_url || siteSettings.site_logo || '';
+    const siteName = cmsData?.global?.site_name || siteSettings.siteName || 'RaaxO BD';
+    const logoUrl = cmsData?.global?.logo_url || siteSettings.logo_url || siteSettings.site_logo || '';
 
     return (
         <div className="bg-[#f8fafc] text-[#0f172a] font-sans flex flex-col min-h-screen relative overflow-x-hidden selection:bg-[#4338ca] selection:text-white">
@@ -630,16 +632,51 @@ export default function AdminLayout({
                             )}
                         </div>
 
-                        <Link
-                            href="/admin/menus"
-                            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activePage === 'menus'
-                                ? 'bg-[#0284c7] text-white shadow-md shadow-[#0284c7]/20'
-                                : 'text-[#475569] hover:bg-[#f1f5f9]'
-                                }`}
-                        >
-                            <SlidersHorizontal className="w-4 h-4" />
-                            <span>Nav Menu Builder</span>
-                        </Link>
+                        <div className="pt-3 px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
+                            Storefront & CMS
+                        </div>
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => toggleSubmenu('frontend_cms')}
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${['cms', 'campaigns'].includes(activePage) || window.location.pathname.includes('/admin/campaigns')
+                                    ? 'bg-[#e0f2fe] text-[#0284c7]'
+                                    : 'text-[#475569] hover:bg-[#f1f5f9]'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <LayoutTemplate className="w-4 h-4" />
+                                    <span>Frontend CMS</span>
+                                </div>
+                                {openSubmenu === 'frontend_cms' ? (
+                                    <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                    <ChevronRight className="w-4 h-4" />
+                                )}
+                            </button>
+                            {openSubmenu === 'frontend_cms' && (
+                                <div className="pl-9 pr-2 py-1 space-y-1">
+                                    <Link
+                                        href="/admin/cms"
+                                        className={`block px-3 py-2 rounded-lg text-[12px] font-semibold transition-all ${activePage === 'cms' || window.location.pathname === '/admin/cms'
+                                            ? 'bg-[#0284c7] text-white font-bold'
+                                            : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#0f172a]'
+                                            }`}
+                                    >
+                                        CMS Settings
+                                    </Link>
+                                    <Link
+                                        href="/admin/campaigns"
+                                        className={`block px-3 py-2 rounded-lg text-[12px] font-semibold transition-all ${activePage === 'campaigns' || window.location.pathname.includes('/admin/campaigns')
+                                            ? 'bg-[#0284c7] text-white font-bold'
+                                            : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#0f172a]'
+                                            }`}
+                                    >
+                                        Campaigns
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                         <Link
                             href="/admin/settings"
                             className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activePage === 'settings'

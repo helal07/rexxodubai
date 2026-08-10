@@ -5,12 +5,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         @php
-            $siteSettings = $siteSettings ?? [];
-            $liveFavicon = !empty($siteSettings['favicon_url']) ? $siteSettings['favicon_url'] : (!empty($siteSettings['site_favicon']) ? $siteSettings['site_favicon'] : '/uploads/settings/favicon_1785930191.ico');
+            $siteSettings = $page['props']['siteSettings'] ?? [];
+            $cmsData = $page['props']['cmsData'] ?? [];
+            $cmsGlobal = $cmsData['global'] ?? [];
+            
+            $liveFavicon = !empty($cmsGlobal['favicon_url']) ? $cmsGlobal['favicon_url'] : (!empty($siteSettings['favicon_url']) ? $siteSettings['favicon_url'] : (!empty($siteSettings['site_favicon']) ? $siteSettings['site_favicon'] : '/uploads/settings/favicon_1785930191.ico'));
             $siteUrl     = rtrim(config('app.url'), '/');
             $siteName    = $siteSettings['siteName'] ?? config('app.name', 'RaaxO BD');
             $siteDesc    = $siteSettings['seo_meta_description'] ?? $siteSettings['tagline'] ?? 'Luxury handcrafted fragrances and pure parfums.';
-            $ogImage     = $siteSettings['logo_url'] ?? $siteSettings['site_logo'] ?? '';
+            $ogImage     = !empty($cmsGlobal['logo_url']) ? $cmsGlobal['logo_url'] : ($siteSettings['logo_url'] ?? $siteSettings['site_logo'] ?? '');
         @endphp
         <title inertia>{{ $siteName }} — {{ $siteSettings['tagline'] ?? 'Fine Fragrance & Luxury Extraits' }}</title>
         <link rel="icon" id="dynamic-favicon" href="{{ $liveFavicon }}">
@@ -58,8 +61,8 @@
             "description": "{{ $siteDesc }}"
             @if($ogImage)
             ,"logo": {
-                "@@type": "ImageObject",
-                "url": "{{ $ogImage }}"
+              "@type": "ImageObject",
+              "url": "{{ !empty($cmsGlobal['logo_url']) ? url($cmsGlobal['logo_url']) : url($siteSettings['logo_url'] ?? $siteSettings['site_logo'] ?? '') }}"
             }
             @endif
         }

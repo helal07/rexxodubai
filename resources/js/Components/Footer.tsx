@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
-import { useSiteSettings } from '@/Contexts/SiteSettingsContext';
+import { Link, usePage } from '@inertiajs/react';
 import {
   MapPin,
   ArrowRight,
@@ -10,7 +9,13 @@ import {
 } from 'lucide-react';
 
 export default function Footer() {
-  const { settings } = useSiteSettings();
+  const { siteSettings, apiSettings, cmsData }: any = usePage().props;
+  const oldSettings = siteSettings || apiSettings || {};
+  
+  const global = cmsData?.global || {};
+  const footerCms = cmsData?.footer || {};
+  const settings = { ...oldSettings, ...global, ...footerCms };
+
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -22,7 +27,7 @@ export default function Footer() {
     setTimeout(() => setSubscribed(false), 5000);
   };
 
-  const businessName = settings.siteName || 'RaaxO BD';
+  const businessName = settings.site_name || settings.siteName || 'RaaxO BD';
   const brandName = businessName.toUpperCase();
 
   return (
@@ -130,7 +135,7 @@ export default function Footer() {
 
             {/* WhatsApp */}
             <a
-              href={`https://api.whatsapp.com/send?phone=${settings.whatsapp || '8801700000000'}`}
+              href={`https://api.whatsapp.com/send?phone=${settings.contact_phone || settings.whatsapp || '8801700000000'}`}
               target="_blank"
               rel="noreferrer"
               aria-label="WhatsApp"
@@ -141,6 +146,11 @@ export default function Footer() {
               </svg>
             </a>
           </div>
+          {settings.about_text && (
+            <div className="pt-4 text-[13px] text-[#4A4744] max-w-sm">
+              <p>{settings.about_text}</p>
+            </div>
+          )}
         </div>
 
         {/* Column 2: COMPANY (Span 3 on Desktop) */}
