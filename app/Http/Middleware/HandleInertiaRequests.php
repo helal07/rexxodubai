@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\MenuItem;
 use App\Models\Category;
 use App\Models\Setting;
+use App\Models\Page;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -132,6 +133,16 @@ class HandleInertiaRequests extends Middleware
                         return [];
                     }
                     return Setting::pluck('value', 'key')->toArray();
+                } catch (\Throwable $e) {
+                    return [];
+                }
+            },
+            'customPages' => function () {
+                try {
+                    if (!Schema::hasTable('pages')) {
+                        return [];
+                    }
+                    return Page::select('title', 'slug')->get()->toArray();
                 } catch (\Throwable $e) {
                     return [];
                 }

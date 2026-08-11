@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 export default function Footer() {
-  const { siteSettings, apiSettings, cmsData }: any = usePage().props;
+  const { siteSettings, apiSettings, cmsData, customPages }: any = usePage().props;
   const oldSettings = siteSettings || apiSettings || {};
   
   const global = cmsData?.global || {};
@@ -213,26 +213,38 @@ export default function Footer() {
             LEGAL TERMS AND CONDITIONS
           </h4>
           <ul className="space-y-2.5 text-[13px] text-[#4A4744]">
-            <li>
-              <Link href="/terms" className="hover:text-black transition-colors">
-                Legal Notice
-              </Link>
-            </li>
-            <li>
-              <Link href="/privacy" className="hover:text-black transition-colors">
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link href="/cookies" className="hover:text-black transition-colors">
-                Cookie Policy
-              </Link>
-            </li>
-            <li>
-              <Link href="/sitemap" className="hover:text-black transition-colors">
-                Sitemap
-              </Link>
-            </li>
+            {customPages && customPages.length > 0 ? (
+              customPages.map((page: any) => (
+                <li key={page.slug}>
+                  <Link href={`/pages/${page.slug}`} className="hover:text-black transition-colors">
+                    {page.title}
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <>
+                <li>
+                  <Link href="/terms" className="hover:text-black transition-colors">
+                    Legal Notice
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="hover:text-black transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="hover:text-black transition-colors">
+                    Cookie Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/sitemap" className="hover:text-black transition-colors">
+                    Sitemap
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>

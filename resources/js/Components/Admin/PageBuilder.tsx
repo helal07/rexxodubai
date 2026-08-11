@@ -88,7 +88,7 @@ export default function PageBuilder({ pages }: PageBuilderProps) {
                         {isEditing ? 'Edit Page' : 'Create New Page'}
                     </h3>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-4">
                         <div>
                             <label className="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
                                 Page Title <span className="text-rose-500">*</span>
@@ -141,7 +141,8 @@ export default function PageBuilder({ pages }: PageBuilderProps) {
 
                         <div className="pt-4 flex items-center gap-3">
                             <button
-                                type="submit"
+                                type="button"
+                                onClick={(e: any) => handleSubmit(e)}
                                 disabled={processing}
                                 className="flex-1 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-[12px] font-bold uppercase tracking-wider shadow-md shadow-[#0284c7]/20 flex items-center justify-center gap-2"
                             >
@@ -158,7 +159,7 @@ export default function PageBuilder({ pages }: PageBuilderProps) {
                                 </button>
                             )}
                         </div>
-                    </form>
+                    </div>
                 </div>
 
                 {/* Table Section */}
