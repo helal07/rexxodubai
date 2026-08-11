@@ -52,12 +52,20 @@ interface ProductData {
 interface ProductEditProps {
     product?: ProductData;
     categories: Category[];
+    variants?: any[];
 }
 
-export default function ProductEdit({ product = {}, categories = [] }: ProductEditProps) {
+export default function ProductEdit({ product = {}, categories = [], variants = [] }: ProductEditProps) {
     const isEdit = Boolean(product.id);
 
     const initialSizes = Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || '');
+    
+    // Map existing product variants
+    const initialVariants = (product as any).variants ? (product as any).variants.map((v: any) => ({
+        variant_id: v.id,
+        price: v.pivot.price,
+        stock: v.pivot.stock
+    })) : [];
 
     const { data, setData, post, put, processing, errors } = useForm({
         name: product.name || '',
@@ -68,6 +76,7 @@ export default function ProductEdit({ product = {}, categories = [] }: ProductEd
         stock: product.stock !== undefined ? product.stock : 50,
         concentration: product.concentration || '',
         sizes: initialSizes,
+        variants: initialVariants,
         scent_family: product.scent_family || '',
         notes_top: product.notes_top || '',
         notes_heart: product.notes_heart || '',
@@ -281,17 +290,90 @@ export default function ProductEdit({ product = {}, categories = [] }: ProductEd
                             />
                         </div>
 
-                        <div>
-                            <label className="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-2">
-                                Available Sizes / Options (Comma Separated)
-                            </label>
-                            <input
-                                type="text"
-                                value={data.sizes}
-                                onChange={e => setData('sizes', e.target.value)}
-                                placeholder="e.g. 50ml, 100ml / S, M, L / 40, 42"
-                                className="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] shadow-2xs"
-                            />
+                        <div className="col-span-1 sm:col-span-2 md:col-span-4 mt-4 bg-slate-50 border border-slate-200 rounded-xl p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-[13px] font-bold text-slate-800 uppercase tracking-wider">Specific Variants & Pricing</h3>
+                                    <p className="text-[11px] text-slate-500">Assign specific prices and stock to global variants.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setData('variants', [...data.variants, { variant_id: '', price: data.price, stock: data.stock }])}
+                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-[11px] font-bold uppercase hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add Variant
+                                </button>
+                            </div>
+
+                            {data.variants.length === 0 ? (
+                                <div className="text-center py-6 text-slate-400 text-[12px]">
+                                    No variants assigned. Base price and stock will be used.
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {data.variants.map((v: any, index: number) => (
+                                        <div key={index} className="flex flex-col sm:flex-row items-end gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                            <div className="flex-1 w-full">
+                                                <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Variant Name</label>
+                                                <select
+                                                    value={v.variant_id}
+                                                    onChange={e => {
+                                                        const newVariants = [...data.variants];
+                                                        newVariants[index].variant_id = e.target.value;
+                                                        setData('variants', newVariants);
+                                                    }}
+                                                    required
+                                                    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-[13px] focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                                >
+                                                    <option value="">Select Variant</option>
+                                                    {variants.map(gv => (
+                                                        <option key={gv.id} value={gv.id}>{gv.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="w-full sm:w-32">
+                                                <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Price</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={v.price}
+                                                    onChange={e => {
+                                                        const newVariants = [...data.variants];
+                                                        newVariants[index].price = e.target.value;
+                                                        setData('variants', newVariants);
+                                                    }}
+                                                    required
+                                                    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-[13px] font-bold focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-24">
+                                                <label className="text-[10px] uppercase font-bold text-slate-500 block mb-1">Stock</label>
+                                                <input
+                                                    type="number"
+                                                    value={v.stock}
+                                                    onChange={e => {
+                                                        const newVariants = [...data.variants];
+                                                        newVariants[index].stock = e.target.value;
+                                                        setData('variants', newVariants);
+                                                    }}
+                                                    required
+                                                    className="w-full border border-slate-300 px-3 py-2 rounded-lg text-[13px] focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newVariants = data.variants.filter((_: any, i: number) => i !== index);
+                                                    setData('variants', newVariants);
+                                                }}
+                                                className="w-full sm:w-auto px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4 mx-auto" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -304,9 +386,9 @@ export default function ProductEdit({ product = {}, categories = [] }: ProductEd
                         </div>
                         <div>
                             <h2 className="text-base font-serif font-bold text-[#0f172a] uppercase tracking-wide">
-                                Product Specifications & Category Attributes (Optional)
+                                Specifications & Category Attributes
                             </h2>
-                            <p className="text-[11px] text-[#64748b]">Detail optional features (e.g. Scent Notes for Perfumes, Material/Specs for Shoes & Bags).</p>
+                            <p className="text-[11px] text-[#64748b]">Describe materials, scent notes, or key features.</p>
                         </div>
                     </div>
 
@@ -358,12 +440,15 @@ export default function ProductEdit({ product = {}, categories = [] }: ProductEd
                                 type="text"
                                 value={data.notes_base}
                                 onChange={e => setData('notes_base', e.target.value)}
-                                placeholder="e.g. Oud, Rubber Sole, Zipper Closure"
+                                placeholder="e.g. Vanilla, Slip-resistant, 1-Year Warranty"
                                 className="w-full border border-[#cbd5e1] px-4 py-3 rounded-xl text-[14px] font-medium text-[#0f172a] bg-white focus:outline-none focus:border-[#0284c7] shadow-2xs"
                             />
                         </div>
+
                     </div>
                 </div>
+
+
 
                 {/* SECTION 4: MEDIA & IMAGES */}
                 <div className="bg-white/90 backdrop-blur-xl border border-[#38bdf8]/30 p-7 rounded-2xl space-y-6 shadow-sm">

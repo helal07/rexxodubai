@@ -103,6 +103,7 @@ export default function AdminLogin() {
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
                                     required 
+                                    autoComplete="username"
                                     className="w-full bg-transparent text-[14px] text-[#0f172a] border-none ring-0 outline-none focus:ring-0 focus:border-none focus:outline-none focus-visible:outline-none placeholder:text-[#94a3b8] font-medium" 
                                 />
                             </div>
@@ -120,6 +121,7 @@ export default function AdminLogin() {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     required 
+                                    autoComplete="current-password"
                                     className="w-full bg-transparent text-[14px] text-[#0f172a] border-none ring-0 outline-none focus:ring-0 focus:border-none focus:outline-none focus-visible:outline-none font-medium" 
                                 />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-[#64748b] hover:text-[#0284c7] transition-colors ml-2 p-1">

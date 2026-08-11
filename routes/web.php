@@ -97,7 +97,7 @@ Route::get('/perfumes', function (Request $request) {
     ]);
 });
 Route::get('/product/{slug}', function ($slug) {
-    $product = Product::with(['images', 'category.parent'])->where('slug', $slug)->firstOrFail();
+    $product = Product::with(['images', 'category.parent', 'variants'])->where('slug', $slug)->firstOrFail();
     $related = Product::with('images')
         ->where('id', '!=', $product->id)
         ->where(function ($q) use ($product) {
@@ -140,6 +140,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/products/add', [AdminWebController::class, 'productAdd']);
     Route::get('/admin/create-order', [AdminWebController::class, 'createOrder']);
     Route::get('/admin/orders', [AdminWebController::class, 'orders']);
+    Route::get('/admin/orders/{id}/invoice', [AdminWebController::class, 'invoiceOrder']);
+    Route::get('/admin/orders/{id}/edit', [AdminWebController::class, 'editOrder']);
+    Route::put('/admin/orders/{id}', [AdminWebController::class, 'updateOrder']);
     Route::post('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
     Route::put('/admin/orders/{id}/status', [AdminWebController::class, 'updateOrderStatus']);
     Route::delete('/admin/orders/{id}', [AdminWebController::class, 'destroyOrder']);
@@ -216,6 +219,12 @@ Route::middleware('auth')->group(function () {
     // Campaigns
     Route::post('/admin/campaigns/{campaign}/toggle', [CampaignController::class, 'toggle'])->name('campaigns.toggle');
     Route::resource('admin/campaigns', CampaignController::class);
+
+    // Variants
+    Route::get('/admin/variants', [\App\Http\Controllers\Admin\VariantController::class, 'index']);
+    Route::post('/admin/variants', [\App\Http\Controllers\Admin\VariantController::class, 'store']);
+    Route::put('/admin/variants/{id}', [\App\Http\Controllers\Admin\VariantController::class, 'update']);
+    Route::delete('/admin/variants/{id}', [\App\Http\Controllers\Admin\VariantController::class, 'destroy']);
 
     // SMS Gateway Routes
     Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { Product } from '@/lib/api';
 import { useCart } from '@/Contexts/CartContext';
@@ -6,27 +6,40 @@ import { ChevronDown, ChevronUp, ShieldCheck, Truck, RefreshCw, ShoppingBag, Zap
 import ScentTrail from './ScentTrail';
 
 interface PDPClientProps {
-  product: Product;
+  product: Product | any;
 }
 
 export default function PDPClient({ product }: PDPClientProps) {
   const { addItem } = useCart();
-  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || '100ml');
+  
+  const hasVariants = product.variants && product.variants.length > 0;
+  const initialVariant = hasVariants ? product.variants[0] : null;
+
+  const [selectedVariant, setSelectedVariant] = useState<any>(initialVariant);
+  const [selectedSize, setSelectedSize] = useState(initialVariant ? initialVariant.name : (product.sizes?.[0] || '100ml'));
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
   const [activeImage, setActiveImage] = useState(product.primary_image_url);
   const [activeAccordion, setActiveAccordion] = useState<string | null>('notes');
 
+  useEffect(() => {
+    if (selectedVariant) {
+        setSelectedSize(selectedVariant.name);
+    }
+  }, [selectedVariant]);
+
   const allImages = [
     product.primary_image_url,
     ...(product.secondary_image_url ? [product.secondary_image_url] : []),
-    ...(product.images?.map(i => i.image_url) || [])
+    ...(product.images?.map((i: any) => i.image_url) || [])
   ].filter(Boolean);
 
   const toggleAccordion = (section: string) => {
     setActiveAccordion(prev => (prev === section ? null : section));
   };
+
+  const currentPrice = selectedVariant ? Number(selectedVariant.pivot?.price || selectedVariant.price) : Number(product.price);
 
   const handleAddToCart = () => {
     addItem(
@@ -34,7 +47,7 @@ export default function PDPClient({ product }: PDPClientProps) {
         id: product.id,
         name: product.name,
         slug: product.slug,
-        price: Number(product.price) || 0,
+        price: currentPrice || 0,
         size: selectedSize,
         image: product.primary_image_url,
         concentration: product.concentration || 'Extrait De Parfum',
@@ -54,7 +67,7 @@ export default function PDPClient({ product }: PDPClientProps) {
         id: product.id,
         name: product.name,
         slug: product.slug,
-        price: Number(product.price) || 0,
+        price: currentPrice || 0,
         size: selectedSize,
         image: product.primary_image_url,
         concentration: product.concentration || 'Extrait De Parfum',
@@ -65,8 +78,8 @@ export default function PDPClient({ product }: PDPClientProps) {
     router.visit('/checkout');
   };
 
-  const formattedUnitPrice = product.price ? `$${Number(product.price).toFixed(2)}` : '$0.00';
-  const totalPrice = product.price ? `$${(Number(product.price) * quantity).toFixed(2)}` : '$0.00';
+  const formattedUnitPrice = currentPrice ? `৳${currentPrice.toFixed(2)}` : '৳0.00';
+  const totalPrice = currentPrice ? `৳${(currentPrice * quantity).toFixed(2)}` : '৳0.00';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
@@ -135,8 +148,8 @@ export default function PDPClient({ product }: PDPClientProps) {
           </p>
         </div>
 
-        {/* Size Selector */}
-        {product.sizes && product.sizes.length > 0 && (
+        {/* Size / Variant Selector */}
+        {(hasVariants || (product.sizes && product.sizes.length > 0)) && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-[11px] uppercase tracking-[0.14em] font-bold text-[#0A0A0A]">
@@ -147,20 +160,37 @@ export default function PDPClient({ product }: PDPClientProps) {
               </span>
             </div>
             <div className="flex flex-wrap gap-2.5">
-              {product.sizes.map(sz => (
-                <button
-                  key={sz}
-                  type="button"
-                  onClick={() => setSelectedSize(sz)}
-                  className={`px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer border ${
-                    selectedSize === sz
-                      ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-xs ring-1 ring-[#0A0A0A]'
-                      : 'bg-[#FAF8F5] text-[#0A0A0A] border-[#DEDBD4] hover:border-[#0A0A0A] hover:bg-white'
-                  }`}
-                >
-                  {sz}
-                </button>
-              ))}
+              {hasVariants ? (
+                product.variants.map((v: any) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setSelectedVariant(v)}
+                    className={`px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer border ${
+                      selectedVariant?.id === v.id
+                        ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-xs ring-1 ring-[#0A0A0A]'
+                        : 'bg-[#FAF8F5] text-[#0A0A0A] border-[#DEDBD4] hover:border-[#0A0A0A] hover:bg-white'
+                    }`}
+                  >
+                    {v.name}
+                  </button>
+                ))
+              ) : (
+                product.sizes.map((sz: string) => (
+                  <button
+                    key={sz}
+                    type="button"
+                    onClick={() => setSelectedSize(sz)}
+                    className={`px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all cursor-pointer border ${
+                      selectedSize === sz
+                        ? 'bg-[#0A0A0A] text-white border-[#0A0A0A] shadow-xs ring-1 ring-[#0A0A0A]'
+                        : 'bg-[#FAF8F5] text-[#0A0A0A] border-[#DEDBD4] hover:border-[#0A0A0A] hover:bg-white'
+                    }`}
+                  >
+                    {sz}
+                  </button>
+                ))
+              )}
             </div>
           </div>
         )}

@@ -326,7 +326,7 @@ export default function AdminLayout({
                             <button
                                 type="button"
                                 onClick={() => toggleSubmenu('product')}
-                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${['products', 'product_add', 'categories'].includes(activePage)
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${['products', 'product_add', 'categories', 'variants'].includes(activePage) || window.location.pathname.includes('/admin/variants')
                                     ? 'bg-[#e0f2fe] text-[#0284c7]'
                                     : 'text-[#475569] hover:bg-[#f1f5f9]'
                                     }`}
@@ -369,6 +369,15 @@ export default function AdminLayout({
                                             }`}
                                     >
                                         Categories & Subs
+                                    </Link>
+                                    <Link
+                                        href="/admin/variants"
+                                        className={`block px-3 py-2 rounded-lg text-[12px] font-semibold transition-all ${activePage === 'variants' || window.location.pathname.includes('/admin/variants')
+                                            ? 'bg-[#0284c7] text-white font-bold'
+                                            : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#0f172a]'
+                                            }`}
+                                    >
+                                        Product Variants
                                     </Link>
                                 </div>
                             )}

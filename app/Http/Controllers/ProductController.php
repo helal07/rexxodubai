@@ -96,7 +96,7 @@ class ProductController extends Controller
         $product = Cache::remember($cacheKey, 60, function () use ($slug) {
             return Product::where('slug', $slug)
                 ->orWhere('id', $slug)
-                ->with(['category', 'images'])
+                ->with(['category', 'images', 'variants'])
                 ->firstOrFail();
         });
 

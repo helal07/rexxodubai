@@ -11,7 +11,8 @@ import {
     Truck,
     Clock,
     XCircle,
-    Filter
+    Filter,
+    PenSquare
 } from 'lucide-react';
 
 interface OrderItem {
@@ -39,7 +40,7 @@ interface OrdersProps {
 export default function OrdersIndex({ orders = [] }: OrdersProps) {
     const [statusFilter, setStatusFilter] = useState('All');
     const [search, setSearch] = useState('');
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [dispatchingOrder, setDispatchingOrder] = useState<number | null>(null);
 
     const filteredOrders = orders.filter(o => {
         const matchesSearch = o.order_number.toLowerCase().includes(search.toLowerCase()) ||
@@ -53,8 +54,27 @@ export default function OrdersIndex({ orders = [] }: OrdersProps) {
         router.post(`/admin/orders/${id}/status`, { status });
     };
 
-    const handleDeleteOrder = (id: number, orderNum: string) => {
-        if (confirm(`Are you sure you want to delete Order #${orderNum}?`)) {
+    const handleDispatchCourier = (id: number, order_number: string) => {
+        if (!confirm(`Dispatch Order #${order_number} to courier?`)) return;
+        setDispatchingOrder(id);
+        
+        const provider = prompt("Enter courier provider (e.g., steadfast, pathao)", "steadfast");
+        if (!provider) {
+            setDispatchingOrder(null);
+            return;
+        }
+
+        router.post('/admin/courier/dispatch', {
+            order_id: id,
+            provider: provider,
+        }, {
+            preserveScroll: true,
+            onFinish: () => setDispatchingOrder(null),
+        });
+    };
+
+    const handleDeleteOrder = (id: number, order_number: string) => {
+        if (confirm(`Are you sure you want to delete Order #${order_number}?`)) {
             router.delete(`/admin/orders/${id}`);
         }
     };
@@ -151,13 +171,28 @@ export default function OrdersIndex({ orders = [] }: OrdersProps) {
                                             </select>
                                         </td>
                                         <td className="p-3.5 text-right space-x-1.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => setSelectedOrder(order)}
-                                                className="p-1.5 text-[#0284c7] hover:bg-[#e0f2fe] rounded-lg transition-colors"
-                                                title="Quick View Details"
+                                            <Link
+                                                href={`/admin/orders/${order.id}/invoice`}
+                                                className="p-1.5 text-[#0284c7] hover:bg-[#e0f2fe] rounded-lg transition-colors inline-block"
+                                                title="View Full Invoice"
                                             >
                                                 <Eye className="w-4 h-4" />
+                                            </Link>
+                                            <Link
+                                                href={`/admin/orders/${order.id}/edit`}
+                                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors inline-block"
+                                                title="Edit Order"
+                                            >
+                                                <PenSquare className="w-4 h-4" />
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDispatchCourier(order.id, order.order_number)}
+                                                disabled={dispatchingOrder === order.id}
+                                                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 inline-block"
+                                                title="Dispatch to Courier"
+                                            >
+                                                <Truck className={`w-4 h-4 ${dispatchingOrder === order.id ? 'animate-pulse' : ''}`} />
                                             </button>
                                             <button
                                                 type="button"
@@ -182,49 +217,7 @@ export default function OrdersIndex({ orders = [] }: OrdersProps) {
                 </div>
             </div>
 
-            {/* ORDER DETAILS MODAL */}
-            {selectedOrder && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl">
-                        <div className="flex items-center justify-between border-b pb-3">
-                            <h3 className="text-base font-serif font-bold text-[#0f172a]">
-                                Order #{selectedOrder.order_number} Details
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedOrder(null)}
-                                className="text-slate-400 hover:text-slate-600 font-bold"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        <div className="space-y-2 text-[13px]">
-                            <div><strong>Customer:</strong> {selectedOrder.customer_name} ({selectedOrder.customer_phone})</div>
-                            <div><strong>Status:</strong> {selectedOrder.status}</div>
-                            <div><strong>Total:</strong> ৳ {Number(selectedOrder.total_amount).toFixed(2)}</div>
-                            <div className="border-t pt-2 mt-2">
-                                <strong className="block mb-1">Purchased Items:</strong>
-                                <ul className="list-disc list-inside text-xs text-slate-700 space-y-1">
-                                    {selectedOrder.items?.map(item => (
-                                        <li key={item.id}>
-                                            {item.product_name} x {item.quantity} (৳{Number(item.unit_price).toFixed(2)} ea)
-                                        </li>
-                                    )) || <li>No items breakdown available</li>}
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="text-right pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedOrder(null)}
-                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
         </AdminLayout>
     );
 }

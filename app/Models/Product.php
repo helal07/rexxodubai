@@ -56,4 +56,11 @@ class Product extends Model
     {
         return $this->belongsToMany(Campaign::class, 'campaign_product');
     }
+
+    public function variants()
+    {
+        return $this->belongsToMany(Variant::class, 'product_variant')
+                    ->withPivot('id', 'price', 'stock')
+                    ->withTimestamps();
+    }
 }

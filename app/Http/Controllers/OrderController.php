@@ -36,8 +36,16 @@ class OrderController extends Controller
         $orderItemsData = [];
 
         foreach ($validated['items'] as $item) {
-            $product   = Product::findOrFail($item['product_id']);
+            $product   = Product::with('variants')->findOrFail($item['product_id']);
             $unitPrice = $product->price;
+
+            if (isset($item['size'])) {
+                $selectedVariant = $product->variants->firstWhere('name', $item['size']);
+                if ($selectedVariant) {
+                    $unitPrice = $selectedVariant->pivot->price ?? $selectedVariant->price;
+                }
+            }
+
             $lineTotal = $unitPrice * $item['quantity'];
             $totalAmount += $lineTotal;
 

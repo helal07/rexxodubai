@@ -162,9 +162,11 @@ class AdminWebController extends Controller
     {
         $product = new Product();
         $categories = Category::all();
+        $variants = \App\Models\Variant::orderBy('name')->get();
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
+            'variants' => $variants,
         ]);
     }
 
@@ -305,12 +307,14 @@ class AdminWebController extends Controller
 
     public function editProduct($id)
     {
-        $product = Product::with(['category', 'images'])->findOrFail($id);
+        $product = Product::with(['category', 'images', 'variants'])->findOrFail($id);
         $categories = Category::all();
+        $variants = \App\Models\Variant::orderBy('name')->get();
         $siteSettings = Setting::pluck('value', 'key')->all();
         return \Inertia\Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
+            'variants' => $variants,
             'siteSettings' => $siteSettings
         ]);
     }
@@ -384,6 +388,21 @@ class AdminWebController extends Controller
         $validated['is_new_arrival'] = $request->has('is_new_arrival');
 
         $product = Product::create($validated);
+        
+        // Sync Variants
+        if ($request->has('variants') && is_array($request->variants)) {
+            $syncData = [];
+            foreach ($request->variants as $variant) {
+                if (!empty($variant['variant_id'])) {
+                    $syncData[$variant['variant_id']] = [
+                        'price' => $variant['price'] ?? $product->price,
+                        'stock' => $variant['stock'] ?? 0,
+                    ];
+                }
+            }
+            $product->variants()->sync($syncData);
+        }
+
         Cache::flush();
 
         if ($request->wantsJson()) {
@@ -469,6 +488,24 @@ class AdminWebController extends Controller
         $validated['is_new_arrival'] = $request->has('is_new_arrival');
 
         $product->update($validated);
+        
+        // Sync Variants
+        if ($request->has('variants') && is_array($request->variants)) {
+            $syncData = [];
+            foreach ($request->variants as $variant) {
+                if (!empty($variant['variant_id'])) {
+                    $syncData[$variant['variant_id']] = [
+                        'price' => $variant['price'] ?? $product->price,
+                        'stock' => $variant['stock'] ?? 0,
+                    ];
+                }
+            }
+            $product->variants()->sync($syncData);
+        } else if ($request->has('variants') && empty($request->variants)) {
+            // Clear variants if empty array was sent
+            $product->variants()->sync([]);
+        }
+
         Cache::flush();
 
         return redirect('/admin/products')->with('success', 'Product updated successfully in database!');
@@ -531,6 +568,103 @@ class AdminWebController extends Controller
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders->items(),
         ]);
+    }
+    public function invoiceOrder($id)
+    {
+        $order = Order::with('items')->findOrFail($id);
+        $siteSettings = Setting::pluck('value', 'key')->all();
+        return Inertia::render('Admin/Orders/Invoice', [
+            'order' => $order,
+            'siteSettings' => $siteSettings,
+        ]);
+    }
+
+    public function editOrder($id)
+    {
+        $order = Order::with('items')->findOrFail($id);
+        $products = Product::with(['variants', 'images'])->orderBy('name')->get();
+        return Inertia::render('Admin/Orders/Edit', [
+            'order' => $order,
+            'products' => $products,
+        ]);
+    }
+
+    public function updateOrder(Request $request, $id)
+    {
+        $order = Order::with('items')->findOrFail($id);
+
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|max:50',
+            'customer_email' => 'nullable|email|max:255',
+            'shipping_address' => 'required|string',
+            'city' => 'nullable|string|max:100',
+            'payment_method' => 'required|string',
+            'status' => 'required|string|in:pending,processing,completed,cancelled',
+            'payment_status' => 'required|string|in:unpaid,paid,refunded',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.size' => 'nullable|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($order, $validated) {
+            // Restore previous stock
+            foreach ($order->items as $item) {
+                $product = Product::find($item->product_id);
+                if ($product && $order->status !== 'cancelled') {
+                    $product->increment('stock', $item->quantity);
+                }
+            }
+
+            // Update order info
+            $order->update([
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'],
+                'customer_email' => $validated['customer_email'],
+                'shipping_address' => $validated['shipping_address'],
+                'city' => $validated['city'] ?? $order->city,
+                'payment_method' => $validated['payment_method'],
+                'status' => $validated['status'],
+                'payment_status' => $validated['payment_status'],
+                'shipping_cost' => $validated['shipping_cost'] ?? 0,
+                'discount_amount' => $validated['discount_amount'] ?? 0,
+            ]);
+
+            // Clear old items and insert new ones
+            $order->items()->delete();
+
+            $subtotal = 0;
+            foreach ($validated['items'] as $itemData) {
+                $product = Product::find($itemData['product_id']);
+                $lineTotal = $itemData['unit_price'] * $itemData['quantity'];
+                $subtotal += $lineTotal;
+
+                $order->items()->create([
+                    'product_id' => $itemData['product_id'],
+                    'product_name' => $product->name,
+                    'size' => $itemData['size'] ?? '100ml',
+                    'unit_price' => $itemData['unit_price'],
+                    'quantity' => $itemData['quantity'],
+                    'total_price' => $lineTotal,
+                ]);
+
+                // Deduct new stock if not cancelled
+                if ($order->status !== 'cancelled' && $product) {
+                    $product->decrement('stock', $itemData['quantity']);
+                }
+            }
+
+            // Calculate new total
+            $order->subtotal = $subtotal;
+            $order->total_amount = $subtotal + $order->shipping_cost - $order->discount_amount;
+            $order->save();
+        });
+
+        return redirect('/admin/orders')->with('success', "Order #{$order->order_number} updated successfully.");
     }
 
     public function updateOrderStatus(Request $request, $id)
