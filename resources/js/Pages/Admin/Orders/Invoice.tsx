@@ -143,11 +143,11 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Phone className="w-4 h-4 shrink-0" />
-                                    <span>{siteSettings['phone'] || siteSettings['contactPhone'] || siteSettings['site_phone'] || '+880 1234 567890'}</span>
+                                    <span>{siteSettings['contactPhone'] || siteSettings['phone'] || siteSettings['site_phone'] || '+880 1234 567890'}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Mail className="w-4 h-4 shrink-0" />
-                                    <span>{siteSettings['email'] || siteSettings['contactEmail'] || siteSettings['site_email'] || 'contact@store.com'}</span>
+                                    <span>{siteSettings['contactEmail'] || siteSettings['email'] || siteSettings['site_email'] || 'contact@store.com'}</span>
                                 </div>
                             </div>
                         </div>
@@ -241,7 +241,7 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                     {/* Footer */}
                     <div className="mt-20 pt-8 border-t border-slate-200 text-center text-[12px] text-slate-500">
                         <p className="font-bold text-slate-700 mb-1">Thank you for your business!</p>
-                        <p>If you have any questions about this invoice, please contact us at {siteSettings['phone'] || siteSettings['contactPhone'] || siteSettings['site_phone'] || 'our support line'}.</p>
+                        <p>If you have any questions about this invoice, please contact us at {siteSettings['contactPhone'] || siteSettings['phone'] || siteSettings['site_phone'] || 'our support line'}.</p>
                     </div>
                 </div>
             </div>
