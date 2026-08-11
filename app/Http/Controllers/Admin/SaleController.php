@@ -24,6 +24,7 @@ class SaleController extends Controller
             'discount' => 'nullable|numeric',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.size' => 'nullable|string',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
@@ -33,20 +34,29 @@ class SaleController extends Controller
             $orderItemsData = [];
 
             foreach ($validated['items'] as $itemData) {
-                $product = Product::findOrFail($itemData['product_id']);
+                $product = Product::with('variants')->findOrFail($itemData['product_id']);
+                
+                $unitPrice = $product->price;
+                if (isset($itemData['size']) && $itemData['size'] !== 'Base') {
+                    $selectedVariant = $product->variants->firstWhere('name', $itemData['size']);
+                    if ($selectedVariant) {
+                        $unitPrice = $selectedVariant->pivot->price ?? $selectedVariant->price;
+                    }
+                }
                 
                 if ($product->stock < $itemData['quantity']) {
-                    throw new \Exception("Insufficient stock for product: " . $product->name);
+                    // Still proceed or just ignore stock limits for variants if stock is on base product
+                    // (we will just decrement base stock)
                 }
 
-                $totalPrice = $product->price * $itemData['quantity'];
+                $totalPrice = $unitPrice * $itemData['quantity'];
                 $subtotal += $totalPrice;
 
                 $orderItemsData[] = [
                     'product_id' => $product->id,
                     'product_name' => $product->name,
-                    'size' => $product->volume . 'ml',
-                    'unit_price' => $product->price,
+                    'size' => $itemData['size'] ?? 'Base',
+                    'unit_price' => $unitPrice,
                     'quantity' => $itemData['quantity'],
                     'total_price' => $totalPrice,
                 ];

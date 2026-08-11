@@ -19,11 +19,19 @@ import {
     X
 } from 'lucide-react';
 
+interface ProductVariant {
+    id: number;
+    name: string;
+    price: string;
+    stock: number;
+}
+
 interface Product {
     id: number;
     name: string;
     price: number;
     stock: number;
+    variants?: ProductVariant[];
 }
 
 interface Customer {
@@ -36,6 +44,7 @@ interface Customer {
 interface CartItem {
     product_id: number;
     name: string;
+    size: string;
     price: number;
     quantity: number;
 }
@@ -60,7 +69,8 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
 
     // Step 2: Cart State
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [selectedProductVal, setSelectedProductVal] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [orderNotes, setOrderNotes] = useState('');
 
     // Step 3: Payment & Logistics State
@@ -129,30 +139,36 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
         }
     };
 
-    const handleAddProductToCart = () => {
-        if (!selectedProductVal) return;
-        const [pName, pPriceStr, pIdStr] = selectedProductVal.split('|');
-        const pId = Number(pIdStr);
-        const price = Number(pPriceStr);
+    const handleAddProductToCart = (pId: number, vName: string, price: number) => {
+        const product = products.find(p => p.id === pId);
 
-        setCart(prev => {
-            const existingIndex = prev.findIndex(item => item.product_id === pId);
-            if (existingIndex > -1) {
-                const updated = [...prev];
-                updated[existingIndex].quantity += 1;
-                return updated;
-            } else {
-                return [...prev, { product_id: pId, name: pName, price, quantity: 1 }];
-            }
-        });
-        setSelectedProductVal('');
+        if (product) {
+            setCart(prev => {
+                const existingIndex = prev.findIndex(item => item.product_id === pId && item.size === vName);
+                if (existingIndex > -1) {
+                    const updated = [...prev];
+                    updated[existingIndex].quantity += 1;
+                    return updated;
+                } else {
+                    return [...prev, { 
+                        product_id: pId, 
+                        name: product.name, 
+                        size: vName, 
+                        price: price, 
+                        quantity: 1
+                    }];
+                }
+            });
+        }
+        setSearchQuery('');
+        setIsDropdownOpen(false);
     };
 
-    const updateQuantity = (product_id: number, delta: number) => {
+    const updateQuantity = (product_id: number, size: string, delta: number) => {
         setCart(prev =>
             prev
                 .map(item => {
-                    if (item.product_id === product_id) {
+                    if (item.product_id === product_id && item.size === size) {
                         const newQty = item.quantity + delta;
                         return newQty > 0 ? { ...item, quantity: newQty } : null;
                     }
@@ -162,8 +178,8 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
         );
     };
 
-    const removeCartItem = (product_id: number) => {
-        setCart(prev => prev.filter(item => item.product_id !== product_id));
+    const removeCartItem = (product_id: number, size: string) => {
+        setCart(prev => prev.filter(item => !(item.product_id === product_id && item.size === size)));
     };
 
     const resetSaleForm = () => {
@@ -197,6 +213,7 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
                 discount: discount,
                 items: cart.map(item => ({
                     product_id: item.product_id,
+                    size: item.size,
                     quantity: item.quantity,
                 })),
             };
@@ -351,31 +368,49 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
                         </div>
 
                         {/* SELECTOR DROPDOWN */}
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-bold uppercase text-slate-600 block">
-                                Choose Product From Database
-                            </label>
-                            <div className="flex items-center gap-2">
-                                <select
-                                    value={selectedProductVal}
-                                    onChange={e => setSelectedProductVal(e.target.value)}
-                                    className="flex-1 border border-slate-300 p-2.5 rounded-xl text-[13px] font-semibold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-white text-slate-800"
-                                >
-                                    <option value="">+ Click to Select Product...</option>
-                                    {products.map(prod => (
-                                        <option key={prod.id} value={`${prod.name}|${prod.price}|${prod.id}`}>
-                                            {prod.name} — ৳{Number(prod.price).toLocaleString()} BDT (Stock: {prod.stock ?? 50})
-                                        </option>
-                                    ))}
-                                </select>
-                                <button
-                                    type="button"
-                                    onClick={handleAddProductToCart}
-                                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[12px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-xs"
-                                >
-                                    <Plus className="w-4 h-4" /> Add
-                                </button>
-                            </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="-- Search Product / Variant --"
+                                value={searchQuery}
+                                onChange={e => {
+                                    setSearchQuery(e.target.value);
+                                    setIsDropdownOpen(true);
+                                }}
+                                onFocus={() => setIsDropdownOpen(true)}
+                                className="w-full border border-slate-300 p-2.5 rounded-xl text-[13px] font-medium focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-white text-slate-800"
+                            />
+                            {isDropdownOpen && (
+                                <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                    {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.variants?.some(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))).length > 0 ? (
+                                        products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.variants?.some(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))).map(p => (
+                                            <div key={p.id}>
+                                                <div 
+                                                    className="px-4 py-2 bg-slate-50 text-[12px] font-bold text-slate-700 cursor-pointer hover:bg-emerald-50 hover:text-emerald-700"
+                                                    onClick={() => handleAddProductToCart(p.id, 'Base', Number(p.price))}
+                                                >
+                                                    {p.name} (Base) - ৳{p.price}
+                                                </div>
+                                                {p.variants?.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(v => (
+                                                    <div 
+                                                        key={v.id} 
+                                                        className="px-4 py-2 pl-8 text-[12px] text-slate-600 cursor-pointer hover:bg-emerald-50 hover:text-emerald-700 border-t border-slate-100"
+                                                        onClick={() => handleAddProductToCart(p.id, v.name, Number(v.price || p.price))}
+                                                    >
+                                                        {p.name} ({v.name}) - ৳{v.price || p.price}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-3 text-[12px] text-slate-500 text-center">No products found.</div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {isDropdownOpen && (
+                                <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)}></div>
+                            )}
                         </div>
 
                         {/* CART ITEMS LIST */}
@@ -387,12 +422,15 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
                                 {cart.length > 0 ? (
                                     cart.map(item => (
                                         <div
-                                            key={item.product_id}
+                                            key={`${item.product_id}-${item.size}`}
                                             className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl"
                                         >
                                             <div>
-                                                <div className="font-bold text-xs text-[#0f172a]">{item.name}</div>
-                                                <div className="text-[11px] font-mono text-emerald-700 font-semibold">
+                                                <div className="font-bold text-[13px] text-slate-800">{item.name}</div>
+                                                {item.size && item.size !== 'Base' && (
+                                                    <div className="text-[11px] text-slate-500 uppercase tracking-widest">{item.size}</div>
+                                                )}
+                                                <div className="text-[11px] font-mono text-emerald-700 font-semibold mt-0.5">
                                                     ৳{item.price.toFixed(2)} x {item.quantity} = ৳{(item.price * item.quantity).toFixed(2)}
                                                 </div>
                                             </div>
@@ -401,8 +439,8 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
                                                 <div className="flex items-center gap-1 bg-white border border-slate-300 rounded-lg p-1">
                                                     <button
                                                         type="button"
-                                                        onClick={() => updateQuantity(item.product_id, -1)}
-                                                        className="p-1 hover:bg-slate-100 rounded text-slate-600"
+                                                        onClick={() => updateQuantity(item.product_id, item.size, -1)}
+                                                        className="p-1 hover:bg-slate-100 rounded text-slate-600 cursor-pointer"
                                                     >
                                                         <Minus className="w-3.5 h-3.5" />
                                                     </button>
@@ -411,8 +449,8 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
                                                     </span>
                                                     <button
                                                         type="button"
-                                                        onClick={() => updateQuantity(item.product_id, 1)}
-                                                        className="p-1 hover:bg-slate-100 rounded text-slate-600"
+                                                        onClick={() => updateQuantity(item.product_id, item.size, 1)}
+                                                        className="p-1 hover:bg-slate-100 rounded text-slate-600 cursor-pointer"
                                                     >
                                                         <Plus className="w-3.5 h-3.5" />
                                                     </button>
@@ -420,8 +458,8 @@ export default function CreateOrder({ products = [], customers = [] }: CreateOrd
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => removeCartItem(item.product_id)}
-                                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                                    onClick={() => removeCartItem(item.product_id, item.size)}
+                                                    className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                                                     title="Remove item"
                                                 >
                                                     <Trash2 className="w-4 h-4" />

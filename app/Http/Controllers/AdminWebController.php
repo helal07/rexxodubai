@@ -523,7 +523,7 @@ class AdminWebController extends Controller
     public function createOrder()
     {
         $customers = Customer::orderBy('name')->get();
-        $products = Product::with(['category', 'images'])
+        $products = Product::with(['category', 'images', 'variants'])
             ->orderBy('created_at', 'desc')
             ->get();
         return Inertia::render('Admin/Orders/Create', [
