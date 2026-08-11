@@ -66,10 +66,16 @@ export default function CmsIndex({ cmsData = {}, pagesData = [], menuItems = [],
             contact_phone: '',
             contact_address: '',
             facebook_url: '',
+            facebook_enabled: '1',
             instagram_url: '',
+            instagram_enabled: '1',
             twitter_url: '',
+            twitter_enabled: '1',
             tiktok_url: '',
+            tiktok_enabled: '1',
             youtube_url: '',
+            youtube_enabled: '1',
+            whatsapp_enabled: '1',
             footerText: 'Fine Fragrance & Luxury Extraits',
         }
     };
@@ -131,6 +137,16 @@ export default function CmsIndex({ cmsData = {}, pagesData = [], menuItems = [],
                             className="text-[12px] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#e0f2fe] file:text-[#0284c7] hover:file:bg-[#bae6fd]"
                         />
                     </div>
+                ) : type === 'checkbox' ? (
+                    <label className="flex items-center gap-2 cursor-pointer mt-2">
+                        <input
+                            type="checkbox"
+                            checked={value !== '0' && value !== false}
+                            onChange={e => handleSectionChange(section, key, e.target.checked ? '1' : '0')}
+                            className="w-4 h-4 text-[#0284c7] border-slate-300 rounded focus:ring-[#0284c7]"
+                        />
+                        <span className="text-[12px] font-bold text-slate-500 uppercase">Enable</span>
+                    </label>
                 ) : (
                     <input
                         type={type}
@@ -247,11 +263,40 @@ export default function CmsIndex({ cmsData = {}, pagesData = [], menuItems = [],
                                 {renderInput('footer', 'contact_email', 'Contact Email', 'email')}
                                 {renderInput('footer', 'contact_phone', 'Contact Phone / WhatsApp')}
                                 {renderInput('footer', 'contact_address', 'Contact Address', 'textarea')}
-                                {renderInput('footer', 'facebook_url', 'Facebook URL')}
-                                {renderInput('footer', 'instagram_url', 'Instagram URL')}
-                                {renderInput('footer', 'twitter_url', 'X (Twitter) URL')}
-                                {renderInput('footer', 'tiktok_url', 'TikTok URL')}
-                                {renderInput('footer', 'youtube_url', 'YouTube URL')}
+                                
+                                <div className="p-4 bg-[#f8fafc] rounded-xl border border-[#e2e8f0] space-y-4">
+                                    <h4 className="font-bold text-[#0f172a] text-[13px] uppercase tracking-wider mb-2">Social Media Links</h4>
+                                    
+                                    <div className="flex gap-4 items-end">
+                                        <div className="flex-1">{renderInput('footer', 'facebook_url', 'Facebook URL')}</div>
+                                        <div className="pb-2">{renderInput('footer', 'facebook_enabled', '', 'checkbox')}</div>
+                                    </div>
+                                    
+                                    <div className="flex gap-4 items-end">
+                                        <div className="flex-1">{renderInput('footer', 'instagram_url', 'Instagram URL')}</div>
+                                        <div className="pb-2">{renderInput('footer', 'instagram_enabled', '', 'checkbox')}</div>
+                                    </div>
+                                    
+                                    <div className="flex gap-4 items-end">
+                                        <div className="flex-1">{renderInput('footer', 'twitter_url', 'X (Twitter) URL')}</div>
+                                        <div className="pb-2">{renderInput('footer', 'twitter_enabled', '', 'checkbox')}</div>
+                                    </div>
+                                    
+                                    <div className="flex gap-4 items-end">
+                                        <div className="flex-1">{renderInput('footer', 'tiktok_url', 'TikTok URL')}</div>
+                                        <div className="pb-2">{renderInput('footer', 'tiktok_enabled', '', 'checkbox')}</div>
+                                    </div>
+                                    
+                                    <div className="flex gap-4 items-end">
+                                        <div className="flex-1">{renderInput('footer', 'youtube_url', 'YouTube URL')}</div>
+                                        <div className="pb-2">{renderInput('footer', 'youtube_enabled', '', 'checkbox')}</div>
+                                    </div>
+                                    
+                                    <div className="flex gap-4 items-end">
+                                        <div className="flex-1">{renderInput('footer', 'whatsapp_enabled', 'Show WhatsApp icon in footer?', 'checkbox')}</div>
+                                    </div>
+                                </div>
+
                                 {renderInput('footer', 'footerText', 'Footer Copyright Text')}
                             </>
                         )}
