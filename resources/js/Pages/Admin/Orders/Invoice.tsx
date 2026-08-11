@@ -41,6 +41,9 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
         window.print();
     };
 
+    // Force Vite HMR to pick up the latest changes
+    console.log("Invoice loaded with settings:", siteSettings);
+
     const handleWhatsApp = () => {
         // format phone for whatsapp (assume BD +880 if 11 digits starting with 01)
         let phone = order.customer_phone.replace(/\D/g, '');
@@ -238,7 +241,7 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                     {/* Footer */}
                     <div className="mt-20 pt-8 border-t border-slate-200 text-center text-[12px] text-slate-500">
                         <p className="font-bold text-slate-700 mb-1">Thank you for your business!</p>
-                        <p>If you have any questions about this invoice, please contact us at {siteSettings['site_phone'] || 'our support line'}.</p>
+                        <p>If you have any questions about this invoice, please contact us at {siteSettings['phone'] || siteSettings['contactPhone'] || siteSettings['site_phone'] || 'our support line'}.</p>
                     </div>
                 </div>
             </div>
