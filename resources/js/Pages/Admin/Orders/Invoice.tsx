@@ -53,7 +53,7 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
         window.open(waLink, '_blank');
     };
 
-    const logoUrl = siteSettings['site_logo'] ? (siteSettings['site_logo'].startsWith('http') ? siteSettings['site_logo'] : `/storage/${siteSettings['site_logo']}`) : null;
+    const logoUrl = siteSettings['site_logo'] || siteSettings['logo_url'] || null;
 
     return (
         <AdminLayout activePage="orders">
@@ -130,21 +130,21 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                             ) : (
                                 <div className="text-2xl font-serif font-bold text-slate-900 mb-4 flex items-center gap-2">
                                     <Building2 className="w-6 h-6 text-indigo-600" />
-                                    {siteSettings['site_name'] || 'Our Store'}
+                                    {siteSettings['site_name'] || siteSettings['siteName'] || 'Our Store'}
                                 </div>
                             )}
                             <div className="space-y-1 text-[13px] text-slate-500 max-w-xs">
                                 <div className="flex items-start gap-1.5">
                                     <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                                    <span>{siteSettings['site_address'] || '123 Business Avenue, City, Country'}</span>
+                                    <span>{siteSettings['address'] || siteSettings['site_address'] || '123 Business Avenue, City, Country'}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Phone className="w-4 h-4 shrink-0" />
-                                    <span>{siteSettings['site_phone'] || '+880 1234 567890'}</span>
+                                    <span>{siteSettings['phone'] || siteSettings['contactPhone'] || siteSettings['site_phone'] || '+880 1234 567890'}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                     <Mail className="w-4 h-4 shrink-0" />
-                                    <span>{siteSettings['site_email'] || 'contact@store.com'}</span>
+                                    <span>{siteSettings['email'] || siteSettings['contactEmail'] || siteSettings['site_email'] || 'contact@store.com'}</span>
                                 </div>
                             </div>
                         </div>
