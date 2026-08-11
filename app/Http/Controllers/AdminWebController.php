@@ -565,8 +565,14 @@ class AdminWebController extends Controller
         $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
         $siteSettings = Setting::pluck('value', 'key')->all();
 
+        $allCouriers = app(\App\Services\Courier\CourierService::class)->getCouriers();
+        $activeCouriers = array_values(array_filter($allCouriers, function($c) {
+            return ($c['status'] ?? '') === 'active';
+        }));
+
         return Inertia::render('Admin/Orders/Index', [
             'orders' => $orders->items(),
+            'activeCouriers' => $activeCouriers,
         ]);
     }
     public function invoiceOrder($id)

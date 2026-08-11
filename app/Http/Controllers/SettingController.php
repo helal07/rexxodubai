@@ -192,7 +192,7 @@ class SettingController extends Controller
 
         $allSettings = Setting::all()->pluck('value', 'key')->toArray();
 
-        if ($request->wantsJson() || $request->is('api/*')) {
+        if (!$request->header('X-Inertia') && ($request->wantsJson() || $request->is('api/*'))) {
             return response()->json([
                 'message' => 'Settings updated successfully',
                 'settings' => $allSettings,

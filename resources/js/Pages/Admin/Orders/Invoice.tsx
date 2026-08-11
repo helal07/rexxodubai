@@ -69,44 +69,50 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                         visibility: visible;
                     }
                     #invoice-print-area {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 100% !important;
                         background-color: white !important;
-                        padding: 20px !important;
+                        padding: 40px !important;
                         margin: 0 !important;
+                        box-shadow: none !important;
                     }
                     .no-print {
                         display: none !important;
+                    }
+                    /* Reset AdminLayout paddings for print */
+                    main, .admin-main-content {
+                        padding: 0 !important;
+                        margin: 0 !important;
                     }
                 }
             `}} />
 
             {/* ACTION BUTTONS (NO PRINT) */}
-            <div className="no-print bg-white/90 border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 sticky top-4 z-10 backdrop-blur-md">
+            <div className="no-print bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 sticky top-4 z-10">
                 <div>
                     <h2 className="text-[18px] font-serif font-bold text-[#0f172a]">
                         Invoice Details
                     </h2>
-                    <p className="text-[12px] text-slate-500">View, print, or share the invoice for Order #{order.order_number}</p>
+                    <p className="text-[13px] text-slate-500">View, print, or share the invoice for Order #{order.order_number}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin/orders"
-                        className="px-4 py-2 text-[13px] font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-2xs"
+                        className="px-4 py-2 text-[13px] font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors flex items-center gap-2"
                     >
                         <List className="w-4 h-4" /> All Orders
                     </Link>
                     <button
                         onClick={handleWhatsApp}
-                        className="px-4 py-2 text-[13px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors flex items-center gap-2 shadow-2xs"
+                        className="px-4 py-2 text-[13px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors flex items-center gap-2"
                     >
                         <MessageCircle className="w-4 h-4" /> WhatsApp
                     </button>
                     <button
                         onClick={handlePrint}
-                        className="px-4 py-2 text-[13px] font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-lg shadow-indigo-600/30"
+                        className="px-4 py-2 text-[13px] font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-md shadow-indigo-600/20"
                     >
                         <Printer className="w-4 h-4" /> Print Invoice
                     </button>
@@ -114,8 +120,8 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
             </div>
 
             {/* INVOICE PAPER AREA */}
-            <div className="flex justify-center mb-10">
-                <div id="invoice-print-area" className="bg-white w-full max-w-[210mm] min-h-[297mm] shadow-xl rounded-sm p-10 text-slate-800">
+            <div className="flex justify-center w-full mb-12">
+                <div id="invoice-print-area" className="bg-white w-full max-w-[210mm] shadow-sm border border-slate-200 rounded-xl p-8 md:p-12 text-slate-800 mx-auto">
                     {/* Header */}
                     <div className="flex justify-between items-start border-b-2 border-slate-100 pb-8 mb-8">
                         <div>

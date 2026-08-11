@@ -33,14 +33,23 @@ interface Order {
     items?: OrderItem[];
 }
 
-interface OrdersProps {
-    orders: Order[];
+interface Courier {
+    key: string;
+    name: string;
+    status: string;
 }
 
-export default function OrdersIndex({ orders = [] }: OrdersProps) {
+interface OrdersProps {
+    orders: Order[];
+    activeCouriers: Courier[];
+}
+
+export default function OrdersIndex({ orders = [], activeCouriers = [] }: OrdersProps) {
     const [statusFilter, setStatusFilter] = useState('All');
     const [search, setSearch] = useState('');
     const [dispatchingOrder, setDispatchingOrder] = useState<number | null>(null);
+    const [dispatchModalOrder, setDispatchModalOrder] = useState<{ id: number, order_number: string } | null>(null);
+    const [selectedCourier, setSelectedCourier] = useState('');
 
     const filteredOrders = orders.filter(o => {
         const matchesSearch = o.order_number.toLowerCase().includes(search.toLowerCase()) ||
@@ -54,22 +63,22 @@ export default function OrdersIndex({ orders = [] }: OrdersProps) {
         router.post(`/admin/orders/${id}/status`, { status });
     };
 
-    const handleDispatchCourier = (id: number, order_number: string) => {
-        if (!confirm(`Dispatch Order #${order_number} to courier?`)) return;
-        setDispatchingOrder(id);
-        
-        const provider = prompt("Enter courier provider (e.g., steadfast, pathao)", "steadfast");
-        if (!provider) {
-            setDispatchingOrder(null);
-            return;
-        }
+    const handleDispatchCourier = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!dispatchModalOrder || !selectedCourier) return;
 
+        setDispatchingOrder(dispatchModalOrder.id);
+        
         router.post('/admin/courier/dispatch', {
-            order_id: id,
-            provider: provider,
+            order_id: dispatchModalOrder.id,
+            provider: selectedCourier,
         }, {
             preserveScroll: true,
-            onFinish: () => setDispatchingOrder(null),
+            onFinish: () => {
+                setDispatchingOrder(null);
+                setDispatchModalOrder(null);
+                setSelectedCourier('');
+            },
         });
     };
 
@@ -187,7 +196,7 @@ export default function OrdersIndex({ orders = [] }: OrdersProps) {
                                             </Link>
                                             <button
                                                 type="button"
-                                                onClick={() => handleDispatchCourier(order.id, order.order_number)}
+                                                onClick={() => setDispatchModalOrder({ id: order.id, order_number: order.order_number })}
                                                 disabled={dispatchingOrder === order.id}
                                                 className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 inline-block"
                                                 title="Dispatch to Courier"
@@ -217,7 +226,61 @@ export default function OrdersIndex({ orders = [] }: OrdersProps) {
                 </div>
             </div>
 
-
+            {/* DISPATCH COURIER MODAL */}
+            {dispatchModalOrder && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+                    <form onSubmit={handleDispatchCourier} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+                        <div className="flex items-center justify-between border-b pb-3">
+                            <h3 className="text-base font-serif font-bold text-[#0f172a]">
+                                Dispatch Order #{dispatchModalOrder.order_number}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setDispatchModalOrder(null)}
+                                className="text-slate-400 hover:text-slate-600 font-bold"
+                            >
+                                <XCircle className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-4 py-2">
+                            <div>
+                                <label className="text-[12px] font-bold uppercase text-slate-500 block mb-1.5">
+                                    Select Courier Service
+                                </label>
+                                <select
+                                    required
+                                    value={selectedCourier}
+                                    onChange={(e) => setSelectedCourier(e.target.value)}
+                                    className="w-full border border-slate-300 p-2.5 rounded-xl text-[13px] font-medium focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none"
+                                >
+                                    <option value="" disabled>-- Choose Active Courier --</option>
+                                    {activeCouriers.map((c) => (
+                                        <option key={c.key} value={c.key}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-3 border-t">
+                            <button
+                                type="button"
+                                onClick={() => setDispatchModalOrder(null)}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={!selectedCourier || dispatchingOrder === dispatchModalOrder.id}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
+                            >
+                                <Truck className="w-3.5 h-3.5" /> Dispatch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
         </AdminLayout>
     );
 }
