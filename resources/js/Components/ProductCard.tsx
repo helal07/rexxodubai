@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
 import { Product } from '@/lib/api';
 import { useCart } from '@/Contexts/CartContext';
+import { usePage, Link } from '@inertiajs/react';
 import { ShoppingBag, Check, Plus } from 'lucide-react';
+import { useContext } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -15,8 +16,15 @@ export default function ProductCard({ product, variant = 'prada' }: ProductCardP
   const { addItem } = useCart();
   const [isHovered, setIsHovered] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  
+  const { siteSettings, apiSettings }: any = usePage().props;
+  const settings = siteSettings || apiSettings || {};
+  const currencySymbol = settings.currency || 'USD ($)';
+  // Extract just the symbol, e.g. "BDT (৳)" -> "৳", "USD ($)" -> "$"
+  const symbolMatch = currencySymbol.match(/\((.*?)\)/);
+  const symbol = symbolMatch ? symbolMatch[1] : (currencySymbol.split(' ')[0] || '$');
 
-  const priceFormatted = product.price ? `$${Number(product.price).toFixed(2)}` : '';
+  const priceFormatted = product.price ? `${symbol}${Number(product.price).toFixed(2)}` : '';
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();

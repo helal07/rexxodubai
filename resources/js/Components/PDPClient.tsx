@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { Product } from '@/lib/api';
 import { useCart } from '@/Contexts/CartContext';
+import { usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, ShieldCheck, Truck, RefreshCw, ShoppingBag, Zap, Check, Sparkles, MessageCircle } from 'lucide-react';
 import ScentTrail from './ScentTrail';
 
@@ -78,8 +79,14 @@ export default function PDPClient({ product }: PDPClientProps) {
     router.visit('/checkout');
   };
 
-  const formattedUnitPrice = currentPrice ? `৳${currentPrice.toFixed(2)}` : '৳0.00';
-  const totalPrice = currentPrice ? `৳${(currentPrice * quantity).toFixed(2)}` : '৳0.00';
+  const { siteSettings, apiSettings }: any = usePage().props;
+  const settings = siteSettings || apiSettings || {};
+  const currencySymbol = settings.currency || 'USD ($)';
+  const symbolMatch = currencySymbol.match(/\((.*?)\)/);
+  const symbol = symbolMatch ? symbolMatch[1] : (currencySymbol.split(' ')[0] || '$');
+
+  const formattedUnitPrice = currentPrice ? `${symbol}${currentPrice.toFixed(2)}` : `${symbol}0.00`;
+  const totalPrice = currentPrice ? `${symbol}${(currentPrice * quantity).toFixed(2)}` : `${symbol}0.00`;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">

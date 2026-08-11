@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePage } from '@inertiajs/react';
 import { useCart } from '@/Contexts/CartContext';
 import { Link } from '@inertiajs/react';
 import { 
@@ -117,6 +118,13 @@ interface PlacedOrder {
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
+  const { siteSettings, apiSettings }: any = usePage().props;
+  const settings = siteSettings || apiSettings || {};
+  const currencySymbol = settings.currency || 'USD ($)';
+  const symbolMatch = currencySymbol.match(/\((.*?)\)/);
+  const symbol = symbolMatch ? symbolMatch[1] : (currencySymbol.split(' ')[0] || '$');
+  const fullCurrency = currencySymbol;
+  
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -348,7 +356,7 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <span className="font-mono font-bold text-[#0A0A0A]">
-                      ${Number(item.total_price).toFixed(2)} USD
+                      {symbol}{Number(item.total_price).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -358,11 +366,11 @@ export default function CheckoutPage() {
               <div className="border-t-2 border-[#0A0A0A] pt-4 space-y-1.5 text-[13px]">
                 <div className="flex justify-between text-[#6E6B66]">
                   <span>Courier Delivery Charge</span>
-                  <span className="font-mono font-semibold text-[#0A0A0A]">৳{Number((completedOrder as any).shipping_cost ?? 0).toFixed(0)}</span>
+                  <span className="font-mono font-semibold text-[#0A0A0A]">{symbol}{Number((completedOrder as any).shipping_cost ?? 0).toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#0A0A0A]">
                   <span>TOTAL AMOUNT</span>
-                  <span className="text-[#B8712E] font-mono">৳{Number(completedOrder.total_amount).toFixed(2)}</span>
+                  <span className="text-[#B8712E] font-mono">{symbol}{Number(completedOrder.total_amount).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -384,7 +392,7 @@ export default function CheckoutPage() {
               </button>
 
               <a
-                href={`https://wa.me/?text=Hello%20ReXxo%20Bd,%20I%20have%20just%20placed%20order%20%23${completedOrder.order_number}%20for%20$${completedOrder.total_amount}%20USD.`}
+                href={`https://wa.me/?text=Hello%20ReXxo%20Bd,%20I%20have%20just%20placed%20order%20%23${completedOrder.order_number}%20for%20${symbol}${completedOrder.total_amount}.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3.5 text-[12px] uppercase font-bold tracking-[0.14em] transition-all flex items-center justify-center gap-2 shadow-sm"
@@ -665,20 +673,20 @@ export default function CheckoutPage() {
                           className="w-full border border-[#DEDBD4] p-3 text-[13px] bg-white focus:outline-none focus:border-[#0A0A0A] appearance-none pr-8 cursor-pointer"
                         >
                           <option value="" disabled>— Select District —</option>
-                          <optgroup label="Inside Dhaka (৳60)">
+                          <optgroup label={`Inside Dhaka (${symbol}60)`}>
                             {districts.filter(d => d.zone === 'inside_dhaka').map(d => (
-                              <option key={d.name} value={d.name}>{d.name} — ৳{d.charge}</option>
+                              <option key={d.name} value={d.name}>{d.name} — {symbol}{d.charge}</option>
                             ))}
                           </optgroup>
-                          <optgroup label="Outside Dhaka (৳120)">
+                          <optgroup label={`Outside Dhaka (${symbol}120)`}>
                             {districts.filter(d => d.zone === 'outside_dhaka').map(d => (
-                              <option key={d.name} value={d.name}>{d.name} — ৳{d.charge}</option>
+                              <option key={d.name} value={d.name}>{d.name} — {symbol}{d.charge}</option>
                             ))}
                           </optgroup>
                           {districts.filter(d => d.zone === 'custom').length > 0 && (
                             <optgroup label="Custom Zone">
                               {districts.filter(d => d.zone === 'custom').map(d => (
-                                <option key={d.name} value={d.name}>{d.name} — ৳{d.charge}</option>
+                                <option key={d.name} value={d.name}>{d.name} — {symbol}{d.charge}</option>
                               ))}
                             </optgroup>
                           )}
@@ -690,7 +698,7 @@ export default function CheckoutPage() {
                       )}
                       {!isLoadingCharge && formData.city && (
                         <span className="text-[10px] text-emerald-700 mt-1 block font-semibold">
-                          ✓ Courier charge: ৳{courierCharge} ({courierZone === 'inside_dhaka' ? 'Inside Dhaka' : courierZone === 'outside_dhaka' ? 'Outside Dhaka' : 'Custom Zone'})
+                          ✓ Courier charge: {symbol}{courierCharge} ({courierZone === 'inside_dhaka' ? 'Inside Dhaka' : courierZone === 'outside_dhaka' ? 'Outside Dhaka' : 'Custom Zone'})
                         </span>
                       )}
                     </div>
@@ -876,7 +884,7 @@ export default function CheckoutPage() {
                       ) : (
                         <>
                           <Sparkles size={16} className="text-[#B8712E]" />
-                          <span>CONFIRM & PLACE ORDER — ৳{grandTotal.toFixed(2)}</span>
+                          <span>CONFIRM & PLACE ORDER — {symbol}{grandTotal.toFixed(2)}</span>
                         </>
                       )}
                     </button>
@@ -919,7 +927,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <span className="font-mono text-[14px] font-bold text-[#0A0A0A]">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      {symbol}{(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -929,7 +937,7 @@ export default function CheckoutPage() {
               <div className="border-t border-[#DEDBD4] pt-4 space-y-2 text-[13px]">
                 <div className="flex justify-between text-[#6E6B66]">
                   <span>Subtotal</span>
-                  <span className="font-mono text-[#0A0A0A]">৳{subtotal.toFixed(2)}</span>
+                  <span className="font-mono text-[#0A0A0A]">{symbol}{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-[#6E6B66]">
                   <span className="flex items-center gap-1">
@@ -944,7 +952,7 @@ export default function CheckoutPage() {
                   {isLoadingCharge ? (
                     <span className="text-[#8E8B85] font-mono animate-pulse">...</span>
                   ) : (
-                    <span className="font-mono font-bold text-[#0A0A0A]">৳{courierCharge.toFixed(0)}</span>
+                    <span className="font-mono font-bold text-[#0A0A0A]">{symbol}{courierCharge.toFixed(0)}</span>
                   )}
                 </div>
                 <div className="flex justify-between text-[#6E6B66]">
@@ -953,7 +961,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#0A0A0A] pt-3 border-t-2 border-[#0A0A0A]">
                   <span>TOTAL DUE</span>
-                  <span className="text-[#B8712E] font-mono">৳{grandTotal.toFixed(2)}</span>
+                  <span className="text-[#B8712E] font-mono">{symbol}{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 

@@ -14,6 +14,7 @@ export default function SettingsPage({ siteSettings = {} }: SettingsProps) {
         contactEmail: siteSettings.contactEmail || '',
         contactPhone: siteSettings.contactPhone || '',
         address: siteSettings.address || '',
+        currency: siteSettings.currency || 'USD ($)',
         logo_url: siteSettings.logo_url || '',
         favicon_url: siteSettings.favicon_url || '',
     });
@@ -69,6 +70,19 @@ export default function SettingsPage({ siteSettings = {} }: SettingsProps) {
                             value={data.tagline}
                             onChange={e => setData('tagline', e.target.value)}
                             className="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-medium outline-none focus:border-[#0284c7] bg-white shadow-2xs"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            Store Currency Symbol
+                        </label>
+                        <input
+                            type="text"
+                            value={data.currency}
+                            onChange={e => setData('currency', e.target.value)}
+                            placeholder="e.g. BDT (৳) or USD ($)"
+                            className="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-bold outline-none focus:border-[#0284c7] bg-white shadow-2xs"
                         />
                     </div>
 

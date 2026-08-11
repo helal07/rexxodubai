@@ -44,6 +44,10 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
     // Force Vite HMR to pick up the latest changes
     console.log("Invoice loaded with settings:", siteSettings);
 
+    const currencySymbol = siteSettings['currency'] || 'USD ($)';
+    const symbolMatch = currencySymbol.match(/\((.*?)\)/);
+    const symbol = symbolMatch ? symbolMatch[1] : (currencySymbol.split(' ')[0] || '$');
+
     const handleWhatsApp = () => {
         // format phone for whatsapp (assume BD +880 if 11 digits starting with 01)
         let phone = order.customer_phone.replace(/\D/g, '');
@@ -51,7 +55,7 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
             phone = '88' + phone;
         }
 
-        const message = `Hello ${order.customer_name},\n\nThis is an invoice for your recent order from *${siteSettings['site_name'] || 'Our Store'}*.\n\n*Order Number:* ${order.order_number}\n*Total Amount:* ৳${order.total_amount}\n*Payment Status:* ${order.payment_status.toUpperCase()}\n\nThank you for your purchase!`;
+        const message = `Hello ${order.customer_name},\n\nThis is an invoice for your recent order from *${siteSettings['site_name'] || 'Our Store'}*.\n\n*Order Number:* ${order.order_number}\n*Total Amount:* ${symbol}${order.total_amount}\n*Payment Status:* ${order.payment_status.toUpperCase()}\n\nThank you for your purchase!`;
         const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
         window.open(waLink, '_blank');
     };
@@ -201,10 +205,10 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                                             {item.quantity}
                                         </td>
                                         <td className="py-4 px-2 text-right text-[14px] text-slate-700 font-mono">
-                                            ৳{Number(item.unit_price).toFixed(2)}
+                                            {symbol}{Number(item.unit_price).toFixed(2)}
                                         </td>
                                         <td className="py-4 px-2 text-right text-[14px] font-bold text-slate-900 font-mono">
-                                            ৳{Number(item.total_price).toFixed(2)}
+                                            {symbol}{Number(item.total_price).toFixed(2)}
                                         </td>
                                     </tr>
                                 ))}
@@ -218,21 +222,21 @@ export default function Invoice({ order, siteSettings }: InvoiceProps) {
                             <div className="space-y-3 text-[14px]">
                                 <div className="flex justify-between text-slate-600 px-2">
                                     <span>Subtotal</span>
-                                    <span className="font-mono">৳{Number(order.subtotal).toFixed(2)}</span>
+                                    <span className="font-mono">{symbol}{Number(order.subtotal).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 px-2">
                                     <span>Shipping Cost</span>
-                                    <span className="font-mono">৳{Number(order.shipping_cost).toFixed(2)}</span>
+                                    <span className="font-mono">{symbol}{Number(order.shipping_cost).toFixed(2)}</span>
                                 </div>
                                 {Number(order.discount_amount) > 0 && (
                                     <div className="flex justify-between text-rose-600 px-2">
                                         <span>Discount</span>
-                                        <span className="font-mono">-৳{Number(order.discount_amount).toFixed(2)}</span>
+                                        <span className="font-mono">-{symbol}{Number(order.discount_amount).toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center text-[18px] font-bold text-indigo-700 border-t-2 border-slate-800 pt-3 px-2 mt-2">
                                     <span>Grand Total</span>
-                                    <span className="font-mono">৳{Number(order.total_amount).toFixed(2)}</span>
+                                    <span className="font-mono">{symbol}{Number(order.total_amount).toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>

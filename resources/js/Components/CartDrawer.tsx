@@ -4,9 +4,17 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Lock } from 'lucide-react';
 import { useCart } from '@/Contexts/CartContext';
+import { usePage } from '@inertiajs/react';
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, totalCount } = useCart();
+  
+  const { siteSettings, apiSettings }: any = usePage().props;
+  const settings = siteSettings || apiSettings || {};
+  const currencySymbol = settings.currency || 'USD ($)';
+  const symbolMatch = currencySymbol.match(/\((.*?)\)/);
+  const symbol = symbolMatch ? symbolMatch[1] : (currencySymbol.split(' ')[0] || '$');
+  const fullCurrency = currencySymbol;
   const freeShippingThreshold = 200;
   const progressPercent = Math.min(100, (subtotal / freeShippingThreshold) * 100);
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
@@ -49,7 +57,7 @@ export default function CartDrawer() {
               {subtotal >= freeShippingThreshold ? (
                 <span className="text-[#B8712E] font-bold">COMPLIMENTARY EXPRESS SHIPPING UNLOCKED</span>
               ) : (
-                <span>ADD <strong className="text-[#B8712E]">${remainingForFreeShipping.toFixed(2)} USD</strong> FOR FREE SHIPPING</span>
+                <span>ADD <strong className="text-[#B8712E]">{symbol}{remainingForFreeShipping.toFixed(2)} {fullCurrency}</strong> FOR FREE SHIPPING</span>
               )}
               <span className="text-[10px] text-white/60 font-mono">{Math.round(progressPercent)}%</span>
             </div>
@@ -125,7 +133,7 @@ export default function CartDrawer() {
                       </div>
 
                       <span className="text-[14px] font-bold text-[#0A0A0A] font-mono">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {symbol}{(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -140,7 +148,7 @@ export default function CartDrawer() {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[15px] font-bold text-[#0A0A0A]">
                   <span className="uppercase tracking-wider">SUBTOTAL</span>
-                  <span className="text-[#0A0A0A] font-mono">${subtotal.toFixed(2)} USD</span>
+                  <span className="text-[#0A0A0A] font-mono">{symbol}{subtotal.toFixed(2)} {fullCurrency}</span>
                 </div>
                 <div className="flex justify-between text-[11px] text-[#6E6B66]">
                   <span>Shipping</span>
