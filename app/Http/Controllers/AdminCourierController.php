@@ -105,10 +105,8 @@ class AdminCourierController extends Controller
         $dispatchedTodayCount = Order::whereDate('dispatched_at', today())->count();
         $totalDispatchedCount = Order::whereNotNull('dispatched_at')->count();
 
-        $siteSettings = Setting::pluck('value', 'key')->all();
-
         return \Inertia\Inertia::render('Admin/Courier', [
-            'courierSettings' => $siteSettings,
+            'couriers' => $couriers,
         ]);
     }
 

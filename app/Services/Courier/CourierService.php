@@ -24,7 +24,7 @@ class CourierService
                 'track_url_template' => 'https://steadfast.com.bd/track/{tracking_id}',
                 'zone' => 'Nationwide (All 64 Districts)',
                 'rate' => '70 - 130 ৳',
-                'status' => 'active',
+                'status' => 'inactive',
                 'mode' => 'live', // live | sandbox
                 'credentials' => [
                     'api_key' => '',
@@ -41,7 +41,7 @@ class CourierService
                 'track_url_template' => 'https://merchant.pathao.com/tracking?consignment_id={tracking_id}',
                 'zone' => 'Dhaka, Chittagong, Sylhet & Major Cities',
                 'rate' => '60 - 150 ৳',
-                'status' => 'active',
+                'status' => 'inactive',
                 'mode' => 'live',
                 'credentials' => [
                     'client_id' => '',
@@ -61,7 +61,7 @@ class CourierService
                 'track_url_template' => 'https://redx.com.bd/track?trackingId={tracking_id}',
                 'zone' => 'Nationwide Coverage',
                 'rate' => '70 - 120 ৳',
-                'status' => 'active',
+                'status' => 'inactive',
                 'mode' => 'live',
                 'credentials' => [
                     'api_token' => '',
@@ -78,7 +78,7 @@ class CourierService
                 'track_url_template' => 'https://sundarbancourierservice.com',
                 'zone' => 'Nationwide (Branch / Counter-to-Counter)',
                 'rate' => '50 - 200 ৳',
-                'status' => 'active',
+                'status' => 'inactive',
                 'mode' => 'manual',
                 'credentials' => [
                     'branch_code' => '',

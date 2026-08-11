@@ -83,18 +83,15 @@ export default function EditOrder({ order, products = [] }: EditOrderProps) {
         }))
     );
 
-    const [selectedProductVal, setSelectedProductVal] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     // Calculations
     const cartSubtotal = cart.reduce((acc, item) => acc + item.unit_price * item.quantity, 0);
     const totalPayable = Math.max(0, cartSubtotal + shippingCost - discount);
 
-    const handleAddProductToCart = () => {
-        if (!selectedProductVal) return;
-        const [pIdStr, vName, pPriceStr] = selectedProductVal.split('|');
-        const pId = Number(pIdStr);
-        const price = Number(pPriceStr);
+    const handleAddProductToCart = (pId: number, vName: string, price: number) => {
         const product = products.find(p => p.id === pId);
 
         if (product) {
@@ -116,7 +113,8 @@ export default function EditOrder({ order, products = [] }: EditOrderProps) {
                 }
             });
         }
-        setSelectedProductVal('');
+        setSearchQuery('');
+        setIsDropdownOpen(false);
     };
 
     const updateQuantity = (index: number, delta: number) => {
@@ -249,31 +247,50 @@ export default function EditOrder({ order, products = [] }: EditOrderProps) {
                             </h3>
                         </div>
 
-                        <div className="flex gap-2">
-                            <select
-                                value={selectedProductVal}
-                                onChange={e => setSelectedProductVal(e.target.value)}
-                                className="flex-1 border border-slate-300 p-2.5 rounded-xl text-[13px] font-medium focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-white text-slate-800"
-                            >
-                                <option value="">-- Add Product / Variant --</option>
-                                {products.map(p => (
-                                    <optgroup key={p.id} label={p.name}>
-                                        <option value={`${p.id}|Base|${p.price}`}>{p.name} (Base) - ৳{p.price}</option>
-                                        {p.variants?.map(v => (
-                                            <option key={v.id} value={`${p.id}|${v.name}|${v.price || p.price}`}>
-                                                {p.name} ({v.name}) - ৳{v.price || p.price}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
-                            <button
-                                type="button"
-                                onClick={handleAddProductToCart}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold transition-colors cursor-pointer flex items-center gap-2"
-                            >
-                                <Plus className="w-4 h-4" /> Add
-                            </button>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="-- Search Product / Variant --"
+                                value={searchQuery}
+                                onChange={e => {
+                                    setSearchQuery(e.target.value);
+                                    setIsDropdownOpen(true);
+                                }}
+                                onFocus={() => setIsDropdownOpen(true)}
+                                className="w-full border border-slate-300 p-2.5 rounded-xl text-[13px] font-medium focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-white text-slate-800"
+                            />
+                            {isDropdownOpen && (
+                                <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                    {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.variants?.some(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))).length > 0 ? (
+                                        products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.variants?.some(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()))).map(p => (
+                                            <div key={p.id}>
+                                                <div 
+                                                    className="px-4 py-2 bg-slate-50 text-[12px] font-bold text-slate-700 cursor-pointer hover:bg-emerald-50 hover:text-emerald-700"
+                                                    onClick={() => handleAddProductToCart(p.id, 'Base', Number(p.price))}
+                                                >
+                                                    {p.name} (Base) - ৳{p.price}
+                                                </div>
+                                                {p.variants?.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(v => (
+                                                    <div 
+                                                        key={v.id} 
+                                                        className="px-4 py-2 pl-8 text-[12px] text-slate-600 cursor-pointer hover:bg-emerald-50 hover:text-emerald-700 border-t border-slate-100"
+                                                        onClick={() => handleAddProductToCart(p.id, v.name, Number(v.price || p.price))}
+                                                    >
+                                                        {p.name} ({v.name}) - ৳{v.price || p.price}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-3 text-[12px] text-slate-500 text-center">No products found.</div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {/* Backdrop to close dropdown when clicking outside */}
+                            {isDropdownOpen && (
+                                <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)}></div>
+                            )}
                         </div>
 
                         {/* Cart List */}
