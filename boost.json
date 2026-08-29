@@ -1,0 +1,17 @@
+{
+    "agents": [
+        "antigravity"
+    ],
+    "cloud": false,
+    "packages": [
+        "spatie/laravel-permission"
+    ],
+    "skills": [
+        "infer-conventions",
+        "laravel-best-practices",
+        "testing-best-practices",
+        "inertia-react-development",
+        "tailwindcss-development",
+        "laravel-permission-development"
+    ]
+}

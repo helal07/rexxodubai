@@ -41,6 +41,7 @@ interface SharedProps {
             id: number;
             name: string;
             email: string;
+            avatar_url?: string;
             is_admin?: boolean;
             roles?: string[];
             permissions?: string[];
@@ -83,8 +84,20 @@ export default function AdminLayout({
     });
 
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const [themeMode, setThemeMode] = useState<string>('default');
     const [clearingCache, setClearingCache] = useState(false);
+
+    // Close profile menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (profileMenuOpen && !(e.target as Element).closest('#user-profile-menu')) {
+                setProfileMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [profileMenuOpen]);
 
     useEffect(() => {
         const saved = localStorage.getItem('admin_theme') || siteSettings.admin_theme || 'default';
@@ -236,18 +249,55 @@ export default function AdminLayout({
 
                     {/* User Profile / Logout */}
                     {currentUser && (
-                        <div className="flex items-center gap-2 pl-2 border-l border-[#e2e8f0]">
-                            <div className="w-8 h-8 rounded-full bg-[#0284c7]/10 text-[#0284c7] font-bold text-xs flex items-center justify-center border border-[#0284c7]/20">
-                                {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
-                            </div>
+                        <div className="relative pl-2 border-l border-[#e2e8f0]" id="user-profile-menu">
                             <button
                                 type="button"
-                                onClick={handleLogout}
-                                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                title="Sign Out"
+                                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                                className="flex items-center gap-2 hover:bg-[#f8fafc] p-1 rounded-xl transition-colors"
                             >
-                                <LogOut className="w-4 h-4" />
+                                {currentUser.avatar_url ? (
+                                    <img 
+                                        src={currentUser.avatar_url} 
+                                        alt={currentUser.name} 
+                                        className="w-8 h-8 rounded-full object-cover border border-[#e2e8f0]"
+                                    />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-[#0284c7]/10 text-[#0284c7] font-bold text-xs flex items-center justify-center border border-[#0284c7]/20">
+                                        {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
+                                    </div>
+                                )}
+                                <div className="hidden md:flex flex-col items-start text-left">
+                                    <span className="text-[12px] font-bold text-[#0f172a] leading-tight">{currentUser.name}</span>
+                                    <span className="text-[10px] text-[#64748b] leading-tight font-medium">Administrator</span>
+                                </div>
+                                <ChevronDown className={`w-3.5 h-3.5 text-[#64748b] transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} />
                             </button>
+
+                            {/* Dropdown Menu */}
+                            {profileMenuOpen && (
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-[#e2e8f0] overflow-hidden animate-fade-in z-50">
+                                    <div className="p-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+                                        <p className="text-[12px] font-bold text-[#0f172a] truncate">{currentUser.name}</p>
+                                        <p className="text-[10px] text-[#64748b] truncate">{currentUser.email}</p>
+                                    </div>
+                                    <div className="p-1.5">
+                                        <Link
+                                            href="/admin/profile"
+                                            onClick={() => setProfileMenuOpen(false)}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-semibold text-[#475569] hover:text-[#0284c7] hover:bg-[#e0f2fe] rounded-lg transition-colors"
+                                        >
+                                            <UserCheck className="w-4 h-4" /> My Profile
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={handleLogout}
+                                            className="flex items-center gap-2 w-full px-3 py-2 text-[12px] font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                        >
+                                            <LogOut className="w-4 h-4" /> Sign Out
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

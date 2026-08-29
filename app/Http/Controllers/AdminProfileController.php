@@ -29,8 +29,10 @@ class AdminProfileController extends Controller
     public function users()
     {
         $users = User::orderBy('created_at', 'desc')->get();
+        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
         return \Inertia\Inertia::render('Admin/Users', [
             'users' => $users,
+            'roles' => $roles,
         ]);
     }
 
@@ -190,7 +192,7 @@ class AdminProfileController extends Controller
             $avatarPath = '/uploads/avatars/' . $filename;
         }
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -200,6 +202,10 @@ class AdminProfileController extends Controller
             'avatar' => $avatarPath,
             'is_admin' => $request->has('is_admin') ? 1 : 1,
         ]);
+
+        if (isset($validated['role'])) {
+            $user->syncRoles([$validated['role']]);
+        }
 
         return redirect()->back()->with('success', 'New system user / administrator account created successfully!');
     }
@@ -218,7 +224,22 @@ class AdminProfileController extends Controller
             'phone' => 'nullable|string|max:30',
             'address' => 'nullable|string|max:500',
             'password' => 'nullable|min:6',
+            'avatar_file' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:4096',
         ]);
+
+        if ($request->hasFile('avatar_file')) {
+            $avatarDir = public_path('uploads/avatars');
+            if (!File::isDirectory($avatarDir)) {
+                File::makeDirectory($avatarDir, 0755, true, true);
+            }
+            if (!empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
+                @unlink(public_path(ltrim($user->avatar, '/')));
+            }
+            $file = $request->file('avatar_file');
+            $filename = 'avatar_user_' . time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
+            $file->move($avatarDir, $filename);
+            $user->avatar = '/uploads/avatars/' . $filename;
+        }
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
@@ -231,6 +252,10 @@ class AdminProfileController extends Controller
         }
 
         $user->save();
+
+        if (isset($validated['role'])) {
+            $user->syncRoles([$validated['role']]);
+        }
 
         return redirect()->back()->with('success', "User '{$user->name}' updated successfully.");
     }

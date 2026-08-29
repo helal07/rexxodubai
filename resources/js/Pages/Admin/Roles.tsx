@@ -7,7 +7,8 @@ import {
     Check,
     Lock,
     Users,
-    Key
+    Key,
+    Trash2
 } from 'lucide-react';
 
 interface Permission {
@@ -44,6 +45,18 @@ export default function RolesIndex({ roles = [], permissions = [] }: RolesProps)
         router.post(`/admin/roles/${roleId}/sync-permissions`, {
             permission: permissionName,
         });
+    };
+
+    const handleDeleteRole = (roleId: number) => {
+        if (confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+            router.delete(`/admin/api/roles/${roleId}`, {
+                onSuccess: () => {
+                    if (selectedRole?.id === roleId) {
+                        setSelectedRole(roles.find(r => r.id !== roleId) || null);
+                    }
+                }
+            });
+        }
     };
 
     return (
@@ -140,10 +153,17 @@ export default function RolesIndex({ roles = [], permissions = [] }: RolesProps)
                                         Configuring: {selectedRole.name}
                                     </h2>
                                 </div>
-                                {selectedRole.name === 'Super Admin' && (
+                                {selectedRole.name === 'Super Admin' ? (
                                     <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold uppercase flex items-center gap-1">
                                         <Lock className="w-3.5 h-3.5" /> Full Bypass Active
                                     </span>
+                                ) : (
+                                    <button
+                                        onClick={() => handleDeleteRole(selectedRole.id)}
+                                        className="px-3 py-1.5 bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" /> Delete Role
+                                    </button>
                                 )}
                             </div>
 

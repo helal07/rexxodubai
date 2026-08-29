@@ -52,7 +52,7 @@ class RoleController extends Controller
             $role->syncPermissions(Permission::whereIn('id', $request->permissions)->pluck('name')->toArray());
         }
 
-        return response()->json(['message' => 'Role created successfully!', 'role' => $role->load('permissions')]);
+        return redirect()->back()->with('success', 'Role created successfully!');
     }
 
     public function update(Request $request, $id)
@@ -60,7 +60,7 @@ class RoleController extends Controller
         $role = Role::findOrFail($id);
 
         if ($role->name === 'Super Admin') {
-            return response()->json(['message' => 'Cannot modify Super Admin role.'], 403);
+            return redirect()->back()->with('error', 'Cannot modify Super Admin role.');
         }
 
         $request->validate([
@@ -75,7 +75,7 @@ class RoleController extends Controller
             $role->syncPermissions(Permission::whereIn('id', $request->permissions)->pluck('name')->toArray());
         }
 
-        return response()->json(['message' => 'Role updated successfully!', 'role' => $role->load('permissions')]);
+        return redirect()->back()->with('success', 'Role updated successfully!');
     }
 
     public function destroy($id)
@@ -83,11 +83,11 @@ class RoleController extends Controller
         $role = Role::findOrFail($id);
 
         if ($role->name === 'Super Admin') {
-            return response()->json(['message' => 'Cannot delete Super Admin role.'], 403);
+            return redirect()->back()->with('error', 'Cannot delete Super Admin role.');
         }
 
         $role->delete();
-        return response()->json(['message' => 'Role deleted successfully!']);
+        return redirect()->back()->with('success', 'Role deleted successfully!');
     }
 
     public function assignRole(Request $request)
@@ -100,6 +100,6 @@ class RoleController extends Controller
         $user = User::findOrFail($request->user_id);
         $user->syncRoles([$request->role]);
 
-        return response()->json(['message' => "Role '{$request->role}' assigned to {$user->name} successfully!"]);
+        return redirect()->back()->with('success', "Role '{$request->role}' assigned to {$user->name} successfully!");
     }
 }
