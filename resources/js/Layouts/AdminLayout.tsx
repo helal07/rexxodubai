@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import axios from 'axios';
 import {
     LayoutDashboard,
     Boxes,
@@ -52,6 +53,8 @@ interface SharedProps {
         error?: string | null;
     };
     siteSettings?: Record<string, any>;
+    cmsData?: any;
+    [key: string]: any;
 }
 
 interface AdminLayoutProps {
