@@ -11,8 +11,9 @@ export default function SettingsPage({ siteSettings = {} }: SettingsProps) {
     const { data, setData, post, processing } = useForm({
         siteName: siteSettings.siteName || 'RaaxO BD',
         tagline: siteSettings.tagline || 'Luxury Fragrances',
-        contactEmail: siteSettings.contactEmail || '',
-        contactPhone: siteSettings.contactPhone || '',
+        email: siteSettings.email || siteSettings.contactEmail || '',
+        phone: siteSettings.phone || siteSettings.contactPhone || '',
+        whatsapp: siteSettings.whatsapp || '',
         address: siteSettings.address || '',
         currency: siteSettings.currency || 'USD ($)',
         logo_url: siteSettings.logo_url || '',
@@ -92,8 +93,8 @@ export default function SettingsPage({ siteSettings = {} }: SettingsProps) {
                         </label>
                         <input
                             type="email"
-                            value={data.contactEmail}
-                            onChange={e => setData('contactEmail', e.target.value)}
+                            value={data.email}
+                            onChange={e => setData('email', e.target.value)}
                             className="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-medium outline-none focus:border-[#0284c7] bg-white shadow-2xs"
                         />
                     </div>
@@ -104,9 +105,22 @@ export default function SettingsPage({ siteSettings = {} }: SettingsProps) {
                         </label>
                         <input
                             type="text"
-                            value={data.contactPhone}
-                            onChange={e => setData('contactPhone', e.target.value)}
+                            value={data.phone}
+                            onChange={e => setData('phone', e.target.value)}
                             className="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-mono outline-none focus:border-[#0284c7] bg-white shadow-2xs"
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        <label className="text-[11px] uppercase font-bold text-[#475569] tracking-wider block mb-1.5">
+                            WhatsApp VIP Chat (Numbers Only)
+                        </label>
+                        <input
+                            type="text"
+                            value={data.whatsapp}
+                            onChange={e => setData('whatsapp', e.target.value)}
+                            placeholder="e.g. 8801700000000"
+                            className="w-full border border-[#cbd5e1] px-4 py-2.5 rounded-xl text-[13px] font-mono outline-none focus:border-[#25D366] bg-white shadow-2xs"
                         />
                     </div>
 
