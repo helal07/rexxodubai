@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
+import axios from 'axios';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Network, RefreshCw, FileText, Globe, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -15,11 +16,10 @@ export default function Ping() {
 
     const loadStatus = async () => {
         try {
-            const res = await fetch('/admin/seo/status', {
+            const res = await axios.get('/admin/seo/status', {
                 headers: { 'Accept': 'application/json' }
             });
-            const data = await res.json();
-            setStatus(data);
+            setStatus(res.data);
         } catch (e) {
             console.error('Error loading SEO status:', e);
         } finally {
@@ -35,15 +35,13 @@ export default function Ping() {
         setLoading(prev => ({ ...prev, [action]: true }));
         setMessage(null);
         try {
-            const res = await fetch(endpoint, {
-                method: 'POST',
+            const res = await axios.post(endpoint, {}, {
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    'Content-Type': 'application/json'
                 }
             });
-            const data = await res.json();
+            const data = res.data;
             if (data.success) {
                 setMessage({ type: 'success', text: data.message });
                 loadStatus();
