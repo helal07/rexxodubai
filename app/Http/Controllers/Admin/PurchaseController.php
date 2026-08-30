@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -48,7 +48,7 @@ class PurchaseController extends Controller
                     'quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_cost'],
                 ]);
-                
+
                 if ($validated['status'] === 'Received') {
                     $product = Product::find($item['product_id']);
                     $product->stock += $item['quantity'];
@@ -57,9 +57,11 @@ class PurchaseController extends Controller
             }
 
             DB::commit();
+
             return response()->json(['message' => 'Purchase created successfully.', 'purchase' => $purchase]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['message' => 'Failed to create purchase.', 'error' => $e->getMessage()], 500);
         }
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Printer, MessageCircle, List, Building2, Phone, Mail, MapPin } from 'lucide-react';
 
@@ -33,34 +33,54 @@ interface Order {
 
 interface InvoiceProps {
     order: Order;
-    siteSettings: Record<string, string>;
+    siteSettings?: Record<string, string>;
 }
 
-export default function Invoice({ order, siteSettings }: InvoiceProps) {
+export default function Invoice({ order, siteSettings: initialSettings = {} }: InvoiceProps) {
+    const pageProps = usePage().props as any;
+    const settings = {
+        ...(pageProps.apiSettings || {}),
+        ...(pageProps.siteSettings || {}),
+        ...(initialSettings || {}),
+    };
+
     const handlePrint = () => {
         window.print();
     };
 
-    // Force Vite HMR to pick up the latest changes
-    console.log("Invoice loaded with settings:", siteSettings);
-
-    const currencySymbol = siteSettings['currency'] || 'USD ($)';
+    const currencySymbol = settings['currency'] || 'USD ($)';
     const symbolMatch = currencySymbol.match(/\((.*?)\)/);
     const symbol = symbolMatch ? symbolMatch[1] : (currencySymbol.split(' ')[0] || '$');
 
     const handleWhatsApp = () => {
         // format phone for whatsapp (assume BD +880 if 11 digits starting with 01)
-        let phone = order.customer_phone.replace(/\D/g, '');
+        let phone = (order.customer_phone || '').replace(/\D/g, '');
         if (phone.length === 11 && phone.startsWith('01')) {
             phone = '88' + phone;
         }
 
-        const message = `Hello ${order.customer_name},\n\nThis is an invoice for your recent order from *${siteSettings['site_name'] || 'Our Store'}*.\n\n*Order Number:* ${order.order_number}\n*Total Amount:* ${symbol}${order.total_amount}\n*Payment Status:* ${order.payment_status.toUpperCase()}\n\nThank you for your purchase!`;
+        const siteName = settings['site_name'] || settings['siteName'] || 'Our Store';
+        const message = `Hello ${order.customer_name},\n\nThis is an invoice for your recent order from *${siteName}*.\n\n*Order Number:* ${order.order_number}\n*Total Amount:* ${symbol}${order.total_amount}\n*Payment Status:* ${order.payment_status?.toUpperCase()}\n\nThank you for your purchase!`;
         const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
         window.open(waLink, '_blank');
     };
 
-    const logoUrl = siteSettings['site_logo'] || siteSettings['logo_url'] || null;
+    const rawLogo = pageProps.cmsData?.global?.logo_url 
+        || settings['site_logo'] 
+        || settings['logo_url'] 
+        || settings['logo'] 
+        || settings['header_logo'] 
+        || null;
+
+    const formatImgSrc = (src: string | null | undefined) => {
+        if (!src) return null;
+        if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+            return src;
+        }
+        return src.startsWith('/') ? src : `/${src}`;
+    };
+
+    const logoUrl = formatImgSrc(rawLogo);
 
     return (
         <AdminLayout activePage="orders">

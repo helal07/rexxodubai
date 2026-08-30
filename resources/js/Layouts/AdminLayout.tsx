@@ -739,6 +739,51 @@ export default function AdminLayout({
                                 </div>
                             )}
                         </div>
+
+                        {/* LANDING PAGE MENU */}
+                        <div>
+                            <button
+                                type="button"
+                                onClick={() => toggleSubmenu('landing_pages')}
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activePage === 'landing-pages' || window.location.pathname.includes('/admin/landing-pages')
+                                    ? 'bg-[#e0f2fe] text-[#0284c7]'
+                                    : 'text-[#475569] hover:bg-[#f1f5f9]'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <LayoutTemplate className="w-4 h-4" />
+                                    <span>Landing Page</span>
+                                </div>
+                                {openSubmenu === 'landing_pages' ? (
+                                    <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                    <ChevronRight className="w-4 h-4" />
+                                )}
+                            </button>
+                            {openSubmenu === 'landing_pages' && (
+                                <div className="pl-9 pr-2 py-1 space-y-1">
+                                    <Link
+                                        href="/admin/landing-pages/create"
+                                        className={`block px-3 py-2 rounded-lg text-[12px] font-semibold transition-all ${window.location.pathname.includes('/admin/landing-pages/create')
+                                            ? 'bg-[#0284c7] text-white font-bold'
+                                            : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#0f172a]'
+                                            }`}
+                                    >
+                                        Create Landing Page
+                                    </Link>
+                                    <Link
+                                        href="/admin/landing-pages"
+                                        className={`block px-3 py-2 rounded-lg text-[12px] font-semibold transition-all ${activePage === 'landing-pages' && window.location.pathname === '/admin/landing-pages'
+                                            ? 'bg-[#0284c7] text-white font-bold'
+                                            : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#0f172a]'
+                                            }`}
+                                    >
+                                        List Landing Page
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                        {/* END LANDING PAGE MENU */}
                         <Link
                             href="/admin/settings"
                             className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-bold transition-all ${activePage === 'settings'

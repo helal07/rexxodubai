@@ -3,18 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\MenuItem;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Setting;
-use App\Models\User;
-use App\Models\Customer;
-use App\Models\Supplier;
 use App\Models\Purchase;
+use App\Models\Setting;
+use App\Models\Supplier;
+use App\Models\User;
+use App\Models\Variant;
+use App\Services\Courier\CourierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -41,27 +43,30 @@ class AdminWebController extends Controller
         $currentUser = Auth::user();
 
         // Dashboard Statistics
-        $totalOrders = \App\Models\Order::count();
-        $inWayOrders = \App\Models\Order::whereIn('status', ['processing', 'dispatched'])->count();
-        $successOrders = \App\Models\Order::where('status', 'completed')->count();
-        $returnOrders = \App\Models\Order::whereIn('status', ['returned', 'cancelled'])->count();
-        $totalCustomers = \App\Models\Order::distinct('customer_phone')->count('customer_phone');
-        
-        $monthlyRevenue = (float) (\App\Models\Order::where('status', 'completed')
-                            ->whereMonth('created_at', date('m'))
-                            ->whereYear('created_at', date('Y'))
-                            ->sum('total_amount'));
-                            
-        $avgOrderValue = (float) (\App\Models\Order::where('status', 'completed')->avg('total_amount') ?? 0);
+        $totalOrders = Order::count();
+        $inWayOrders = Order::whereIn('status', ['processing', 'dispatched'])->count();
+        $successOrders = Order::where('status', 'completed')->count();
+        $returnOrders = Order::whereIn('status', ['returned', 'cancelled'])->count();
+        $totalCustomers = Order::distinct('customer_phone')->count('customer_phone');
 
-        $recentOrders = \App\Models\Order::with('items')->orderBy('created_at', 'desc')->take(50)->get()->map(function($o) {
-            $prodSummary = $o->items->map(function($i) { return $i->product_name . ' (x' . $i->quantity . ')'; })->join(', ');
+        $monthlyRevenue = (float) (Order::where('status', 'completed')
+            ->whereMonth('created_at', date('m'))
+            ->whereYear('created_at', date('Y'))
+            ->sum('total_amount'));
+
+        $avgOrderValue = (float) (Order::where('status', 'completed')->avg('total_amount') ?? 0);
+
+        $recentOrders = Order::with('items')->orderBy('created_at', 'desc')->take(50)->get()->map(function ($o) {
+            $prodSummary = $o->items->map(function ($i) {
+                return $i->product_name.' (x'.$i->quantity.')';
+            })->join(', ');
+
             return [
                 'id' => (string) $o->order_number,
-                'client' => $o->customer_name . ' (' . $o->customer_phone . ')',
+                'client' => $o->customer_name.' ('.$o->customer_phone.')',
                 'prod' => $prodSummary ?: 'No items',
                 'amt' => (float) $o->total_amount,
-                'status' => ucfirst(str_replace('_', ' ', $o->status))
+                'status' => ucfirst(str_replace('_', ' ', $o->status)),
             ];
         });
 
@@ -78,8 +83,6 @@ class AdminWebController extends Controller
         ]);
     }
 
-
-
     public function storeMenu(Request $request)
     {
         $validated = $request->validate([
@@ -89,7 +92,7 @@ class AdminWebController extends Controller
             'sort_order' => 'nullable|integer',
         ]);
 
-        if (!isset($validated['sort_order'])) {
+        if (! isset($validated['sort_order'])) {
             $validated['sort_order'] = MenuItem::max('sort_order') + 1;
         }
 
@@ -118,6 +121,7 @@ class AdminWebController extends Controller
     public function purchaseList()
     {
         $purchases = Purchase::with('supplier')->orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/Purchases/Index', [
             'purchases' => $purchases,
         ]);
@@ -127,6 +131,7 @@ class AdminWebController extends Controller
     {
         $suppliers = Supplier::orderBy('company_name')->get();
         $products = Product::with(['category', 'images'])->orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/Purchases/Create', [
             'suppliers' => $suppliers,
             'products' => $products,
@@ -136,19 +141,19 @@ class AdminWebController extends Controller
     public function productList(Request $request)
     {
         $query = Product::with(['category', 'images'])->orderBy('created_at', 'desc');
-        
+
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where('name', 'like', "%{$search}%");
         }
-        
+
         if ($request->has('category') && $request->get('category') != 'All') {
             $cat = Category::where('name', $request->get('category'))->first();
             if ($cat) {
                 $query->where('category_id', $cat->id);
             }
         }
-        
+
         $products = $query->get();
         $categories = Category::all();
 
@@ -160,9 +165,10 @@ class AdminWebController extends Controller
 
     public function productAdd()
     {
-        $product = new Product();
+        $product = new Product;
         $categories = Category::all();
-        $variants = \App\Models\Variant::orderBy('name')->get();
+        $variants = Variant::orderBy('name')->get();
+
         return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
@@ -173,6 +179,7 @@ class AdminWebController extends Controller
     public function customers()
     {
         $customers = Customer::orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/Customers', [
             'customers' => $customers,
         ]);
@@ -181,6 +188,7 @@ class AdminWebController extends Controller
     public function suppliers()
     {
         $suppliers = Supplier::orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/Suppliers', [
             'suppliers' => $suppliers,
         ]);
@@ -198,9 +206,10 @@ class AdminWebController extends Controller
 
     public function apiSms()
     {
-        $siteSettings = \App\Models\Setting::pluck('value', 'key')->all();
+        $siteSettings = Setting::pluck('value', 'key')->all();
+
         return Inertia::render('Admin/Settings/ApiSms', [
-            'siteSettings' => $siteSettings
+            'siteSettings' => $siteSettings,
         ]);
     }
 
@@ -212,16 +221,18 @@ class AdminWebController extends Controller
     public function seoMeta()
     {
         $siteSettings = Setting::pluck('value', 'key')->all();
+
         return Inertia::render('Admin/Seo/Meta', [
-            'siteSettings' => $siteSettings
+            'siteSettings' => $siteSettings,
         ]);
     }
 
     public function seoMarketing()
     {
         $siteSettings = Setting::pluck('value', 'key')->all();
+
         return Inertia::render('Admin/Seo/Marketing', [
-            'siteSettings' => $siteSettings
+            'siteSettings' => $siteSettings,
         ]);
     }
 
@@ -242,6 +253,7 @@ class AdminWebController extends Controller
     public function categories()
     {
         $categories = Category::with(['children', 'parent', 'products'])->orderBy('sort_order', 'asc')->get();
+
         return Inertia::render('Admin/Categories', [
             'categories' => $categories,
         ]);
@@ -262,7 +274,7 @@ class AdminWebController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        if (!isset($validated['sort_order'])) {
+        if (! isset($validated['sort_order'])) {
             $validated['sort_order'] = Category::max('sort_order') + 1;
         }
 
@@ -279,7 +291,7 @@ class AdminWebController extends Controller
         $validated = $request->validate([
             'parent_id' => 'nullable|exists:categories,id',
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'slug' => 'nullable|string|max:255|unique:categories,slug,'.$category->id,
             'description' => 'nullable|string',
             'image_url' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer',
@@ -304,18 +316,18 @@ class AdminWebController extends Controller
         return redirect()->back()->with('success', 'Category deleted from database.');
     }
 
-
     public function editProduct($id)
     {
         $product = Product::with(['category', 'images', 'variants'])->findOrFail($id);
         $categories = Category::all();
-        $variants = \App\Models\Variant::orderBy('name')->get();
+        $variants = Variant::orderBy('name')->get();
         $siteSettings = Setting::pluck('value', 'key')->all();
-        return \Inertia\Inertia::render('Admin/Products/Edit', [
+
+        return Inertia::render('Admin/Products/Edit', [
             'product' => $product,
             'categories' => $categories,
             'variants' => $variants,
-            'siteSettings' => $siteSettings
+            'siteSettings' => $siteSettings,
         ]);
     }
 
@@ -349,51 +361,51 @@ class AdminWebController extends Controller
         ]);
 
         $uploadDir = public_path('uploads/products');
-        if (!file_exists($uploadDir)) {
+        if (! file_exists($uploadDir)) {
             @mkdir($uploadDir, 0755, true);
         }
 
         if ($request->hasFile('primary_image_file')) {
             $file = $request->file('primary_image_file');
-            $fileName = 'prod_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $fileName = 'prod_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
-            $validated['primary_image_url'] = '/uploads/products/' . $fileName;
+            $validated['primary_image_url'] = '/uploads/products/'.$fileName;
         }
 
         if ($request->hasFile('secondary_image_file')) {
             $file = $request->file('secondary_image_file');
-            $fileName = 'prod_sec_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $fileName = 'prod_sec_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
-            $validated['secondary_image_url'] = '/uploads/products/' . $fileName;
+            $validated['secondary_image_url'] = '/uploads/products/'.$fileName;
         }
 
         if ($request->hasFile('og_image_file')) {
             $file = $request->file('og_image_file');
-            $fileName = 'prod_og_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $fileName = 'prod_og_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
-            $validated['og_image_url'] = '/uploads/products/' . $fileName;
+            $validated['og_image_url'] = '/uploads/products/'.$fileName;
         }
 
         // Handle sizes array
-        if (!empty($validated['sizes'])) {
+        if (! empty($validated['sizes'])) {
             $sizesArray = array_values(array_filter(array_map('trim', explode(',', $validated['sizes']))));
             $validated['sizes'] = $sizesArray;
         } else {
             $validated['sizes'] = ['100ml'];
         }
 
-        $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(4);
+        $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(4);
         $validated['stock'] = $request->input('stock', 50);
         $validated['is_featured'] = $request->has('is_featured');
         $validated['is_new_arrival'] = $request->has('is_new_arrival');
 
         $product = Product::create($validated);
-        
+
         // Sync Variants
         if ($request->has('variants') && is_array($request->variants)) {
             $syncData = [];
             foreach ($request->variants as $variant) {
-                if (!empty($variant['variant_id'])) {
+                if (! empty($variant['variant_id'])) {
                     $syncData[$variant['variant_id']] = [
                         'price' => $variant['price'] ?? $product->price,
                         'stock' => $variant['stock'] ?? 0,
@@ -418,7 +430,7 @@ class AdminWebController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug,' . $product->id,
+            'slug' => 'nullable|string|max:255|unique:products,slug,'.$product->id,
             'category_id' => 'nullable|exists:categories,id',
             'scent_family' => 'nullable|string|max:255',
             'concentration' => 'nullable|string|max:255',
@@ -445,40 +457,40 @@ class AdminWebController extends Controller
         ]);
 
         $uploadDir = public_path('uploads/products');
-        if (!file_exists($uploadDir)) {
+        if (! file_exists($uploadDir)) {
             @mkdir($uploadDir, 0755, true);
         }
 
         if ($request->hasFile('primary_image_file')) {
             $file = $request->file('primary_image_file');
-            $fileName = 'prod_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $fileName = 'prod_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
-            $validated['primary_image_url'] = '/uploads/products/' . $fileName;
+            $validated['primary_image_url'] = '/uploads/products/'.$fileName;
         }
 
         if ($request->hasFile('secondary_image_file')) {
             $file = $request->file('secondary_image_file');
-            $fileName = 'prod_sec_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $fileName = 'prod_sec_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
-            $validated['secondary_image_url'] = '/uploads/products/' . $fileName;
+            $validated['secondary_image_url'] = '/uploads/products/'.$fileName;
         }
 
         if ($request->hasFile('og_image_file')) {
             $file = $request->file('og_image_file');
-            $fileName = 'prod_og_' . time() . '_' . Str::random(6) . '.' . $file->getClientOriginalExtension();
+            $fileName = 'prod_og_'.time().'_'.Str::random(6).'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
-            $validated['og_image_url'] = '/uploads/products/' . $fileName;
+            $validated['og_image_url'] = '/uploads/products/'.$fileName;
         }
 
         // Handle slug
         if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']) . '-' . Str::random(4);
+            $validated['slug'] = Str::slug($validated['name']).'-'.Str::random(4);
         } else {
             $validated['slug'] = Str::slug($validated['slug']);
         }
 
         // Handle sizes array
-        if (!empty($validated['sizes'])) {
+        if (! empty($validated['sizes'])) {
             $sizesArray = array_values(array_filter(array_map('trim', explode(',', $validated['sizes']))));
             $validated['sizes'] = $sizesArray;
         }
@@ -488,12 +500,12 @@ class AdminWebController extends Controller
         $validated['is_new_arrival'] = $request->has('is_new_arrival');
 
         $product->update($validated);
-        
+
         // Sync Variants
         if ($request->has('variants') && is_array($request->variants)) {
             $syncData = [];
             foreach ($request->variants as $variant) {
-                if (!empty($variant['variant_id'])) {
+                if (! empty($variant['variant_id'])) {
                     $syncData[$variant['variant_id']] = [
                         'price' => $variant['price'] ?? $product->price,
                         'stock' => $variant['stock'] ?? 0,
@@ -501,7 +513,7 @@ class AdminWebController extends Controller
                 }
             }
             $product->variants()->sync($syncData);
-        } else if ($request->has('variants') && empty($request->variants)) {
+        } elseif ($request->has('variants') && empty($request->variants)) {
             // Clear variants if empty array was sent
             $product->variants()->sync([]);
         }
@@ -526,59 +538,116 @@ class AdminWebController extends Controller
         $products = Product::with(['category', 'images', 'variants'])
             ->orderBy('created_at', 'desc')
             ->get();
+
         return Inertia::render('Admin/Orders/Create', [
             'products' => $products,
             'customers' => $customers,
         ]);
     }
+
     public function orders(Request $request)
     {
-        $query = Order::with('items')->orderBy('created_at', 'desc');
+        $query = Order::with(['items'])->orderBy('created_at', 'desc');
 
         // Status filter
-        if ($request->filled('status') && $request->status !== 'all') {
+        if ($request->filled('status') && $request->status !== 'all' && $request->status !== 'All') {
             $query->where('status', $request->status);
         }
 
         // Payment status filter
-        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+        if ($request->filled('payment_status') && $request->payment_status !== 'all' && $request->payment_status !== 'All') {
             $query->where('payment_status', $request->payment_status);
         }
 
-        // Keyword Search (order number, customer name, email, phone, city)
+        // Payment method filter
+        if ($request->filled('payment_method') && $request->payment_method !== 'all' && $request->payment_method !== 'All') {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // Courier filter
+        if ($request->filled('courier') && $request->courier !== 'all' && $request->courier !== 'All') {
+            $query->where('courier_name', $request->courier);
+        }
+
+        // Min & Max Price filter
+        if ($request->filled('min_price') && is_numeric($request->min_price)) {
+            $query->where('total_amount', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price') && is_numeric($request->max_price)) {
+            $query->where('total_amount', '<=', $request->max_price);
+        }
+
+        // Date Range filter
+        if ($request->filled('date_range') && $request->date_range !== 'all') {
+            switch ($request->date_range) {
+                case 'today':
+                    $query->whereDate('created_at', now()->today());
+                    break;
+                case 'yesterday':
+                    $query->whereDate('created_at', now()->subDay()->toDateString());
+                    break;
+                case '7days':
+                    $query->where('created_at', '>=', now()->subDays(7));
+                    break;
+                case '30days':
+                    $query->where('created_at', '>=', now()->subDays(30));
+                    break;
+                case 'this_month':
+                    $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                    break;
+            }
+        }
+
+        // Keyword Search (order number, customer name, email, phone, city, tracking id)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_email', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%")
-                  ->orWhere('city', 'like', "%{$search}%");
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_email', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%")
+                    ->orWhere('shipping_address', 'like', "%{$search}%")
+                    ->orWhere('courier_tracking_id', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%");
             });
         }
 
+        $filteredQueryForSum = clone $query;
+        $filteredTotalAmount = $filteredQueryForSum->sum('total_amount');
+        $filteredPaidCount = (clone $query)->where('payment_status', 'paid')->count();
+
         $orders = $query->paginate(25)->withQueryString();
         $totalOrdersCount = Order::count();
-        $pendingOrdersCount = Order::where('status', 'pending')->count();
-        $processingOrdersCount = Order::where('status', 'processing')->count();
-        $completedOrdersCount = Order::where('status', 'completed')->count();
+        $allPaidCount = Order::where('payment_status', 'paid')->count();
         $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
         $siteSettings = Setting::pluck('value', 'key')->all();
 
-        $allCouriers = app(\App\Services\Courier\CourierService::class)->getCouriers();
-        $activeCouriers = array_values(array_filter($allCouriers, function($c) {
+        $allCouriers = app(CourierService::class)->getCouriers();
+        $activeCouriers = array_values(array_filter($allCouriers, function ($c) {
             return ($c['status'] ?? '') === 'active';
         }));
 
         return Inertia::render('Admin/Orders/Index', [
-            'orders' => $orders->items(),
+            'orders' => $orders,
             'activeCouriers' => $activeCouriers,
+            'siteSettings' => $siteSettings,
+            'filters' => $request->all(),
+            'stats' => [
+                'total_count' => $totalOrdersCount,
+                'shown_count' => $orders->total(),
+                'paid_count' => $filteredPaidCount,
+                'filtered_total' => $filteredTotalAmount,
+                'all_paid_count' => $allPaidCount,
+                'total_revenue' => $totalRevenue,
+            ],
         ]);
     }
+
     public function invoiceOrder($id)
     {
         $order = Order::with('items')->findOrFail($id);
         $siteSettings = Setting::pluck('value', 'key')->all();
+
         return Inertia::render('Admin/Orders/Invoice', [
             'order' => $order,
             'siteSettings' => $siteSettings,
@@ -589,6 +658,7 @@ class AdminWebController extends Controller
     {
         $order = Order::with('items')->findOrFail($id);
         $products = Product::with(['variants', 'images'])->orderBy('name')->get();
+
         return Inertia::render('Admin/Orders/Edit', [
             'order' => $order,
             'products' => $products,
@@ -617,7 +687,7 @@ class AdminWebController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($order, $validated) {
+        DB::transaction(function () use ($order, $validated) {
             // Restore previous stock
             foreach ($order->items as $item) {
                 $product = Product::find($item->product_id);
@@ -699,7 +769,7 @@ class AdminWebController extends Controller
     {
         $order = Order::with('items.product')->findOrFail($id);
         $orderNumber = $order->order_number;
-        
+
         // Restore stock
         foreach ($order->items as $item) {
             if ($item->product) {
@@ -707,12 +777,9 @@ class AdminWebController extends Controller
                 $item->product->save();
             }
         }
-        
+
         $order->delete();
 
         return redirect()->back()->with('success', "Order #{$orderNumber} has been removed and stock restored.");
     }
 }
-
-
-

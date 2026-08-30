@@ -16,9 +16,9 @@ class CategoryController extends Controller
             }])
             ->orderBy('sort_order', 'asc');
 
-        if (!$request->is('api/admin/*')) {
+        if (! $request->is('api/admin/*')) {
             $query->where('is_active', true);
-            if (!$request->has('all')) {
+            if (! $request->has('all')) {
                 $query->whereNull('parent_id');
             }
         }
@@ -42,7 +42,7 @@ class CategoryController extends Controller
             $validated['slug'] = Str::slug($validated['name']);
         }
 
-        if (!isset($validated['sort_order'])) {
+        if (! isset($validated['sort_order'])) {
             $maxSort = Category::where('parent_id', $validated['parent_id'] ?? null)->max('sort_order');
             $validated['sort_order'] = ($maxSort !== null) ? $maxSort + 1 : 0;
         }
@@ -67,7 +67,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'parent_id' => 'nullable|exists:categories,id',
             'name' => 'sometimes|required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'slug' => 'nullable|string|max:255|unique:categories,slug,'.$category->id,
             'description' => 'nullable|string',
             'image_url' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer',

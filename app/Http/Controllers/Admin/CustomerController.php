@@ -28,10 +28,10 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20|unique:customers,phone,' . $id,
+            'phone' => 'required|string|max:20|unique:customers,phone,'.$id,
             'address' => 'nullable|string|max:255',
         ]);
 

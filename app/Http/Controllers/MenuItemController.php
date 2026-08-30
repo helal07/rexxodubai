@@ -52,7 +52,7 @@ class MenuItemController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        if (!isset($validated['sort_order'])) {
+        if (! isset($validated['sort_order'])) {
             $maxSort = MenuItem::where('parent_id', $validated['parent_id'] ?? null)->max('sort_order');
             $validated['sort_order'] = ($maxSort !== null) ? $maxSort + 1 : 0;
         }

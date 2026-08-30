@@ -35,7 +35,7 @@ class SaleController extends Controller
 
             foreach ($validated['items'] as $itemData) {
                 $product = Product::with('variants')->findOrFail($itemData['product_id']);
-                
+
                 $unitPrice = $product->price;
                 if (isset($itemData['size']) && $itemData['size'] !== 'Base') {
                     $selectedVariant = $product->variants->firstWhere('name', $itemData['size']);
@@ -43,7 +43,7 @@ class SaleController extends Controller
                         $unitPrice = $selectedVariant->pivot->price ?? $selectedVariant->price;
                     }
                 }
-                
+
                 if ($product->stock < $itemData['quantity']) {
                     // Still proceed or just ignore stock limits for variants if stock is on base product
                     // (we will just decrement base stock)
@@ -71,7 +71,7 @@ class SaleController extends Controller
             $grandTotal = $subtotal + $shippingCost - $discount;
 
             $order = Order::create([
-                'order_number' => 'RX-' . strtoupper(Str::random(6)),
+                'order_number' => 'RX-'.strtoupper(Str::random(6)),
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => 'pos@store.local', // Placeholder
                 'customer_phone' => $validated['customer_phone'],
@@ -90,9 +90,11 @@ class SaleController extends Controller
             }
 
             DB::commit();
+
             return response()->json(['message' => 'Sale created successfully!', 'order' => $order]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['message' => 'Failed to create sale.', 'error' => $e->getMessage()], 500);
         }
     }
@@ -100,7 +102,7 @@ class SaleController extends Controller
     public function destroy($id)
     {
         $order = Order::findOrFail($id);
-        
+
         // Restore stock
         foreach ($order->items as $item) {
             if ($item->product) {
@@ -110,6 +112,7 @@ class SaleController extends Controller
         }
 
         $order->delete();
+
         return response()->json(['message' => 'Sale deleted and stock restored.']);
     }
 }

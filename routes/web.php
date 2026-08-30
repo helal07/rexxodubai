@@ -1,21 +1,41 @@
 <?php
 
-use App\Http\Controllers\AdminCourierController;
-use App\Http\Controllers\AdminWebController;
-use App\Http\Controllers\CourierChargeController;
-use App\Http\Controllers\SeoController;
-use App\Http\Controllers\SmsController;
-use Illuminate\Support\Facades\Route;
-
-use Inertia\Inertia;
-use App\Models\Product;
-
-use Illuminate\Http\Request;
 use App\Http\Controllers\Admin\CampaignController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SaleController;
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\VariantController;
+use App\Http\Controllers\AdminCourierController;
+use App\Http\Controllers\AdminLandingPageController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\AdminWebController;
+use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\CourierChargeController;
+use App\Http\Controllers\FrontendCmsController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\SeoController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SmsController;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\Campaign;
+use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Inertia\Inertia;
 
 // Public Frontend Routes (Inertia)
 Route::get('/', function () {
-    $categories = \App\Models\Category::with(['products' => function($query) {
+    $categories = Category::with(['products' => function ($query) {
         $query->with('images')->take(8);
     }])->whereHas('products')->take(4)->get();
 
@@ -23,7 +43,7 @@ Route::get('/', function () {
         'featuredProducts' => Product::with('images')->where('is_featured', true)->take(8)->get(),
         'newArrivals' => Product::with('images')->where('is_new_arrival', true)->take(8)->get(),
         'categoriesWithProducts' => $categories,
-        'activeCampaigns' => \App\Models\Campaign::with(['products' => function($query) {
+        'activeCampaigns' => Campaign::with(['products' => function ($query) {
             $query->with('images')->take(4);
         }])->where('is_active', true)->orderBy('created_at', 'desc')->get(),
     ]);
@@ -37,7 +57,7 @@ Route::get('/contact', function () {
 Route::get('/checkout', function () {
     return Inertia::render('Checkout');
 });
-Route::get('/pages/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->name('page.show');
+Route::get('/pages/{slug}', [PageController::class, 'show'])->name('page.show');
 
 Route::get('/perfumes', function (Request $request) {
     $query = Product::with(['images', 'category.parent']);
@@ -47,18 +67,18 @@ Route::get('/perfumes', function (Request $request) {
         $search = $request->input('search');
         $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('scent_family', 'like', "%{$search}%")
-              ->orWhere('notes_top', 'like', "%{$search}%")
-              ->orWhere('notes_heart', 'like', "%{$search}%")
-              ->orWhere('notes_base', 'like', "%{$search}%")
-              ->orWhere('short_description', 'like', "%{$search}%");
+                ->orWhere('scent_family', 'like', "%{$search}%")
+                ->orWhere('notes_top', 'like', "%{$search}%")
+                ->orWhere('notes_heart', 'like', "%{$search}%")
+                ->orWhere('notes_base', 'like', "%{$search}%")
+                ->orWhere('short_description', 'like', "%{$search}%");
         });
     }
 
-    if ($request->has('category') && !empty($request->input('category'))) {
+    if ($request->has('category') && ! empty($request->input('category'))) {
         $catSlug = $request->input('category');
         $query->where(function ($q) use ($catSlug) {
-            $hasParent = \Illuminate\Support\Facades\Schema::hasColumn('categories', 'parent_id');
+            $hasParent = Schema::hasColumn('categories', 'parent_id');
             $q->whereHas('category', function ($sub) use ($catSlug, $hasParent) {
                 $sub->where('slug', $catSlug);
                 if ($hasParent) {
@@ -83,7 +103,7 @@ Route::get('/perfumes', function (Request $request) {
     }
 
     $products = $query->get();
-    
+
     // If specific filter/search yields no result, provide fallback recommendations
     if (($request->has('search') || $request->has('category')) && $products->isEmpty()) {
         $products = Product::with(['images', 'category'])->where('is_featured', true)->take(4)->get();
@@ -102,7 +122,7 @@ Route::get('/product/{slug}', function ($slug) {
         ->where('id', '!=', $product->id)
         ->where(function ($q) use ($product) {
             $q->where('scent_family', $product->scent_family)
-              ->orWhere('gender', $product->gender);
+                ->orWhere('gender', $product->gender);
         })
         ->take(4)
         ->get();
@@ -113,23 +133,28 @@ Route::get('/product/{slug}', function ($slug) {
     ]);
 });
 // Admin Authentication Routes
-Route::get('/admin/login', [\App\Http\Controllers\Auth\AdminLoginController::class, 'create'])->name('login');
-Route::post('/admin/login', [\App\Http\Controllers\Auth\AdminLoginController::class, 'store']);
-Route::post('/admin', [\App\Http\Controllers\Auth\AdminLoginController::class, 'store']);
+Route::get('/admin/login', [AdminLoginController::class, 'create'])->name('login');
+Route::post('/admin/login', [AdminLoginController::class, 'store']);
+Route::post('/admin', [AdminLoginController::class, 'store']);
 Route::get('/login', function () {
     return redirect('/admin');
 });
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Public SEO routes (must be before auth middleware) Ã¢â€â‚¬Ã¢â€â‚¬
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
-Route::get('/robots.txt',  [SeoController::class, 'robots']);
+Route::get('/robots.txt', [SeoController::class, 'robots']);
+
+// Public Landing Page Route & Live Preview
+Route::get('/landing-page-preview', [LandingPageController::class, 'preview'])->name('landing-page.preview');
+Route::get('/landing-page/{slug}', [LandingPageController::class, 'show'])->name('landing-page.show');
 
 // Admin Root Route: Shows Login if guest, or Dashboard if authenticated admin
 Route::get('/admin', function () {
-    if (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()->is_admin) {
-        return \Inertia\Inertia::render('Auth/AdminLogin');
+    if (! Auth::check() || ! Auth::user()->is_admin) {
+        return Inertia::render('Auth/AdminLogin');
     }
-    return app(\App\Http\Controllers\AdminWebController::class)->dashboard();
+
+    return app(AdminWebController::class)->dashboard();
 });
 
 // All Backend Admin Panel Web Routes (Protected)
@@ -155,14 +180,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/suppliers', [AdminWebController::class, 'suppliers']);
     // Settings & CMS Routes
     Route::get('/admin/settings', [AdminWebController::class, 'settings']);
-    Route::get('/admin/cms', [\App\Http\Controllers\FrontendCmsController::class, 'index']);
-    Route::post('/admin/cms', [\App\Http\Controllers\FrontendCmsController::class, 'update']);
-    
+    Route::get('/admin/cms', [FrontendCmsController::class, 'index']);
+    Route::post('/admin/cms', [FrontendCmsController::class, 'update']);
+
     // Split API Settings
     Route::get('/admin/api-settings/payment', [AdminWebController::class, 'apiPayment']);
     Route::get('/admin/api-settings/sms', [AdminWebController::class, 'apiSms']);
     Route::get('/admin/api-settings/courier', [AdminWebController::class, 'apiCourier']);
-    
+
     // Split SEO Settings
     Route::get('/admin/seo/meta', [AdminWebController::class, 'seoMeta']);
     Route::get('/admin/seo/marketing', [AdminWebController::class, 'seoMarketing']);
@@ -194,11 +219,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/categories', [AdminWebController::class, 'storeCategory']);
     Route::put('/admin/categories/{id}', [AdminWebController::class, 'updateCategory']);
     Route::delete('/admin/categories/{id}', [AdminWebController::class, 'destroyCategory']);
-    
+
     // Custom Pages CRUD Routes
-    Route::post('/admin/pages', [\App\Http\Controllers\PageController::class, 'store']);
-    Route::put('/admin/pages/{id}', [\App\Http\Controllers\PageController::class, 'update']);
-    Route::delete('/admin/pages/{id}', [\App\Http\Controllers\PageController::class, 'destroy']);
+    Route::post('/admin/pages', [PageController::class, 'store']);
+    Route::put('/admin/pages/{id}', [PageController::class, 'update']);
+    Route::delete('/admin/pages/{id}', [PageController::class, 'destroy']);
 
     // Product Catalog CRUD Routes
     Route::get('/admin/products', [AdminWebController::class, 'productList']);
@@ -209,102 +234,102 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/products/{id}', [AdminWebController::class, 'destroyProduct']);
 
     // Logout Routes
-    Route::post('/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy'])->name('logout');
-    Route::get('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
-    Route::post('/admin/logout', [\App\Http\Controllers\Auth\AdminLoginController::class, 'destroy']);
+    Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('logout');
+    Route::get('/admin/logout', [AdminLoginController::class, 'destroy']);
+    Route::post('/admin/logout', [AdminLoginController::class, 'destroy']);
 
     // Settings Route
-    Route::post('/admin/settings', [\App\Http\Controllers\SettingController::class, 'store'])->name('admin.settings.store');
+    Route::post('/admin/settings', [SettingController::class, 'store'])->name('admin.settings.store');
 
     // Campaigns
     Route::post('/admin/campaigns/{campaign}/toggle', [CampaignController::class, 'toggle'])->name('campaigns.toggle');
     Route::resource('admin/campaigns', CampaignController::class);
 
     // Variants
-    Route::get('/admin/variants', [\App\Http\Controllers\Admin\VariantController::class, 'index']);
-    Route::post('/admin/variants', [\App\Http\Controllers\Admin\VariantController::class, 'store']);
-    Route::put('/admin/variants/{id}', [\App\Http\Controllers\Admin\VariantController::class, 'update']);
-    Route::delete('/admin/variants/{id}', [\App\Http\Controllers\Admin\VariantController::class, 'destroy']);
+    Route::get('/admin/variants', [VariantController::class, 'index']);
+    Route::post('/admin/variants', [VariantController::class, 'store']);
+    Route::put('/admin/variants/{id}', [VariantController::class, 'update']);
+    Route::delete('/admin/variants/{id}', [VariantController::class, 'destroy']);
 
     // SMS Gateway Routes
     Route::post('/admin/sms/test', [SmsController::class, 'testConnection'])->name('admin.sms.test');
 
     // SEO — Sitemap & Robots Generator Routes
-    Route::get('/admin/seo/status',              [SeoController::class, 'status'])->name('admin.seo.status');
-    Route::post('/admin/seo/generate-sitemap',   [SeoController::class, 'generateSitemap'])->name('admin.seo.sitemap');
-    Route::post('/admin/seo/generate-robots',    [SeoController::class, 'generateRobots'])->name('admin.seo.robots');
-    Route::post('/admin/seo/ping-search-engines',[SeoController::class, 'pingSearchEngines'])->name('admin.seo.ping');
+    Route::get('/admin/seo/status', [SeoController::class, 'status'])->name('admin.seo.status');
+    Route::post('/admin/seo/generate-sitemap', [SeoController::class, 'generateSitemap'])->name('admin.seo.sitemap');
+    Route::post('/admin/seo/generate-robots', [SeoController::class, 'generateRobots'])->name('admin.seo.robots');
+    Route::post('/admin/seo/ping-search-engines', [SeoController::class, 'pingSearchEngines'])->name('admin.seo.ping');
 
     // User Profile & Staff Management Routes
-    Route::get('/admin/profile', [\App\Http\Controllers\AdminProfileController::class, 'index']);
+    Route::get('/admin/profile', [AdminProfileController::class, 'index']);
 
-    Route::get('/admin/users', [\App\Http\Controllers\AdminProfileController::class, 'users']);
-    Route::post('/admin/profile/update', [\App\Http\Controllers\AdminProfileController::class, 'updateProfile']);
-    Route::post('/admin/profile/remove-avatar', [\App\Http\Controllers\AdminProfileController::class, 'removeAvatar']);
-    Route::post('/admin/profile/password', [\App\Http\Controllers\AdminProfileController::class, 'updatePassword']);
-    Route::post('/admin/users', [\App\Http\Controllers\AdminProfileController::class, 'storeUser']);
-    Route::put('/admin/users/{id}', [\App\Http\Controllers\AdminProfileController::class, 'updateUser']);
-    Route::delete('/admin/users/{id}', [\App\Http\Controllers\AdminProfileController::class, 'deleteUser']);
+    Route::get('/admin/users', [AdminProfileController::class, 'users']);
+    Route::post('/admin/profile/update', [AdminProfileController::class, 'updateProfile']);
+    Route::post('/admin/profile/remove-avatar', [AdminProfileController::class, 'removeAvatar']);
+    Route::post('/admin/profile/password', [AdminProfileController::class, 'updatePassword']);
+    Route::post('/admin/users', [AdminProfileController::class, 'storeUser']);
+    Route::put('/admin/users/{id}', [AdminProfileController::class, 'updateUser']);
+    Route::delete('/admin/users/{id}', [AdminProfileController::class, 'deleteUser']);
 
     // Customer API Routes
-    Route::post('/admin/api/customers', [\App\Http\Controllers\Admin\CustomerController::class, 'store']);
-    Route::put('/admin/api/customers/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'update']);
-    Route::delete('/admin/api/customers/{id}', [\App\Http\Controllers\Admin\CustomerController::class, 'destroy']);
+    Route::post('/admin/api/customers', [CustomerController::class, 'store']);
+    Route::put('/admin/api/customers/{id}', [CustomerController::class, 'update']);
+    Route::delete('/admin/api/customers/{id}', [CustomerController::class, 'destroy']);
 
     // Supplier API Routes
-    Route::post('/admin/api/suppliers', [\App\Http\Controllers\Admin\SupplierController::class, 'store']);
-    Route::put('/admin/api/suppliers/{id}', [\App\Http\Controllers\Admin\SupplierController::class, 'update']);
-    Route::delete('/admin/api/suppliers/{id}', [\App\Http\Controllers\Admin\SupplierController::class, 'destroy']);
+    Route::post('/admin/api/suppliers', [SupplierController::class, 'store']);
+    Route::put('/admin/api/suppliers/{id}', [SupplierController::class, 'update']);
+    Route::delete('/admin/api/suppliers/{id}', [SupplierController::class, 'destroy']);
 
     // Purchase API Routes
-    Route::post('/admin/api/purchases', [\App\Http\Controllers\Admin\PurchaseController::class, 'store']);
-    Route::delete('/admin/api/purchases/{id}', [\App\Http\Controllers\Admin\PurchaseController::class, 'destroy']);
+    Route::post('/admin/api/purchases', [PurchaseController::class, 'store']);
+    Route::delete('/admin/api/purchases/{id}', [PurchaseController::class, 'destroy']);
 
     // Sale API Routes
-    Route::post('/admin/api/sales', [\App\Http\Controllers\Admin\SaleController::class, 'store']);
-    Route::delete('/admin/api/sales/{id}', [\App\Http\Controllers\Admin\SaleController::class, 'destroy']);
+    Route::post('/admin/api/sales', [SaleController::class, 'store']);
+    Route::delete('/admin/api/sales/{id}', [SaleController::class, 'destroy']);
+
+    // Landing Page Routes
+    Route::resource('admin/landing-pages', AdminLandingPageController::class)->names('admin.landing-pages');
 
     // Role & Permission Routes
-    Route::get('/admin/roles', [\App\Http\Controllers\Admin\RoleController::class, 'index']);
-    Route::post('/admin/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store']);
-    Route::post('/admin/roles/{id}/sync-permissions', [\App\Http\Controllers\Admin\RoleController::class, 'syncPermission']);
-    Route::post('/admin/api/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store']);
-    Route::put('/admin/api/roles/{id}', [\App\Http\Controllers\Admin\RoleController::class, 'update']);
-    Route::delete('/admin/api/roles/{id}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy']);
-    Route::post('/admin/api/roles/assign', [\App\Http\Controllers\Admin\RoleController::class, 'assignRole']);
+    Route::get('/admin/roles', [RoleController::class, 'index']);
+    Route::post('/admin/roles', [RoleController::class, 'store']);
+    Route::post('/admin/roles/{id}/sync-permissions', [RoleController::class, 'syncPermission']);
+    Route::post('/admin/api/roles', [RoleController::class, 'store']);
+    Route::put('/admin/api/roles/{id}', [RoleController::class, 'update']);
+    Route::delete('/admin/api/roles/{id}', [RoleController::class, 'destroy']);
+    Route::post('/admin/api/roles/assign', [RoleController::class, 'assignRole']);
 });
-
 
 // Setup / Migration helper route (Exempt from session middleware)
 Route::withoutMiddleware([
-    \Illuminate\Session\Middleware\StartSession::class,
-    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-    \App\Http\Middleware\HandleInertiaRequests::class,
-    \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+    StartSession::class,
+    ShareErrorsFromSession::class,
+    HandleInertiaRequests::class,
+    ValidateCsrfToken::class,
 ])->get('/run-migrations', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+        Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = Artisan::output();
 
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
+        Artisan::call('db:seed', ['--force' => true]);
+        $seedOutput = Artisan::output();
 
-        \Illuminate\Support\Facades\Artisan::call('storage:link');
-        $storageOutput = \Illuminate\Support\Facades\Artisan::output();
+        Artisan::call('storage:link');
+        $storageOutput = Artisan::output();
 
-        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        Artisan::call('optimize:clear');
 
-        return '<div style="font-family: sans-serif; padding: 40px; background: #0f172a; color: #f8fafc; min-height: 100vh;">' .
-               '<h1 style="color: #4ade80;">Setup & Migrations Completed Successfully!</h1>' .
-               '<pre style="background: #1e293b; padding: 15px; border-radius: 8px; overflow: auto; color: #e2e8f0;">' . htmlspecialchars($migrateOutput . "\n" . $seedOutput . "\n" . $storageOutput) . '</pre>' .
-               '<p style="margin-top: 20px;"><a href="/" style="color: #38bdf8; font-weight: bold; font-size: 18px; text-decoration: none;">&larr; Return to Website Home</a></p>' .
+        return '<div style="font-family: sans-serif; padding: 40px; background: #0f172a; color: #f8fafc; min-height: 100vh;">'.
+               '<h1 style="color: #4ade80;">Setup & Migrations Completed Successfully!</h1>'.
+               '<pre style="background: #1e293b; padding: 15px; border-radius: 8px; overflow: auto; color: #e2e8f0;">'.htmlspecialchars($migrateOutput."\n".$seedOutput."\n".$storageOutput).'</pre>'.
+               '<p style="margin-top: 20px;"><a href="/" style="color: #38bdf8; font-weight: bold; font-size: 18px; text-decoration: none;">&larr; Return to Website Home</a></p>'.
                '</div>';
-    } catch (\Throwable $e) {
-        return '<div style="font-family: sans-serif; padding: 40px; background: #0f172a; color: #f8fafc;">' .
-               '<h1 style="color: #f87171;">Migration Error</h1>' .
-               '<pre>' . htmlspecialchars($e->getMessage() . "\n" . $e->getTraceAsString()) . '</pre>' .
+    } catch (Throwable $e) {
+        return '<div style="font-family: sans-serif; padding: 40px; background: #0f172a; color: #f8fafc;">'.
+               '<h1 style="color: #f87171;">Migration Error</h1>'.
+               '<pre>'.htmlspecialchars($e->getMessage()."\n".$e->getTraceAsString()).'</pre>'.
                '</div>';
     }
 });
-
-

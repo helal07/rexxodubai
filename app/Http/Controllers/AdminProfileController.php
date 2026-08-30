@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class AdminProfileController extends Controller
 {
@@ -19,18 +21,19 @@ class AdminProfileController extends Controller
     {
         $user = Auth::user();
         $siteSettings = Setting::pluck('value', 'key')->all();
-        return \Inertia\Inertia::render('Admin/Profile', [
+
+        return Inertia::render('Admin/Profile', [
             'user' => $user,
-            'siteSettings' => $siteSettings
+            'siteSettings' => $siteSettings,
         ]);
     }
-
 
     public function users()
     {
         $users = User::orderBy('created_at', 'desc')->get();
-        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
-        return \Inertia\Inertia::render('Admin/Users', [
+        $roles = Role::orderBy('name')->get();
+
+        return Inertia::render('Admin/Users', [
             'users' => $users,
             'roles' => $roles,
         ]);
@@ -58,19 +61,19 @@ class AdminProfileController extends Controller
         // Handle Avatar File Upload
         if ($request->hasFile('avatar_file')) {
             $avatarDir = public_path('uploads/avatars');
-            if (!File::isDirectory($avatarDir)) {
+            if (! File::isDirectory($avatarDir)) {
                 File::makeDirectory($avatarDir, 0755, true, true);
             }
 
             // Remove old custom avatar if exists
-            if (!empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
+            if (! empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
                 @unlink(public_path(ltrim($user->avatar, '/')));
             }
 
             $file = $request->file('avatar_file');
-            $filename = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $filename = 'avatar_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $file->move($avatarDir, $filename);
-            $user->avatar = '/uploads/avatars/' . $filename;
+            $user->avatar = '/uploads/avatars/'.$filename;
         }
 
         $user->name = $validated['name'];
@@ -95,7 +98,7 @@ class AdminProfileController extends Controller
                     'city' => $user->city,
                     'country' => $user->country,
                     'designation' => $user->designation,
-                ]
+                ],
             ]);
         }
 
@@ -110,7 +113,7 @@ class AdminProfileController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if (!empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
+        if (! empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
             @unlink(public_path(ltrim($user->avatar, '/')));
         }
 
@@ -121,7 +124,7 @@ class AdminProfileController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Profile avatar removed.',
-                'avatar_url' => $user->avatar_url
+                'avatar_url' => $user->avatar_url,
             ]);
         }
 
@@ -141,13 +144,14 @@ class AdminProfileController extends Controller
             'password' => 'required|min:6|confirmed',
         ]);
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Current password does not match our records.'
+                    'message' => 'Current password does not match our records.',
                 ], 422);
             }
+
             return redirect()->back()->withErrors(['current_password' => 'Current password does not match.']);
         }
 
@@ -157,7 +161,7 @@ class AdminProfileController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Password updated securely!'
+                'message' => 'Password updated securely!',
             ]);
         }
 
@@ -183,13 +187,13 @@ class AdminProfileController extends Controller
         $avatarPath = null;
         if ($request->hasFile('avatar_file')) {
             $avatarDir = public_path('uploads/avatars');
-            if (!File::isDirectory($avatarDir)) {
+            if (! File::isDirectory($avatarDir)) {
                 File::makeDirectory($avatarDir, 0755, true, true);
             }
             $file = $request->file('avatar_file');
-            $filename = 'avatar_user_' . time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
+            $filename = 'avatar_user_'.time().'_'.rand(100, 999).'.'.$file->getClientOriginalExtension();
             $file->move($avatarDir, $filename);
-            $avatarPath = '/uploads/avatars/' . $filename;
+            $avatarPath = '/uploads/avatars/'.$filename;
         }
 
         $user = User::create([
@@ -229,16 +233,16 @@ class AdminProfileController extends Controller
 
         if ($request->hasFile('avatar_file')) {
             $avatarDir = public_path('uploads/avatars');
-            if (!File::isDirectory($avatarDir)) {
+            if (! File::isDirectory($avatarDir)) {
                 File::makeDirectory($avatarDir, 0755, true, true);
             }
-            if (!empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
+            if (! empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
                 @unlink(public_path(ltrim($user->avatar, '/')));
             }
             $file = $request->file('avatar_file');
-            $filename = 'avatar_user_' . time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
+            $filename = 'avatar_user_'.time().'_'.rand(100, 999).'.'.$file->getClientOriginalExtension();
             $file->move($avatarDir, $filename);
-            $user->avatar = '/uploads/avatars/' . $filename;
+            $user->avatar = '/uploads/avatars/'.$filename;
         }
 
         $user->name = $validated['name'];
@@ -247,7 +251,7 @@ class AdminProfileController extends Controller
         $user->phone = $validated['phone'] ?? null;
         $user->address = $validated['address'] ?? null;
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
@@ -271,7 +275,7 @@ class AdminProfileController extends Controller
 
         $user = User::findOrFail($id);
 
-        if (!empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
+        if (! empty($user->avatar) && File::exists(public_path(ltrim($user->avatar, '/')))) {
             @unlink(public_path(ltrim($user->avatar, '/')));
         }
 

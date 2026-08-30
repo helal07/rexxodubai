@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Setting;
 use App\Services\Courier\CourierService;
+use Exception;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Database\Schema\Blueprint;
-use Exception;
+use Inertia\Inertia;
 
 class AdminCourierController extends Controller
 {
@@ -27,30 +27,30 @@ class AdminCourierController extends Controller
     protected function ensureCourierColumnsExist(): void
     {
         try {
-            if (Schema::hasTable('orders') && !Schema::hasColumn('orders', 'courier_tracking_id')) {
+            if (Schema::hasTable('orders') && ! Schema::hasColumn('orders', 'courier_tracking_id')) {
                 Schema::table('orders', function (Blueprint $table) {
-                    if (!Schema::hasColumn('orders', 'courier_name')) {
+                    if (! Schema::hasColumn('orders', 'courier_name')) {
                         $table->string('courier_name')->nullable()->after('status');
                     }
-                    if (!Schema::hasColumn('orders', 'courier_tracking_id')) {
+                    if (! Schema::hasColumn('orders', 'courier_tracking_id')) {
                         $table->string('courier_tracking_id')->nullable()->index()->after('courier_name');
                     }
-                    if (!Schema::hasColumn('orders', 'courier_consignment_id')) {
+                    if (! Schema::hasColumn('orders', 'courier_consignment_id')) {
                         $table->string('courier_consignment_id')->nullable()->index()->after('courier_tracking_id');
                     }
-                    if (!Schema::hasColumn('orders', 'courier_status')) {
+                    if (! Schema::hasColumn('orders', 'courier_status')) {
                         $table->string('courier_status')->default('pending')->after('courier_consignment_id');
                     }
-                    if (!Schema::hasColumn('orders', 'courier_response')) {
+                    if (! Schema::hasColumn('orders', 'courier_response')) {
                         $table->json('courier_response')->nullable()->after('courier_status');
                     }
-                    if (!Schema::hasColumn('orders', 'dispatched_at')) {
+                    if (! Schema::hasColumn('orders', 'dispatched_at')) {
                         $table->timestamp('dispatched_at')->nullable()->after('courier_response');
                     }
                 });
             }
         } catch (\Throwable $e) {
-            Log::warning('Self-healing schema migration for orders table: ' . $e->getMessage());
+            Log::warning('Self-healing schema migration for orders table: '.$e->getMessage());
         }
     }
 
@@ -67,7 +67,7 @@ class AdminCourierController extends Controller
         $pendingOrders = Order::with('items')
             ->where(function ($q) {
                 $q->whereNull('courier_tracking_id')
-                  ->orWhere('courier_tracking_id', '');
+                    ->orWhere('courier_tracking_id', '');
             })
             ->whereIn('status', ['pending', 'processing'])
             ->latest()
@@ -77,7 +77,7 @@ class AdminCourierController extends Controller
         $historyQuery = Order::with('items')
             ->where(function ($q) {
                 $q->whereNotNull('courier_tracking_id')
-                  ->where('courier_tracking_id', '!=', '');
+                    ->where('courier_tracking_id', '!=', '');
             })
             ->latest();
 
@@ -85,10 +85,10 @@ class AdminCourierController extends Controller
             $search = $request->input('search');
             $historyQuery->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_phone', 'like', "%{$search}%")
-                  ->orWhere('courier_name', 'like', "%{$search}%")
-                  ->orWhere('courier_tracking_id', 'like', "%{$search}%");
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%")
+                    ->orWhere('courier_name', 'like', "%{$search}%")
+                    ->orWhere('courier_tracking_id', 'like', "%{$search}%");
             });
         }
 
@@ -100,12 +100,12 @@ class AdminCourierController extends Controller
 
         // Metrics
         $totalCouriers = count($couriers);
-        $activeCouriers = count(array_filter($couriers, fn($c) => ($c['status'] ?? '') === 'active'));
+        $activeCouriers = count(array_filter($couriers, fn ($c) => ($c['status'] ?? '') === 'active'));
         $pendingDispatchCount = $pendingOrders->count();
         $dispatchedTodayCount = Order::whereDate('dispatched_at', today())->count();
         $totalDispatchedCount = Order::whereNotNull('dispatched_at')->count();
 
-        return \Inertia\Inertia::render('Admin/Courier', [
+        return Inertia::render('Admin/Courier', [
             'couriers' => $couriers,
         ]);
     }
@@ -121,7 +121,7 @@ class AdminCourierController extends Controller
             $couriersData = json_decode($couriersData, true);
         }
 
-        if (!is_array($couriersData)) {
+        if (! is_array($couriersData)) {
             return response()->json(['success' => false, 'message' => 'Invalid courier configuration format.'], 422);
         }
 
@@ -176,7 +176,7 @@ class AdminCourierController extends Controller
         $credentials = $request->input('credentials', []);
         $mode = $request->input('mode', 'live');
 
-        if (!$provider) {
+        if (! $provider) {
             return response()->json(['success' => false, 'message' => 'Courier provider is required.'], 422);
         }
 
@@ -222,16 +222,16 @@ class AdminCourierController extends Controller
 
             return redirect()->back()->with('success', $result['message']);
         } catch (Exception $e) {
-            Log::error("Courier Dispatch Failed for Order #{$order->order_number}: " . $e->getMessage());
+            Log::error("Courier Dispatch Failed for Order #{$order->order_number}: ".$e->getMessage());
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dispatch failed: ' . $e->getMessage(),
+                    'message' => 'Dispatch failed: '.$e->getMessage(),
                 ], 500);
             }
 
-            return redirect()->back()->with('error', 'Dispatch failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Dispatch failed: '.$e->getMessage());
         }
     }
 
@@ -266,16 +266,16 @@ class AdminCourierController extends Controller
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Database migrations executed successfully: ' . $output);
+            return redirect()->back()->with('success', 'Database migrations executed successfully: '.$output);
         } catch (\Throwable $e) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Migration error: ' . $e->getMessage(),
+                    'message' => 'Migration error: '.$e->getMessage(),
                 ], 500);
             }
 
-            return redirect()->back()->with('error', 'Migration error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Migration error: '.$e->getMessage());
         }
     }
 }

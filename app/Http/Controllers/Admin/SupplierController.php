@@ -33,7 +33,7 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:20|unique:suppliers,phone,' . $id,
+            'phone' => 'required|string|max:20|unique:suppliers,phone,'.$id,
             'city_country' => 'nullable|string|max:255',
         ]);
 

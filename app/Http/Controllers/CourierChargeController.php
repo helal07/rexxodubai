@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\CourierCharge;
-use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-
 use Inertia\Inertia;
 
 class CourierChargeController extends Controller
@@ -23,10 +21,10 @@ class CourierChargeController extends Controller
             ->orderBy('district_name')
             ->get();
 
-        $insideDhakaCount  = $charges->where('zone_type', 'inside_dhaka')->count();
+        $insideDhakaCount = $charges->where('zone_type', 'inside_dhaka')->count();
         $outsideDhakaCount = $charges->where('zone_type', 'outside_dhaka')->count();
-        $customCount       = $charges->where('zone_type', 'custom')->count();
-        $activeCount       = $charges->where('is_active', true)->count();
+        $customCount = $charges->where('zone_type', 'custom')->count();
+        $activeCount = $charges->where('is_active', true)->count();
 
         return Inertia::render('Admin/CourierCharges', [
             'charges' => $charges,
@@ -44,9 +42,9 @@ class CourierChargeController extends Controller
     {
         $validated = $request->validate([
             'district_name' => 'required|string|max:100|unique:courier_charges,district_name',
-            'charge'        => 'required|numeric|min:0',
-            'zone_type'     => 'required|in:inside_dhaka,outside_dhaka,custom',
-            'is_active'     => 'nullable|boolean',
+            'charge' => 'required|numeric|min:0',
+            'zone_type' => 'required|in:inside_dhaka,outside_dhaka,custom',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -68,10 +66,10 @@ class CourierChargeController extends Controller
         $charge = CourierCharge::findOrFail($id);
 
         $validated = $request->validate([
-            'district_name' => 'required|string|max:100|unique:courier_charges,district_name,' . $id,
-            'charge'        => 'required|numeric|min:0',
-            'zone_type'     => 'required|in:inside_dhaka,outside_dhaka,custom',
-            'is_active'     => 'nullable|boolean',
+            'district_name' => 'required|string|max:100|unique:courier_charges,district_name,'.$id,
+            'charge' => 'required|numeric|min:0',
+            'zone_type' => 'required|in:inside_dhaka,outside_dhaka,custom',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -90,7 +88,7 @@ class CourierChargeController extends Controller
     public function destroy(Request $request, $id)
     {
         $charge = CourierCharge::findOrFail($id);
-        $name   = $charge->district_name;
+        $name = $charge->district_name;
         $charge->delete();
 
         if ($request->expectsJson()) {
@@ -107,19 +105,23 @@ class CourierChargeController extends Controller
     {
         $rows = $request->input('charges', []);
 
-        if (!is_array($rows) || empty($rows)) {
+        if (! is_array($rows) || empty($rows)) {
             return response()->json(['success' => false, 'message' => 'No data provided.'], 422);
         }
 
         $saved = 0;
         foreach ($rows as $row) {
-            if (empty($row['id'])) continue;
+            if (empty($row['id'])) {
+                continue;
+            }
 
             $charge = CourierCharge::find($row['id']);
-            if (!$charge) continue;
+            if (! $charge) {
+                continue;
+            }
 
             $charge->update([
-                'charge'    => (float) ($row['charge'] ?? $charge->charge),
+                'charge' => (float) ($row['charge'] ?? $charge->charge),
                 'zone_type' => in_array($row['zone_type'] ?? '', ['inside_dhaka', 'outside_dhaka', 'custom'])
                                 ? $row['zone_type'] : $charge->zone_type,
                 'is_active' => isset($row['is_active']) ? (bool) $row['is_active'] : $charge->is_active,
@@ -140,7 +142,7 @@ class CourierChargeController extends Controller
     {
         $city = trim($request->input('city', ''));
 
-        if (!$city) {
+        if (! $city) {
             return response()->json(['charge' => 120, 'zone_type' => 'outside_dhaka']);
         }
 
@@ -150,16 +152,16 @@ class CourierChargeController extends Controller
             ->first();
 
         // Partial match fallback
-        if (!$record) {
+        if (! $record) {
             $record = CourierCharge::where('is_active', true)
-                ->whereRaw('LOWER(district_name) LIKE ?', ['%' . strtolower($city) . '%'])
+                ->whereRaw('LOWER(district_name) LIKE ?', ['%'.strtolower($city).'%'])
                 ->first();
         }
 
         if ($record) {
             return response()->json([
-                'charge'        => (float) $record->charge,
-                'zone_type'     => $record->zone_type,
+                'charge' => (float) $record->charge,
+                'zone_type' => $record->zone_type,
                 'district_name' => $record->district_name,
             ]);
         }
@@ -186,8 +188,8 @@ class CourierChargeController extends Controller
      */
     protected function ensureTableExists(): void
     {
-        if (!Schema::hasTable('courier_charges')) {
-            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        if (! Schema::hasTable('courier_charges')) {
+            Artisan::call('migrate', ['--force' => true]);
         }
     }
 }

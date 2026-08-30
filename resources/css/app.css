@@ -81,12 +81,14 @@
 .text-gold-gradient {
   background: linear-gradient(135deg, #B8712E 0%, #D4AF37 50%, #A35E20 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-platinum-gradient {
   background: linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 50%, #94A3B8 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -236,4 +238,18 @@
 .hover-lift:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 28px -4px rgba(10, 10, 10, 0.12);
+}
+
+/* Quick CSS-filter based Dark Mode for Admin Panel */
+.theme-night {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #000;
+}
+
+.theme-night img,
+.theme-night svg,
+.theme-night video,
+.theme-night [data-theme-ignore],
+.theme-night .no-invert {
+  filter: invert(1) hue-rotate(180deg);
 }

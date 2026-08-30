@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class AdminLoginController extends Controller
 {
@@ -17,7 +18,7 @@ class AdminLoginController extends Controller
             return redirect('/admin/dashboard');
         }
 
-        return \Inertia\Inertia::render('Auth/AdminLogin');
+        return Inertia::render('Auth/AdminLogin');
     }
 
     /**
@@ -67,4 +68,3 @@ class AdminLoginController extends Controller
         return redirect('/admin');
     }
 }
-
